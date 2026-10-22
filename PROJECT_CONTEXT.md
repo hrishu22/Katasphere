@@ -228,11 +228,16 @@ To add new coding challenges in the future, Katasphere provides 3 distinct paths
    - Server-side Spring Data JPA Specification search and filtering.
    - Filter chips for topics and difficulty levels.
    - Real-time catalog with 10+ seeded popular LeetCode-style katas.
-5. **Coding Workspace (`/problems/[slug]`)**:
+5. **Coding Workspace & Real Code Execution Engine (`/problems/[slug]`)**:
    - Interactive draggable horizontal resizer with a floating scroll button (grip + nudge chevrons `<` / `>`) to freely adjust the question area and code editor area from 20% to 80%.
    - Quick one-click ratio presets in the navigation bar (`35%` Code Focus, `50%` Balanced, `65%` Reading Focus).
-   - Multi-language tabs (Python, Java, C++, JavaScript) with starter templates on the right.
-   - Sample testcase runner tabs and result console.
+   - Vertical resizer gutter between the code editor and test cases panel with double-click reset and one-click expand/collapse.
+   - **Real Code Execution Engine (Judge0 & Sandbox)**:
+     - `POST /api/v1/submissions/run` evaluates sample test cases in real-time.
+     - `POST /api/v1/submissions` submits code against hidden test suites and persists submission records to PostgreSQL.
+     - `CodeExecutionProvider` interface with `Judge0Adapter` and `LocalExecutionEngine` sandbox fallback.
+     - Dynamic language harness generator for Python, JavaScript, Java, and C++.
+     - Granular execution telemetry: runtime (ms), memory (MB), and per-case test verdict (`Accepted`, `Wrong Answer`, `Time Limit Exceeded`, `Runtime Error`).
 6. **Interview Preparation Hub (`/interview-prep`)**:
    - Blind 75 pattern roadmap.
    - Top Interview 150 comprehensive roadmap.

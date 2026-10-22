@@ -23,6 +23,10 @@ import {
   ChevronUp,
   ChevronDown,
   Columns2,
+  AlertTriangle,
+  Terminal,
+  Award,
+  Zap,
 } from "lucide-react";
 
 interface TagDto {
@@ -58,6 +62,44 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface TestCaseResult {
+  caseNumber: number;
+  passed: boolean;
+  input: string;
+  expectedOutput: string;
+  actualOutput: string;
+  error?: string;
+  executionTimeMs?: number;
+  memoryKb?: number;
+  status: string;
+}
+
+interface ExecutionResult {
+  verdict: string;
+  totalTestCases: number;
+  passedTestCases: number;
+  runtimeMs: number;
+  memoryKb: number;
+  compileOutput?: string;
+  errorMessage?: string;
+  testCases: TestCaseResult[];
+  timestamp: string;
+}
+
+interface SubmissionResult {
+  id: string;
+  problemSlug: string;
+  problemTitle: string;
+  language: string;
+  verdict: string;
+  passedTestCases: number;
+  totalTestCases: number;
+  executionTimeMs?: number;
+  memoryKb?: number;
+  errorMessage?: string;
+  createdAt: string;
+}
+
 type Language = "PYTHON" | "JAVA" | "CPP" | "JAVASCRIPT";
 
 export default function ProblemWorkspacePage() {
@@ -74,6 +116,13 @@ export default function ProblemWorkspacePage() {
 
   const [activeTab, setActiveTab] = useState<"testcases" | "result">("testcases");
   const [selectedExampleIdx, setSelectedExampleIdx] = useState(0);
+
+  // Execution & Submission state
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
+  const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
+  const [selectedResultCaseIdx, setSelectedResultCaseIdx] = useState(0);
 
   // Horizontal split-pane resize state
   const [leftWidth, setLeftWidth] = useState<number>(50); // percentage 20% to 80%
@@ -217,6 +266,80 @@ export default function ProblemWorkspacePage() {
     }
   };
 
+  const handleRunCode = async () => {
+    if (!slug || isRunning || isSubmitting) return;
+    setIsRunning(true);
+    setSubmissionResult(null);
+    setActiveTab("result");
+    if (isBottomCollapsed) setIsBottomCollapsed(false);
+
+    try {
+      const res = await apiClient<ApiResponse<ExecutionResult>>("/api/v1/submissions/run", {
+        method: "POST",
+        body: JSON.stringify({
+          problemSlug: slug,
+          language: selectedLanguage,
+          sourceCode: code,
+        }),
+      });
+
+      if (res && res.data) {
+        setExecutionResult(res.data);
+        setSelectedResultCaseIdx(0);
+      }
+    } catch (err: any) {
+      setExecutionResult({
+        verdict: "INTERNAL_ERROR",
+        totalTestCases: 0,
+        passedTestCases: 0,
+        runtimeMs: 0,
+        memoryKb: 0,
+        errorMessage: err?.message || "Execution failed",
+        testCases: [],
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!slug || isRunning || isSubmitting) return;
+    setIsSubmitting(true);
+    setExecutionResult(null);
+    setActiveTab("result");
+    if (isBottomCollapsed) setIsBottomCollapsed(false);
+
+    try {
+      const res = await apiClient<ApiResponse<SubmissionResult>>("/api/v1/submissions", {
+        method: "POST",
+        body: JSON.stringify({
+          problemSlug: slug,
+          language: selectedLanguage,
+          sourceCode: code,
+        }),
+      });
+
+      if (res && res.data) {
+        setSubmissionResult(res.data);
+      }
+    } catch (err: any) {
+      setSubmissionResult({
+        id: "",
+        problemSlug: slug,
+        problemTitle: problem?.title || "",
+        language: selectedLanguage,
+        verdict: "INTERNAL_ERROR",
+        passedTestCases: 0,
+        totalTestCases: 0,
+        errorMessage: err?.message || "Submission failed",
+        createdAt: new Date().toISOString(),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const difficultyColors = {
     EASY: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
     MEDIUM: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30",
@@ -332,19 +455,29 @@ export default function ProblemWorkspacePage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("result")}
-            className="px-3.5 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-surface-border text-xs font-semibold text-foreground transition flex items-center space-x-1.5"
+            onClick={handleRunCode}
+            disabled={isRunning || isSubmitting}
+            className="px-3.5 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-surface-border text-xs font-semibold text-foreground transition flex items-center space-x-1.5 disabled:opacity-50"
           >
-            <Play className="h-3 w-3 text-emerald-500 fill-emerald-500" />
-            <span>Run Code</span>
+            {isRunning ? (
+              <Loader2 className="h-3 w-3 animate-spin text-brand-500" />
+            ) : (
+              <Play className="h-3 w-3 text-emerald-500 fill-emerald-500" />
+            )}
+            <span>{isRunning ? "Running..." : "Run Code"}</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("result")}
-            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition flex items-center space-x-1.5"
+            onClick={handleSubmit}
+            disabled={isRunning || isSubmitting}
+            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition flex items-center space-x-1.5 disabled:opacity-50"
           >
-            <Send className="h-3 w-3" />
-            <span>Submit</span>
+            {isSubmitting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Send className="h-3 w-3" />
+            )}
+            <span>{isSubmitting ? "Submitting..." : "Submit"}</span>
           </button>
         </div>
       </header>
@@ -645,14 +778,182 @@ export default function ProblemWorkspacePage() {
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                    <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="font-bold">Ready for Execution</span>
+                ) : isRunning ? (
+                  <div className="py-6 flex flex-col items-center justify-center space-y-2 text-slate-500">
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+                    <p className="text-xs font-semibold text-foreground">Running sample test cases in Judge0 sandbox...</p>
+                    <p className="text-[11px] text-slate-400">Compiling code and gathering runtime telemetry</p>
+                  </div>
+                ) : isSubmitting ? (
+                  <div className="py-6 flex flex-col items-center justify-center space-y-2 text-slate-500">
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+                    <p className="text-xs font-semibold text-foreground">Evaluating submission against all test suites...</p>
+                    <p className="text-[11px] text-slate-400">Running against public & hidden test cases</p>
+                  </div>
+                ) : submissionResult ? (
+                  <div className="space-y-3">
+                    <div
+                      className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                        submissionResult.verdict === "ACCEPTED"
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                          : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        {submissionResult.verdict === "ACCEPTED" ? (
+                          <CheckCircle2 className="h-5 w-5 shrink-0" />
+                        ) : (
+                          <XCircle className="h-5 w-5 shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-bold text-sm tracking-wide">
+                            {submissionResult.verdict === "ACCEPTED"
+                              ? "Accepted"
+                              : submissionResult.verdict.replace(/_/g, " ")}
+                          </span>
+                          <span className="ml-2 text-xs opacity-80">
+                            ({submissionResult.passedTestCases} / {submissionResult.totalTestCases} test cases passed)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-xs font-mono space-x-3 opacity-90">
+                        {submissionResult.executionTimeMs != null && (
+                          <span>
+                            Runtime: <strong className="text-foreground">{submissionResult.executionTimeMs} ms</strong>
+                          </span>
+                        )}
+                        {submissionResult.memoryKb != null && (
+                          <span>
+                            Memory: <strong className="text-foreground">{(submissionResult.memoryKb / 1024).toFixed(1)} MB</strong>
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      Judge0 compilation and container execution sandbox will run your test cases in Milestone 5.
+
+                    {submissionResult.errorMessage && (
+                      <div className="p-3 rounded-lg bg-surface-subtle border border-surface-border text-rose-500 font-mono text-xs whitespace-pre-wrap">
+                        {submissionResult.errorMessage}
+                      </div>
+                    )}
+                  </div>
+                ) : executionResult ? (
+                  <div className="space-y-3">
+                    {/* Overall Verdict Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full border ${
+                            executionResult.verdict === "ACCEPTED"
+                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                              : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
+                          }`}
+                        >
+                          {executionResult.verdict === "ACCEPTED"
+                            ? "Accepted"
+                            : executionResult.verdict.replace(/_/g, " ")}
+                        </span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                          {executionResult.passedTestCases} / {executionResult.totalTestCases} passed
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-3 text-xs font-mono text-slate-500 dark:text-slate-400">
+                        <span>
+                          Runtime: <strong className="text-foreground">{executionResult.runtimeMs} ms</strong>
+                        </span>
+                        {executionResult.memoryKb > 0 && (
+                          <span>
+                            Memory: <strong className="text-foreground">{(executionResult.memoryKb / 1024).toFixed(1)} MB</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Compile Error Output */}
+                    {executionResult.compileOutput && (
+                      <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-500 font-mono text-xs whitespace-pre-wrap">
+                        <div className="font-bold mb-1">Compilation Output:</div>
+                        {executionResult.compileOutput}
+                      </div>
+                    )}
+
+                    {/* Per-Test Case Tabs */}
+                    {executionResult.testCases && executionResult.testCases.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2 overflow-x-auto pb-1">
+                          {executionResult.testCases.map((tc, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setSelectedResultCaseIdx(idx)}
+                              className={`px-3 py-1 rounded-md text-xs font-semibold shrink-0 transition flex items-center space-x-1.5 ${
+                                selectedResultCaseIdx === idx
+                                  ? "bg-surface text-foreground border border-slate-400 dark:border-slate-500 shadow-xs"
+                                  : "bg-surface-subtle text-slate-500 hover:text-foreground border border-surface-border"
+                              }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  tc.passed ? "bg-emerald-500" : "bg-rose-500"
+                                }`}
+                              />
+                              <span>Case {tc.caseNumber}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {executionResult.testCases[selectedResultCaseIdx] && (
+                          <div className="space-y-2 pt-1 font-mono text-xs">
+                            <div>
+                              <span className="text-slate-500 dark:text-slate-400">Input:</span>
+                              <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-foreground overflow-x-auto">
+                                {executionResult.testCases[selectedResultCaseIdx].input}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <span className="text-slate-500 dark:text-slate-400">Expected Output:</span>
+                                <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                                  {executionResult.testCases[selectedResultCaseIdx].expectedOutput}
+                                </div>
+                              </div>
+
+                              <div>
+                                <span className="text-slate-500 dark:text-slate-400">Your Output:</span>
+                                <div
+                                  className={`mt-1 p-2 rounded bg-surface-subtle border border-surface-border overflow-x-auto ${
+                                    executionResult.testCases[selectedResultCaseIdx].passed
+                                      ? "text-emerald-600 dark:text-emerald-400"
+                                      : "text-rose-600 dark:text-rose-400"
+                                  }`}
+                                >
+                                  {executionResult.testCases[selectedResultCaseIdx].actualOutput || "(empty output)"}
+                                </div>
+                              </div>
+                            </div>
+
+                            {executionResult.testCases[selectedResultCaseIdx].error && (
+                              <div>
+                                <span className="text-rose-500">Error / Diagnostics:</span>
+                                <div className="mt-1 p-2 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 whitespace-pre-wrap">
+                                  {executionResult.testCases[selectedResultCaseIdx].error}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center space-y-2 text-slate-500 dark:text-slate-400">
+                    <div className="h-9 w-9 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-500 mx-auto">
+                      <Terminal className="h-4 w-4" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-foreground">No execution results yet</h4>
+                    <p className="text-xs max-w-sm mx-auto">
+                      Click <span className="font-semibold text-foreground">Run Code</span> to test against sample cases, or{" "}
+                      <span className="font-semibold text-foreground">Submit</span> to evaluate against hidden test suites.
                     </p>
                   </div>
                 )}
