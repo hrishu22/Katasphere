@@ -135,9 +135,17 @@ export default function ProblemsPage() {
             </p>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono">
-            Showing <span className="font-bold text-foreground">{problems.length}</span> of{" "}
-            <span className="font-bold text-foreground">{totalElements}</span> challenges
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/problems/new"
+              className="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition flex items-center space-x-1.5"
+            >
+              <span>+ Add Challenge</span>
+            </Link>
+            <div className="text-xs text-slate-500 font-mono hidden sm:block">
+              <span className="font-bold text-foreground">{problems.length}</span> of{" "}
+              <span className="font-bold text-foreground">{totalElements}</span> challenges
+            </div>
           </div>
         </div>
 

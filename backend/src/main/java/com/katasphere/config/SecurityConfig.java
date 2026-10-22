@@ -41,7 +41,8 @@ public class SecurityConfig {
                 .ignoringRequestMatchers(
                     "/api/v1/health",
                     "/actuator/**",
-                    "/api/v1/auth/**"
+                    "/api/v1/auth/**",
+                    "/api/v1/admin/problems/**"
                 )
             )
             .sessionManagement(session -> session
@@ -54,6 +55,7 @@ public class SecurityConfig {
                     "/api/v1/auth/**",
                     "/api/v1/problems/**",
                     "/api/v1/tags/**",
+                    "/api/v1/admin/problems/**",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/v1/users/**").authenticated()
