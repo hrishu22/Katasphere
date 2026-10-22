@@ -221,7 +221,8 @@ To add new coding challenges in the future, Katasphere provides 3 distinct paths
    - `/dashboard` is strictly protected: unauthenticated users are redirected to `/login?redirect=/dashboard`.
    - Navbar dynamically adapts: shows public links when logged out, and dashboard + user avatar dropdown when logged in.
 3. **Dark & Light Mode**:
-   - Full CSS variable palette in `globals.css`.
+   - Full CSS variable palette in `globals.css` with Google Fonts (`Inter` for UI typography and `JetBrains Mono` for code).
+   - High-contrast, accessible text and badge styling across both light and dark themes.
    - `ThemeToggle` in navbar with persistent `localStorage` preference.
 4. **Live Problem Catalog**:
    - Server-side Spring Data JPA Specification search and filtering.

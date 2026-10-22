@@ -105,7 +105,7 @@ export function Navbar() {
                 {userDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface border border-surface-border shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-1">
                     <div className="px-4 py-2 border-b border-surface-border">
-                      <p className="text-xs text-slate-400 font-medium">Signed in as</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Signed in as</p>
                       <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
                     </div>
 
@@ -114,7 +114,7 @@ export function Navbar() {
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
                     >
-                      <LayoutDashboard className="h-4 w-4 text-slate-400" />
+                      <LayoutDashboard className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       <span>Dashboard</span>
                     </Link>
 
@@ -123,7 +123,7 @@ export function Navbar() {
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
                     >
-                      <User className="h-4 w-4 text-slate-400" />
+                      <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       <span>Profile</span>
                     </Link>
 
@@ -162,7 +162,7 @@ export function Navbar() {
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-slate-400 hover:text-foreground hover:bg-surface"
+              className="p-2 rounded-md text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-subtle"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -185,7 +185,7 @@ export function Navbar() {
                 className={`flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium ${
                   active
                     ? "bg-surface-subtle text-foreground font-semibold"
-                    : "text-slate-400 hover:text-foreground hover:bg-surface-subtle"
+                    : "text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-subtle"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -197,7 +197,7 @@ export function Navbar() {
           <div className="pt-4 border-t border-surface-border space-y-2">
             {user ? (
               <>
-                <div className="px-3 py-2 text-xs text-slate-400">
+                <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
                   Signed in as <span className="font-medium text-foreground">{user.email}</span>
                 </div>
                 <button
@@ -215,7 +215,7 @@ export function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full text-center px-4 py-2 text-sm font-medium text-slate-300 hover:bg-surface-subtle rounded-md"
+                  className="block w-full text-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-surface-subtle rounded-md"
                 >
                   Sign In
                 </Link>

@@ -114,9 +114,9 @@ export default function ProblemWorkspacePage() {
   };
 
   const difficultyColors = {
-    EASY: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
-    MEDIUM: "text-amber-500 bg-amber-500/10 border-amber-500/20",
-    HARD: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+    EASY: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+    MEDIUM: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30",
+    HARD: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30",
   };
 
   if (loading) {
@@ -223,7 +223,7 @@ export default function ProblemWorkspacePage() {
               {problem.tags.map((t) => (
                 <span
                   key={t.id}
-                  className="text-xs px-2.5 py-0.5 rounded-md bg-surface-subtle text-slate-500 dark:text-slate-400 font-mono"
+                  className="text-xs px-2.5 py-0.5 rounded-md bg-surface-subtle text-slate-600 dark:text-slate-400 border border-surface-border font-mono"
                 >
                   {t.name}
                 </span>
@@ -251,17 +251,17 @@ export default function ProblemWorkspacePage() {
                     <span className="font-bold text-foreground">Example {ex.position}:</span>
                     <div className="font-mono bg-surface p-2.5 rounded border border-surface-border space-y-1">
                       <div>
-                        <span className="text-slate-400">Input: </span>
+                        <span className="text-slate-500 dark:text-slate-400">Input: </span>
                         <span className="text-foreground">{ex.input}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Output: </span>
-                        <span className="text-emerald-500 font-semibold">{ex.expectedOutput}</span>
+                        <span className="text-slate-500 dark:text-slate-400">Output: </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{ex.expectedOutput}</span>
                       </div>
                       {ex.explanation && (
                         <div>
-                          <span className="text-slate-400">Explanation: </span>
-                          <span className="text-slate-300">{ex.explanation}</span>
+                          <span className="text-slate-500 dark:text-slate-400">Explanation: </span>
+                          <span className="text-slate-700 dark:text-slate-300">{ex.explanation}</span>
                         </div>
                       )}
                     </div>
@@ -311,7 +311,7 @@ export default function ProblemWorkspacePage() {
                 className={`py-2 px-3 border-b-2 transition ${
                   activeTab === "testcases"
                     ? "border-brand-500 text-brand-500 font-bold"
-                    : "border-transparent text-slate-400 hover:text-foreground"
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
                 }`}
               >
                 Sample Testcases
@@ -321,7 +321,7 @@ export default function ProblemWorkspacePage() {
                 className={`py-2 px-3 border-b-2 transition ${
                   activeTab === "result"
                     ? "border-brand-500 text-brand-500 font-bold"
-                    : "border-transparent text-slate-400 hover:text-foreground"
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
                 }`}
               >
                 Execution Result
@@ -339,7 +339,7 @@ export default function ProblemWorkspacePage() {
                         className={`px-3 py-1 rounded-md text-xs font-semibold transition ${
                           selectedExampleIdx === idx
                             ? "bg-brand-600 text-white"
-                            : "bg-surface-subtle text-slate-400 hover:text-foreground"
+                            : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground border border-surface-border"
                         }`}
                       >
                         Case {idx + 1}
@@ -350,14 +350,14 @@ export default function ProblemWorkspacePage() {
                   {problem.examples && problem.examples[selectedExampleIdx] && (
                     <div className="space-y-2">
                       <div>
-                        <span className="text-slate-400">Input:</span>
+                        <span className="text-slate-500 dark:text-slate-400">Input:</span>
                         <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-foreground">
                           {problem.examples[selectedExampleIdx].input}
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-400">Expected Output:</span>
-                        <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-emerald-500">
+                        <span className="text-slate-500 dark:text-slate-400">Expected Output:</span>
+                        <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-emerald-600 dark:text-emerald-400">
                           {problem.examples[selectedExampleIdx].expectedOutput}
                         </div>
                       </div>
@@ -365,8 +365,8 @@ export default function ProblemWorkspacePage() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-2 text-slate-400">
-                  <div className="flex items-center space-x-2 text-emerald-500">
+                <div className="space-y-2 text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="font-bold">Ready for Execution</span>
                   </div>

@@ -85,12 +85,12 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-5 rounded-xl bg-surface border border-surface-border shadow-sm">
-            <div className="flex items-center justify-between text-xs text-emerald-500 font-semibold uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">
               <span>Easy</span>
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
             </div>
             <div className="mt-2 flex items-baseline space-x-2">
-              <span className="text-3xl font-extrabold text-emerald-500">0</span>
+              <span className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
               <span className="text-xs text-slate-500">/ 4 easy</span>
             </div>
             <div className="mt-3 w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
@@ -99,12 +99,12 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-5 rounded-xl bg-surface border border-surface-border shadow-sm">
-            <div className="flex items-center justify-between text-xs text-amber-500 font-semibold uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider">
               <span>Medium</span>
               <span className="h-2 w-2 rounded-full bg-amber-500" />
             </div>
             <div className="mt-2 flex items-baseline space-x-2">
-              <span className="text-3xl font-extrabold text-amber-500">0</span>
+              <span className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">0</span>
               <span className="text-xs text-slate-500">/ 1 medium</span>
             </div>
             <div className="mt-3 w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
@@ -113,12 +113,12 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-5 rounded-xl bg-surface border border-surface-border shadow-sm">
-            <div className="flex items-center justify-between text-xs text-rose-500 font-semibold uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs text-rose-600 dark:text-rose-400 font-semibold uppercase tracking-wider">
               <span>Hard</span>
               <span className="h-2 w-2 rounded-full bg-rose-500" />
             </div>
             <div className="mt-2 flex items-baseline space-x-2">
-              <span className="text-3xl font-extrabold text-rose-500">0</span>
+              <span className="text-3xl font-extrabold text-rose-600 dark:text-rose-400">0</span>
               <span className="text-xs text-slate-500">/ 1 hard</span>
             </div>
             <div className="mt-3 w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">

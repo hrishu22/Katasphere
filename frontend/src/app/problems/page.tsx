@@ -112,9 +112,9 @@ export default function ProblemsPage() {
   }, [fetchProblems]);
 
   const difficultyColors = {
-    EASY: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
-    MEDIUM: "text-amber-500 bg-amber-500/10 border-amber-500/20",
-    HARD: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+    EASY: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+    MEDIUM: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30",
+    HARD: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30",
   };
 
   return (
@@ -191,7 +191,7 @@ export default function ProblemsPage() {
           {/* Tag Filter Pills */}
           {tags.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pt-2 border-t border-surface-border pb-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
                 <TagIcon className="h-3 w-3" /> Topics:
               </span>
               <button
@@ -202,7 +202,7 @@ export default function ProblemsPage() {
                 className={`px-2.5 py-1 rounded-full text-xs font-mono shrink-0 transition ${
                   selectedTag === ""
                     ? "bg-brand-500 text-white font-medium"
-                    : "bg-surface-subtle text-slate-500 hover:text-foreground"
+                    : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted"
                 }`}
               >
                 All
@@ -217,7 +217,7 @@ export default function ProblemsPage() {
                   className={`px-2.5 py-1 rounded-full text-xs font-mono shrink-0 transition ${
                     selectedTag === t.slug
                       ? "bg-brand-500 text-white font-medium"
-                      : "bg-surface-subtle text-slate-500 hover:text-foreground"
+                      : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted"
                   }`}
                 >
                   {t.name}
@@ -285,7 +285,7 @@ export default function ProblemsPage() {
                     {problem.tags.map((t) => (
                       <span
                         key={t.id}
-                        className="text-[11px] px-2 py-0.5 rounded bg-surface-subtle text-slate-500 dark:text-slate-400 font-mono"
+                        className="text-[11px] px-2 py-0.5 rounded bg-surface-subtle text-slate-600 dark:text-slate-400 border border-surface-border font-mono"
                       >
                         {t.name}
                       </span>

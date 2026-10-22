@@ -24,27 +24,27 @@ export default function InterviewPrepPage() {
     {
       category: "Arrays & Hashing",
       problems: [
-        { title: "Two Sum", slug: "two-sum", difficulty: "EASY", diffColor: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-        { title: "Best Time to Buy and Sell Stock", slug: "best-time-to-buy-and-sell-stock", difficulty: "EASY", diffColor: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+        { title: "Two Sum", slug: "two-sum", difficulty: "EASY", diffColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+        { title: "Best Time to Buy and Sell Stock", slug: "best-time-to-buy-and-sell-stock", difficulty: "EASY", diffColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
       ],
     },
     {
       category: "Two Pointers & Sliding Window",
       problems: [
-        { title: "Valid Palindrome", slug: "valid-palindrome", difficulty: "EASY", diffColor: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-        { title: "Longest Substring Without Repeating Characters", slug: "longest-substring-without-repeating-characters", difficulty: "MEDIUM", diffColor: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+        { title: "Valid Palindrome", slug: "valid-palindrome", difficulty: "EASY", diffColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+        { title: "Longest Substring Without Repeating Characters", slug: "longest-substring-without-repeating-characters", difficulty: "MEDIUM", diffColor: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30" },
       ],
     },
     {
       category: "Stacks & Queues",
       problems: [
-        { title: "Valid Parentheses", slug: "valid-parentheses", difficulty: "EASY", diffColor: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+        { title: "Valid Parentheses", slug: "valid-parentheses", difficulty: "EASY", diffColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
       ],
     },
     {
       category: "Binary Search & Advanced",
       problems: [
-        { title: "Median of Two Sorted Arrays", slug: "median-of-two-sorted-arrays", difficulty: "HARD", diffColor: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
+        { title: "Median of Two Sorted Arrays", slug: "median-of-two-sorted-arrays", difficulty: "HARD", diffColor: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30" },
       ],
     },
   ];
