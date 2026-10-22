@@ -1,4 +1,4 @@
-package com.codeforge.config;
+package com.katasphere.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${codeforge.cors.allowed-origins:http://localhost:3000}")
+    @Value("${katasphere.cors.allowed-origins:http://localhost:3000}")
     private String allowedOrigins;
 
     @Bean

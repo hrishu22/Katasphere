@@ -1,4 +1,4 @@
-package com.codeforge.config;
+package com.katasphere.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -45,7 +45,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/health", "/actuator/**", "/error").permitAll()
-                .anyRequest().permitAll() // Milestone 1 permits open baseline; Milestone 2 locks down authenticated routes
+                .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {

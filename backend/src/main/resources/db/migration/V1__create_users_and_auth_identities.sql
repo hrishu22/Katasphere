@@ -1,6 +1,6 @@
 -- ============================================================================
 -- V1: Create Users and Auth Identities Schema
--- CodeForge Platform
+-- Katasphere Platform
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

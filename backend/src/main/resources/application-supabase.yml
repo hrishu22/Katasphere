@@ -26,5 +26,5 @@ spring:
 
 logging:
   level:
-    com.codeforge: INFO
+    com.katasphere: INFO
     org.flywaydb: INFO

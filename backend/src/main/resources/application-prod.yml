@@ -19,6 +19,6 @@ spring:
 
 logging:
   level:
-    com.codeforge: INFO
+    com.katasphere: INFO
     org.springframework.security: WARN
     org.flywaydb: INFO

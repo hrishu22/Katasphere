@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Code2, Github } from "lucide-react";
+import { Code2 } from "lucide-react";
 
 export function Footer() {
   return (
@@ -11,7 +11,7 @@ export function Footer() {
             <div className="h-7 w-7 rounded-md bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400">
               <Code2 className="h-4 w-4" />
             </div>
-            <span className="font-semibold text-sm text-foreground">CodeForge</span>
+            <span className="font-semibold text-sm text-foreground">Katasphere</span>
             <span className="text-slate-500 text-sm">— Practice. Improve. Repeat.</span>
           </div>
 

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Terminal, Code2, Menu, X, BookOpen, LayoutDashboard, User } from "lucide-react";
+import { Code2, Menu, X, BookOpen, LayoutDashboard, User } from "lucide-react";
 
 interface NavbarProps {
   user?: {
@@ -36,7 +36,7 @@ export function Navbar({ user }: NavbarProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg text-foreground tracking-tight flex items-center gap-1.5">
-                  CodeForge
+                  Katasphere
                   <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">
                     MVP
                   </span>

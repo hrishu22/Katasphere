@@ -2,10 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import {
-  Code2,
   Terminal,
-  Cpu,
-  CheckCircle2,
   Layers,
   ArrowRight,
   Shield,
@@ -88,12 +85,12 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-              Practice. Improve. <span className="text-brand-400">Repeat.</span>
+              Master Code Katas. <span className="text-brand-400">Repeat.</span>
             </h1>
 
             <p className="text-lg sm:text-xl text-slate-400 leading-relaxed">
-              Master algorithms and prepare for technical interviews with real multi-language
-              code execution, comprehensive test suites, and transparent progress tracking.
+              Step into Katasphere to master algorithmic problem solving and ace technical interviews
+              with real multi-language execution, comprehensive test suites, and transparent progress tracking.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">

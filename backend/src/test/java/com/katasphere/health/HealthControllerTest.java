@@ -1,4 +1,4 @@
-package com.codeforge.health;
+package com.katasphere.health;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,6 @@ class HealthControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("UP"))
-                .andExpect(jsonPath("$.data.service").value("codeforge-backend"));
+                .andExpect(jsonPath("$.data.service").value("katasphere-backend"));
     }
 }

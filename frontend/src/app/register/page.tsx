@@ -12,9 +12,9 @@ export default function RegisterPage() {
             <div className="h-10 w-10 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400 mx-auto">
               <Code2 className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Create your account</h2>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Join Katasphere</h2>
             <p className="text-sm text-slate-400">
-              Join CodeForge to solve algorithm challenges and track progress
+              Create an account to solve algorithmic katas and track interview readiness
             </p>
           </div>
 

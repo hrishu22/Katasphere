@@ -12,7 +12,7 @@ export default function LoginPage() {
             <div className="h-10 w-10 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400 mx-auto">
               <Code2 className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Sign in to CodeForge</h2>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Sign in to Katasphere</h2>
             <p className="text-sm text-slate-400">
               Enter your credentials to continue your practice session
             </p>

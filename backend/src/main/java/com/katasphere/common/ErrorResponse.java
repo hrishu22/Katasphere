@@ -1,4 +1,4 @@
-package com.codeforge.common;
+package com.katasphere.common;
 
 import java.time.Instant;
 import java.util.Map;

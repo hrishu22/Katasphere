@@ -1,7 +1,7 @@
-package com.codeforge.health;
+package com.katasphere.health;
 
-import com.codeforge.common.ApiResponse;
-import com.codeforge.common.HealthResponse;
+import com.katasphere.common.ApiResponse;
+import com.katasphere.common.HealthResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +21,11 @@ public class HealthController {
     public ResponseEntity<ApiResponse<HealthResponse>> checkHealth() {
         HealthResponse response = new HealthResponse(
             "UP",
-            "codeforge-backend",
+            "katasphere-backend",
             "1.0.0",
             activeProfile,
             Instant.now()
         );
-        return ResponseEntity.ok(ApiResponse.ok("CodeForge service is operational", response));
+        return ResponseEntity.ok(ApiResponse.ok("Katasphere service is operational", response));
     }
 }

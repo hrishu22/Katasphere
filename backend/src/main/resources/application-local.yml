@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:codeforge}}
-    username: ${DB_USERNAME:codeforge_user}
-    password: ${DB_PASSWORD:codeforge_local_password}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:katasphere}}
+    username: ${DB_USERNAME:katasphere_user}
+    password: ${DB_PASSWORD:katasphere_local_password}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -18,6 +18,6 @@ spring:
 
 logging:
   level:
-    com.codeforge: DEBUG
+    com.katasphere: DEBUG
     org.springframework.security: INFO
     org.flywaydb: INFO

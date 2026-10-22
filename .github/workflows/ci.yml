@@ -1,4 +1,4 @@
-name: CodeForge CI
+name: Katasphere CI
 
 on:
   push:
