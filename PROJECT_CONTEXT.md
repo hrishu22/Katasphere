@@ -229,7 +229,8 @@ To add new coding challenges in the future, Katasphere provides 3 distinct paths
    - Filter chips for topics and difficulty levels.
    - Real-time catalog with 10+ seeded popular LeetCode-style katas.
 5. **Coding Workspace (`/problems/[slug]`)**:
-   - Split-pane layout with statement, examples, and constraints on the left.
+   - Interactive draggable horizontal resizer with a floating scroll button (grip + nudge chevrons `<` / `>`) to freely adjust the question area and code editor area from 20% to 80%.
+   - Quick one-click ratio presets in the navigation bar (`35%` Code Focus, `50%` Balanced, `65%` Reading Focus).
    - Multi-language tabs (Python, Java, C++, JavaScript) with starter templates on the right.
    - Sample testcase runner tabs and result console.
 6. **Interview Preparation Hub (`/interview-prep`)**:
