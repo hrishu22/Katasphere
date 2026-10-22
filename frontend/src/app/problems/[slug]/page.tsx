@@ -17,8 +17,11 @@ import {
   Loader2,
   Code2,
   GripVertical,
+  GripHorizontal,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Columns2,
 } from "lucide-react";
 
@@ -118,6 +121,57 @@ export default function ProblemWorkspacePage() {
     };
   }, [isDragging]);
 
+  // Vertical split-pane resize state (Code Editor vs Test Cases)
+  const [bottomHeight, setBottomHeight] = useState<number>(170); // default compact height in px
+  const [isDraggingVertical, setIsDraggingVertical] = useState<boolean>(false);
+  const [isBottomCollapsed, setIsBottomCollapsed] = useState<boolean>(false);
+  const rightPaneRef = useRef<HTMLDivElement>(null);
+
+  // Vertical dragging event listeners
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingVertical || !rightPaneRef.current) return;
+      const rect = rightPaneRef.current.getBoundingClientRect();
+      const newHeight = rect.bottom - e.clientY;
+      const maxAllowed = Math.min(rect.height * 0.75, 550);
+      const clamped = Math.min(Math.max(newHeight, 80), maxAllowed);
+      setBottomHeight(clamped);
+      if (isBottomCollapsed) setIsBottomCollapsed(false);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingVertical(false);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDraggingVertical || !rightPaneRef.current || e.touches.length === 0) return;
+      const rect = rightPaneRef.current.getBoundingClientRect();
+      const newHeight = rect.bottom - e.touches[0].clientY;
+      const maxAllowed = Math.min(rect.height * 0.75, 550);
+      const clamped = Math.min(Math.max(newHeight, 80), maxAllowed);
+      setBottomHeight(clamped);
+      if (isBottomCollapsed) setIsBottomCollapsed(false);
+    };
+
+    if (isDraggingVertical) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "row-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDraggingVertical, isBottomCollapsed]);
+
   // Fetch Problem Details
   useEffect(() => {
     async function fetchProblem() {
@@ -199,7 +253,7 @@ export default function ProblemWorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
       {/* Top Problem Navigation Bar */}
       <header className="h-14 border-b border-surface-border bg-surface px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-4">
@@ -430,9 +484,12 @@ export default function ProblemWorkspacePage() {
         </div>
 
         {/* Right Panel: Code Workspace & Results */}
-        <div className="flex flex-col h-full bg-surface-subtle overflow-hidden w-full lg:flex-1 min-w-0">
-          {/* Code Area */}
-          <div className="flex-1 flex flex-col p-4">
+        <div
+          ref={rightPaneRef}
+          className="flex flex-col h-full bg-surface-subtle overflow-hidden w-full lg:flex-1 min-w-0"
+        >
+          {/* Code Area (Expanded to occupy majority of height) */}
+          <div className="flex-1 flex flex-col p-3 pb-1 min-h-0 overflow-hidden">
             <div className="flex items-center justify-between pb-2 text-xs font-mono text-slate-400">
               <span className="flex items-center gap-1.5">
                 <Code2 className="h-3.5 w-3.5" />
@@ -443,84 +500,164 @@ export default function ProblemWorkspacePage() {
             <textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="flex-1 w-full p-4 rounded-xl bg-surface border border-surface-border font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+              className="flex-1 w-full p-4 rounded-xl bg-surface border border-surface-border font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none overflow-auto shadow-sm leading-relaxed"
               spellCheck={false}
             />
           </div>
 
-          {/* Bottom Tabs: Test Cases & Execution Verdicts */}
-          <div className="h-48 border-t border-surface-border bg-surface flex flex-col">
-            <div className="flex border-b border-surface-border px-4 text-xs font-semibold">
-              <button
-                onClick={() => setActiveTab("testcases")}
-                className={`py-2 px-3 border-b-2 transition ${
-                  activeTab === "testcases"
-                    ? "border-brand-500 text-brand-500 font-bold"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
-                }`}
-              >
-                Sample Testcases
-              </button>
-              <button
-                onClick={() => setActiveTab("result")}
-                className={`py-2 px-3 border-b-2 transition ${
-                  activeTab === "result"
-                    ? "border-brand-500 text-brand-500 font-bold"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
-                }`}
-              >
-                Execution Result
-              </button>
+          {/* Vertical Draggable Gutter / Scrollable Split Button */}
+          <div
+            onMouseDown={() => setIsDraggingVertical(true)}
+            onTouchStart={() => setIsDraggingVertical(true)}
+            onDoubleClick={() => {
+              if (isBottomCollapsed) {
+                setIsBottomCollapsed(false);
+                setBottomHeight(170);
+              } else {
+                setBottomHeight(170);
+              }
+            }}
+            className={`w-full h-3 -my-1.5 relative z-20 select-none cursor-row-resize flex items-center justify-center group transition-colors ${
+              isDraggingVertical ? "bg-brand-500/20" : "hover:bg-brand-500/10"
+            }`}
+            title="Drag vertically to resize testcases / editor | Double-click to reset"
+          >
+            {/* Horizontal line indicator */}
+            <div
+              className={`h-[2px] w-full transition-colors ${
+                isDraggingVertical ? "bg-brand-500 shadow-sm" : "bg-surface-border group-hover:bg-brand-500/60"
+              }`}
+            />
+
+            {/* Scrollable / Draggable Grip Pill Button */}
+            <div
+              className={`absolute left-1/2 -translate-x-1/2 flex items-center shadow-md border rounded-full px-2.5 py-0.5 bg-surface transition-all duration-150 ${
+                isDraggingVertical
+                  ? "border-brand-500 text-brand-500 scale-105 shadow-brand-500/30 ring-2 ring-brand-500/20"
+                  : "border-surface-border text-slate-500 dark:text-slate-400 group-hover:border-brand-500/50 group-hover:text-brand-500 group-hover:scale-105"
+              }`}
+            >
+              <GripHorizontal className="h-3.5 w-5" />
             </div>
+          </div>
 
-            <div className="p-4 flex-1 overflow-y-auto text-xs font-mono">
-              {activeTab === "testcases" ? (
-                <div className="space-y-3">
-                  <div className="flex space-x-2">
-                    {problem.examples?.map((ex, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedExampleIdx(idx)}
-                        className={`px-3 py-1 rounded-md text-xs font-semibold transition ${
-                          selectedExampleIdx === idx
-                            ? "bg-brand-600 text-white"
-                            : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground border border-surface-border"
-                        }`}
-                      >
-                        Case {idx + 1}
-                      </button>
-                    ))}
-                  </div>
+          {/* Bottom Tabs: Test Cases & Execution Verdicts (Scrollable & Collapsible) */}
+          <div
+            className="border-t border-surface-border bg-surface flex flex-col shrink-0 transition-[height] duration-75"
+            style={{ height: isBottomCollapsed ? "38px" : `${bottomHeight}px` }}
+          >
+            <div className="flex items-center justify-between border-b border-surface-border px-3 text-xs font-semibold shrink-0 h-[38px]">
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => {
+                    setActiveTab("testcases");
+                    if (isBottomCollapsed) setIsBottomCollapsed(false);
+                  }}
+                  className={`py-2 px-3 border-b-2 transition ${
+                    activeTab === "testcases"
+                      ? "border-brand-500 text-brand-500 font-bold"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
+                  }`}
+                >
+                  Sample Testcases
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("result");
+                    if (isBottomCollapsed) setIsBottomCollapsed(false);
+                  }}
+                  className={`py-2 px-3 border-b-2 transition ${
+                    activeTab === "result"
+                      ? "border-brand-500 text-brand-500 font-bold"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-foreground"
+                  }`}
+                >
+                  Execution Result
+                </button>
+              </div>
 
-                  {problem.examples && problem.examples[selectedExampleIdx] && (
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-slate-500 dark:text-slate-400">Input:</span>
-                        <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-foreground">
-                          {problem.examples[selectedExampleIdx].input}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 dark:text-slate-400">Expected Output:</span>
-                        <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-emerald-600 dark:text-emerald-400">
-                          {problem.examples[selectedExampleIdx].expectedOutput}
-                        </div>
-                      </div>
-                    </div>
+              {/* Right side controls: Expand/Collapse */}
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isBottomCollapsed) {
+                      setIsBottomCollapsed(false);
+                      setBottomHeight(170);
+                    } else {
+                      setIsBottomCollapsed(true);
+                    }
+                  }}
+                  className="px-2 py-1 rounded text-slate-500 dark:text-slate-400 hover:text-foreground hover:bg-surface-subtle transition flex items-center space-x-1 text-xs"
+                  title={isBottomCollapsed ? "Expand test cases (view test inputs)" : "Collapse test cases (maximize code editor height)"}
+                >
+                  {isBottomCollapsed ? (
+                    <>
+                      <ChevronUp className="h-3.5 w-3.5" />
+                      <span className="text-[11px] font-medium hidden sm:inline">Expand</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      <span className="text-[11px] font-medium hidden sm:inline">Collapse</span>
+                    </>
                   )}
-                </div>
-              ) : (
-                <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-bold">Ready for Execution</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Judge0 compilation and container execution sandbox will run your test cases in Milestone 5.
-                  </p>
-                </div>
-              )}
+                </button>
+              </div>
             </div>
+
+            {/* Test Cases Scrollable Content */}
+            {!isBottomCollapsed && (
+              <div className="p-3 flex-1 overflow-y-auto text-xs font-mono space-y-3">
+                {activeTab === "testcases" ? (
+                  <div className="space-y-3">
+                    {/* Horizontal scrollable case pill buttons */}
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-1">
+                      {problem.examples?.map((ex, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedExampleIdx(idx)}
+                          className={`px-3 py-1 rounded-md text-xs font-semibold shrink-0 transition ${
+                            selectedExampleIdx === idx
+                              ? "bg-brand-600 text-white shadow-xs"
+                              : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground border border-surface-border"
+                          }`}
+                        >
+                          Case {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    {problem.examples && problem.examples[selectedExampleIdx] && (
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-slate-500 dark:text-slate-400">Input:</span>
+                          <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-foreground overflow-x-auto">
+                            {problem.examples[selectedExampleIdx].input}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 dark:text-slate-400">Expected Output:</span>
+                          <div className="mt-1 p-2 rounded bg-surface-subtle border border-surface-border text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                            {problem.examples[selectedExampleIdx].expectedOutput}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="font-bold">Ready for Execution</span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Judge0 compilation and container execution sandbox will run your test cases in Milestone 5.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
