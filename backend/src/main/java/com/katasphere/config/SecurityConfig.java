@@ -38,14 +38,26 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(requestHandler)
-                .ignoringRequestMatchers("/api/v1/health", "/actuator/**")
+                .ignoringRequestMatchers(
+                    "/api/v1/health",
+                    "/actuator/**",
+                    "/api/v1/auth/**"
+                )
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/health", "/actuator/**", "/error").permitAll()
-                .anyRequest().permitAll()
+                .requestMatchers(
+                    "/api/v1/health",
+                    "/actuator/**",
+                    "/api/v1/auth/**",
+                    "/api/v1/problems/**",
+                    "/api/v1/tags/**",
+                    "/error"
+                ).permitAll()
+                .requestMatchers("/api/v1/users/**").authenticated()
+                .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
