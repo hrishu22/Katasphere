@@ -270,6 +270,19 @@ npm run dev
 - Backend test suite: `cd backend && ./mvnw test`
 - Frontend production build: `cd frontend && npm run build`
 
+### Deploying Backend to Render
+1. In Render Dashboard, click **New +** -> **Web Service** -> Connect `hrishu22/Katasphere`.
+2. **Root Directory**: `backend` *(do NOT use backend/src)*.
+3. **Environment**: `Java` (or `Docker`).
+4. **Build Command**: `chmod +x mvnw && ./mvnw clean package -DskipTests`
+5. **Start Command**: `java -Dserver.port=$PORT -Xmx384m -jar target/katasphere-backend.jar`
+6. **Environment Variables**:
+   - `SPRING_PROFILES_ACTIVE`: `supabase`
+   - `SUPABASE_DB_URL`: `jdbc:postgresql://<host>:5432/postgres?sslmode=require`
+   - `SUPABASE_DB_USERNAME`: `postgres`
+   - `SUPABASE_DB_PASSWORD`: `<your-supabase-db-password>`
+   - `CORS_ALLOWED_ORIGINS`: `https://your-frontend.vercel.app,http://localhost:3000`
+
 ---
 
 ## 9. Next Milestones & Roadmap
