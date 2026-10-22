@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -16,6 +16,10 @@ import {
   Sparkles,
   Loader2,
   Code2,
+  GripVertical,
+  ChevronLeft,
+  ChevronRight,
+  Columns2,
 } from "lucide-react";
 
 interface TagDto {
@@ -67,6 +71,52 @@ export default function ProblemWorkspacePage() {
 
   const [activeTab, setActiveTab] = useState<"testcases" | "result">("testcases");
   const [selectedExampleIdx, setSelectedExampleIdx] = useState(0);
+
+  // Horizontal split-pane resize state
+  const [leftWidth, setLeftWidth] = useState<number>(50); // percentage 20% to 80%
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Dragging event listeners for horizontal resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const rawPercent = ((e.clientX - rect.left) / rect.width) * 100;
+      const clamped = Math.min(Math.max(rawPercent, 20), 80);
+      setLeftWidth(clamped);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || !containerRef.current || e.touches.length === 0) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const rawPercent = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+      const clamped = Math.min(Math.max(rawPercent, 20), 80);
+      setLeftWidth(clamped);
+    };
+
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging]);
 
   // Fetch Problem Details
   useEffect(() => {
@@ -173,6 +223,40 @@ export default function ProblemWorkspacePage() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Split Ratio Presets */}
+          <div className="hidden sm:flex items-center space-x-0.5 p-0.5 bg-surface-subtle rounded-lg border border-surface-border text-xs font-mono">
+            <button
+              type="button"
+              onClick={() => setLeftWidth(35)}
+              title="Code focus (35% question / 65% editor)"
+              className={`px-2 py-1 rounded transition ${
+                leftWidth <= 40 ? "bg-brand-600 text-white font-semibold shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-foreground"
+              }`}
+            >
+              35%
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeftWidth(50)}
+              title="Balanced split (50% question / 50% editor)"
+              className={`px-2 py-1 rounded transition ${
+                leftWidth > 40 && leftWidth < 60 ? "bg-brand-600 text-white font-semibold shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-foreground"
+              }`}
+            >
+              50%
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeftWidth(65)}
+              title="Reading focus (65% question / 35% editor)"
+              className={`px-2 py-1 rounded transition ${
+                leftWidth >= 60 ? "bg-brand-600 text-white font-semibold shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-foreground"
+              }`}
+            >
+              65%
+            </button>
+          </div>
+
           {/* Language Selector */}
           <select
             value={selectedLanguage}
@@ -212,9 +296,15 @@ export default function ProblemWorkspacePage() {
       </header>
 
       {/* Main Resizable Split-Pane View */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex-1 flex flex-col lg:flex-row overflow-hidden relative"
+      >
         {/* Left Panel: Problem Statement */}
-        <div className="overflow-y-auto p-6 border-r border-surface-border space-y-6">
+        <div
+          className="overflow-y-auto p-6 space-y-6 w-full lg:w-[var(--left-width)] shrink-0 min-w-0 border-b lg:border-b-0 lg:border-r border-surface-border"
+          style={{ '--left-width': `${leftWidth}%` } as React.CSSProperties}
+        >
           <div className="space-y-2">
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
               {problem.title}
@@ -284,8 +374,63 @@ export default function ProblemWorkspacePage() {
           )}
         </div>
 
+        {/* Draggable & Scrollable Horizontal Divider Gutter */}
+        <div
+          onMouseDown={() => setIsDragging(true)}
+          onTouchStart={() => setIsDragging(true)}
+          onDoubleClick={() => setLeftWidth(50)}
+          className={`hidden lg:flex items-center justify-center relative z-20 select-none shrink-0 w-3 -mx-1.5 cursor-col-resize group transition-colors ${
+            isDragging ? "bg-brand-500/20" : "hover:bg-brand-500/10"
+          }`}
+          title="Drag horizontally to resize | Double-click to reset (50/50)"
+        >
+          {/* Central Line Indicator */}
+          <div
+            className={`w-[2px] h-full transition-colors ${
+              isDragging ? "bg-brand-500 shadow-sm" : "bg-surface-border group-hover:bg-brand-500/60"
+            }`}
+          />
+
+          {/* Floating Pill Scroll Button with Chevron Nudge + Grip Handle */}
+          <div
+            className={`absolute top-1/2 -translate-y-1/2 flex items-center shadow-md border rounded-full px-1 py-1.5 bg-surface transition-all duration-150 ${
+              isDragging
+                ? "border-brand-500 scale-110 shadow-brand-500/30 ring-2 ring-brand-500/20 text-brand-500"
+                : "border-surface-border text-slate-500 group-hover:border-brand-500/50 group-hover:text-brand-500 group-hover:scale-105"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLeftWidth((w) => Math.max(w - 10, 20));
+              }}
+              title="Shrink problem pane (-10%)"
+              className="p-0.5 hover:text-brand-500 text-slate-400 hover:bg-surface-subtle rounded transition"
+            >
+              <ChevronLeft className="h-3 w-3" />
+            </button>
+
+            <div className="flex flex-col items-center justify-center px-0.5 cursor-col-resize">
+              <GripVertical className="h-3.5 w-3.5" />
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLeftWidth((w) => Math.min(w + 10, 80));
+              }}
+              title="Expand problem pane (+10%)"
+              className="p-0.5 hover:text-brand-500 text-slate-400 hover:bg-surface-subtle rounded transition"
+            >
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+
         {/* Right Panel: Code Workspace & Results */}
-        <div className="flex flex-col h-full bg-surface-subtle">
+        <div className="flex flex-col h-full bg-surface-subtle overflow-hidden w-full lg:flex-1 min-w-0">
           {/* Code Area */}
           <div className="flex-1 flex flex-col p-4">
             <div className="flex items-center justify-between pb-2 text-xs font-mono text-slate-400">
