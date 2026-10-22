@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------------
+# Maven Wrapper Script for CodeForge Backend
+# ----------------------------------------------------------------------------
+set -e
+
+# Resolve script directory
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+# Try system mvn first
+if command -v mvn >/dev/null 2>&1; then
+    exec mvn "$@"
+fi
+
+# Check common local maven paths
+LOCAL_MVN="/Users/hrishii/.m2/wrapper/dists/apache-maven-3.9.16-bin/5grr65jo27hi51sujmtcldfovl/apache-maven-3.9.16/bin/mvn"
+if [ -x "$LOCAL_MVN" ]; then
+    exec "$LOCAL_MVN" "$@"
+fi
+
+# Fallback: check homebrew
+if [ -x "/opt/homebrew/bin/mvn" ]; then
+    exec "/opt/homebrew/bin/mvn" "$@"
+fi
+
+echo "Error: Maven (mvn) not found in PATH or standard locations." >&2
+exit 1
