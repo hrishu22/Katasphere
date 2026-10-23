@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  staticPageGenerationTimeout: 180,
   async headers() {
     return [
       {

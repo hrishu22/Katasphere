@@ -26,10 +26,16 @@ async function getProblem(slug: string): Promise<ProblemDetail | null> {
       : "http://localhost:8080");
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     const res = await fetch(`${apiUrl}/api/v1/problems/${slug}`, {
+      signal: controller.signal,
       next: { revalidate: 3600 },
       headers: { Accept: "application/json" },
     });
+    clearTimeout(timeoutId);
+
     if (!res.ok) return null;
     const body = await res.json();
     return body?.data || null;

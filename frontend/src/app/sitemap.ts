@@ -6,11 +6,18 @@ const DEFAULT_SLUGS = [
   "longest-substring-without-repeating-characters",
   "best-time-to-buy-and-sell-stock",
   "valid-parentheses",
-  "median-of-two-sorted-arrays",
-  "container-with-most-water",
-  "climbing-stairs",
-  "maximum-subarray",
   "valid-palindrome",
+  "container-with-most-water",
+  "maximum-subarray",
+  "climbing-stairs",
+  "reverse-linked-list",
+  "merge-two-sorted-lists",
+  "invert-binary-tree",
+  "binary-tree-level-order-traversal",
+  "kth-largest-element-in-an-array",
+  "product-of-array-except-self",
+  "group-anagrams",
+  "search-in-rotated-sorted-array",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -25,10 +32,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let problemSlugs = DEFAULT_SLUGS;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const res = await fetch(`${apiUrl}/api/v1/problems?size=100`, {
+      signal: controller.signal,
       next: { revalidate: 3600 },
       headers: { Accept: "application/json" },
     });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
       const data = await res.json();
       const fetchedSlugs = data?.data?.content?.map((p: any) => p.slug);
@@ -37,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch {
-    // Graceful fallback to static seeded slugs
+    // Graceful fallback to static seeded slugs without blocking build workers
   }
 
   const now = new Date();
