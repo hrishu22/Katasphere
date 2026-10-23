@@ -61,22 +61,38 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                 }
 
                 props.put("spring.datasource.url", jdbcUrl);
+                props.put("DB_URL", jdbcUrl);
+                props.put("DATABASE_URL", jdbcUrl);
+                props.put("SUPABASE_DB_URL", jdbcUrl);
 
                 if (uri.getUserInfo() != null && !uri.getUserInfo().isBlank()) {
                     String[] userInfo = uri.getUserInfo().split(":", 2);
-                    props.put("spring.datasource.username", URLDecoder.decode(userInfo[0], StandardCharsets.UTF_8));
+                    String user = URLDecoder.decode(userInfo[0], StandardCharsets.UTF_8);
+                    props.put("spring.datasource.username", user);
+                    props.put("DB_USERNAME", user);
+                    props.put("SUPABASE_DB_USERNAME", user);
+
                     if (userInfo.length > 1) {
-                        props.put("spring.datasource.password", URLDecoder.decode(userInfo[1], StandardCharsets.UTF_8));
+                        String pass = URLDecoder.decode(userInfo[1], StandardCharsets.UTF_8);
+                        props.put("spring.datasource.password", pass);
+                        props.put("DB_PASSWORD", pass);
+                        props.put("SUPABASE_DB_PASSWORD", pass);
                     }
                 }
                 props.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
             } catch (Exception e) {
                 if (!rawUrl.startsWith("jdbc:")) {
-                    props.put("spring.datasource.url", "jdbc:" + rawUrl);
+                    String jdbc = "jdbc:" + rawUrl;
+                    props.put("spring.datasource.url", jdbc);
+                    props.put("DB_URL", jdbc);
+                    props.put("DATABASE_URL", jdbc);
                 }
             }
         } else if (rawUrl.startsWith("jdbc:postgresql://")) {
             props.put("spring.datasource.url", rawUrl);
+            props.put("DB_URL", rawUrl);
+            props.put("DATABASE_URL", rawUrl);
+            props.put("SUPABASE_DB_URL", rawUrl);
             props.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
         }
 
@@ -87,6 +103,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         }
         if (dbUser != null && !dbUser.isBlank()) {
             props.put("spring.datasource.username", dbUser);
+            props.put("DB_USERNAME", dbUser);
         }
 
         // Allow explicit password override
@@ -96,6 +113,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         }
         if (dbPass != null && !dbPass.isBlank()) {
             props.put("spring.datasource.password", dbPass);
+            props.put("DB_PASSWORD", dbPass);
         }
 
         if (!props.isEmpty()) {
