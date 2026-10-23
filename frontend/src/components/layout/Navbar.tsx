@@ -50,11 +50,8 @@ export function Navbar() {
                 <Code2 className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg text-foreground tracking-tight flex items-center gap-1.5">
+                <span className="font-bold text-lg text-foreground tracking-tight">
                   Katasphere
-                  <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-500 border border-brand-500/30">
-                    MVP
-                  </span>
                 </span>
               </div>
             </Link>
