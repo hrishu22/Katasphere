@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${katasphere.cors.allowed-origins:http://localhost:3000}")
+    @Value("${katasphere.cors.allowed-origins:${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,https://*.vercel.app,https://*.onrender.com}}")
     private String allowedOrigins;
 
     @Bean
@@ -23,7 +23,10 @@ public class CorsConfig {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
-        configuration.setAllowedOrigins(origins);
+
+        // Using setAllowedOriginPatterns allows specific origins, wildcard domains (*.vercel.app),
+        // and full wildcards safely even when allowCredentials is true.
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "X-XSRF-TOKEN"));
         configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
