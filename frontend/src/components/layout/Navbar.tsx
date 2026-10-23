@@ -13,6 +13,8 @@ import {
   LayoutDashboard,
   User,
   GraduationCap,
+  Building2,
+  Crown,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -24,11 +26,14 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
+  const isPremiumUser = Boolean(user && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN"));
+
   // Requirement 1: Dashboard is only shown for authenticated users
   const navLinks = [
-    { href: "/problems", label: "Problems", icon: BookOpen },
-    { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap },
-    ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] : []),
+    { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
+    { href: "/companies", label: "Companies", icon: Building2, isPro: true },
+    { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
+    ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false }] : []),
   ];
 
   const isActive = (path: string) => pathname === path || (path !== "/" && pathname?.startsWith(path));
@@ -65,7 +70,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center space-x-2 px-3.5 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       active
                         ? "bg-surface text-foreground font-semibold shadow-sm"
                         : "text-slate-500 dark:text-slate-400 hover:text-foreground hover:bg-surface-subtle"
@@ -73,6 +78,11 @@ export function Navbar() {
                   >
                     <Icon className="h-4 w-4" />
                     <span>{link.label}</span>
+                    {link.isPro && (
+                      <span className="ml-0.5 inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+                        PRO
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -96,6 +106,11 @@ export function Navbar() {
                   <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
                     {user.name}
                   </span>
+                  {isPremiumUser && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500 flex items-center gap-0.5">
+                      <Crown className="h-2.5 w-2.5" /> PRO
+                    </span>
+                  )}
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 </button>
 
@@ -104,6 +119,22 @@ export function Navbar() {
                     <div className="px-4 py-2 border-b border-surface-border">
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Signed in as</p>
                       <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
+                      <div className="mt-1 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-400">Membership</span>
+                        <span
+                          className={`text-[11px] font-semibold flex items-center gap-1 ${
+                            isPremiumUser ? "text-amber-500" : "text-slate-400"
+                          }`}
+                        >
+                          {isPremiumUser ? (
+                            <>
+                              <Crown className="h-3 w-3" /> Katasphere Pro
+                            </>
+                          ) : (
+                            "Free Member"
+                          )}
+                        </span>
+                      </div>
                     </div>
 
                     <Link
@@ -187,6 +218,11 @@ export function Navbar() {
               >
                 <Icon className="h-4 w-4" />
                 <span>{link.label}</span>
+                {link.isPro && (
+                  <span className="ml-auto inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                    PRO
+                  </span>
+                )}
               </Link>
             );
           })}

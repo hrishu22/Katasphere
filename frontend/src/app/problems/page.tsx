@@ -15,6 +15,9 @@ import {
   AlertCircle,
   Tag as TagIcon,
   Sparkles,
+  Building2,
+  Crown,
+  Target,
 } from "lucide-react";
 
 interface TagDto {
@@ -117,6 +120,12 @@ export default function ProblemsPage() {
     HARD: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30",
   };
 
+  const COMPANY_SLUGS = ["amazon", "google", "meta", "microsoft", "apple", "uber", "bloomberg", "netflix"];
+  const companyTags = tags.filter((t) => COMPANY_SLUGS.includes(t.slug.toLowerCase()));
+  const topicTags = tags.filter(
+    (t) => !COMPANY_SLUGS.includes(t.slug.toLowerCase()) && t.slug.toLowerCase() !== "sde-1"
+  );
+
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-6">
@@ -149,11 +158,41 @@ export default function ProblemsPage() {
           </div>
         </div>
 
+        {/* Company Interview Hub Banner */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-500/10 to-transparent border border-amber-500/25 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start sm:items-center space-x-3.5">
+            <div className="h-10 w-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/30">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm sm:text-base font-bold text-foreground">
+                  Company-Specific Interview Roadmaps & Round Breakdowns
+                </h3>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+                  PRO
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Practice verified interview questions asked in Google, Amazon, Meta, Microsoft, and Apple rounds (OA, Phone Screen & Onsite DSA).
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/companies"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shrink-0 transition shadow-sm flex items-center justify-center space-x-2"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            <span>Explore Company Sets</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
         {/* Filters & Search Toolbar */}
         <div className="p-4 rounded-xl bg-surface border border-surface-border space-y-4 shadow-sm">
-          <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
             {/* Search Bar */}
-            <div className="relative w-full md:w-96">
+            <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -162,41 +201,109 @@ export default function ProblemsPage() {
                   setSearch(e.target.value);
                   setPage(0);
                 }}
-                placeholder="Search problem title..."
+                placeholder="Search problem title or algorithm..."
                 className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-subtle border border-surface-border text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
               />
             </div>
 
-            {/* Difficulty Filter Buttons */}
-            <div className="flex items-center space-x-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-              {["ALL", "EASY", "MEDIUM", "HARD"].map((diff) => (
-                <button
-                  key={diff}
-                  onClick={() => {
-                    setSelectedDifficulty(diff);
-                    setPage(0);
-                  }}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-                    selectedDifficulty === diff
-                      ? "bg-brand-600 text-white shadow-sm"
-                      : "bg-surface-subtle hover:bg-surface-muted text-slate-600 dark:text-slate-300"
-                  }`}
-                >
-                  {diff.charAt(0) + diff.slice(1).toLowerCase()}
-                </button>
-              ))}
+            {/* Quick Filter: SDE-1 Sheet & Difficulty */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  setSelectedTag(selectedTag === "sde-1" ? "" : "sde-1");
+                  setPage(0);
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                  selectedTag === "sde-1"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm ring-2 ring-amber-500/40"
+                    : "bg-surface-subtle hover:bg-surface-muted text-slate-700 dark:text-slate-200 border border-surface-border"
+                }`}
+              >
+                <Target className="h-3.5 w-3.5 text-amber-500" />
+                <span>🎯 SDE-1 Core Sheet</span>
+                {selectedTag === "sde-1" && (
+                  <span className="ml-1 text-[10px] bg-white/25 px-1.5 py-0.2 rounded-full uppercase">
+                    Active
+                  </span>
+                )}
+              </button>
+
+              <div className="h-5 w-px bg-surface-border hidden sm:block mx-1" />
+
+              {/* Difficulty Filter Buttons */}
+              <div className="flex items-center space-x-1">
+                {["ALL", "EASY", "MEDIUM", "HARD"].map((diff) => (
+                  <button
+                    key={diff}
+                    onClick={() => {
+                      setSelectedDifficulty(diff);
+                      setPage(0);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                      selectedDifficulty === diff
+                        ? "bg-brand-600 text-white shadow-sm font-semibold"
+                        : "bg-surface-subtle hover:bg-surface-muted text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    {diff.charAt(0) + diff.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Tag Filter Pills */}
-          {tags.length > 0 && (
+          {/* Company Filter Chips */}
+          {companyTags.length > 0 && (
+            <div className="flex items-center space-x-2 overflow-x-auto pt-3 border-t border-surface-border pb-1 text-xs">
+              <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-brand-500" /> Companies:
+              </span>
+              <button
+                onClick={() => {
+                  if (COMPANY_SLUGS.includes(selectedTag.toLowerCase())) setSelectedTag("");
+                  setPage(0);
+                }}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition ${
+                  !COMPANY_SLUGS.includes(selectedTag.toLowerCase())
+                    ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
+                    : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted"
+                }`}
+              >
+                All
+              </button>
+              {companyTags.map((t) => {
+                const isSelected = selectedTag.toLowerCase() === t.slug.toLowerCase();
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setSelectedTag(isSelected ? "" : t.slug);
+                      setPage(0);
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+                      isSelected
+                        ? "bg-brand-600 text-white font-semibold shadow-xs"
+                        : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted border border-surface-border"
+                    }`}
+                  >
+                    <span>{t.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Topic Filter Pills */}
+          {topicTags.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pt-2 border-t border-surface-border pb-1">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
                 <TagIcon className="h-3 w-3" /> Topics:
               </span>
               <button
                 onClick={() => {
-                  setSelectedTag("");
+                  if (!COMPANY_SLUGS.includes(selectedTag.toLowerCase()) && selectedTag !== "sde-1") {
+                    setSelectedTag("");
+                  }
                   setPage(0);
                 }}
                 className={`px-2.5 py-1 rounded-full text-xs font-mono shrink-0 transition ${
@@ -207,7 +314,7 @@ export default function ProblemsPage() {
               >
                 All
               </button>
-              {tags.map((t) => (
+              {topicTags.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => {
@@ -282,14 +389,24 @@ export default function ProblemsPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 pl-7">
-                    {problem.tags.map((t) => (
-                      <span
-                        key={t.id}
-                        className="text-[11px] px-2 py-0.5 rounded bg-surface-subtle text-slate-600 dark:text-slate-400 border border-surface-border font-mono"
-                      >
-                        {t.name}
-                      </span>
-                    ))}
+                    {problem.tags.map((t) => {
+                      const isCompany = COMPANY_SLUGS.includes(t.slug.toLowerCase());
+                      const isSde1 = t.slug.toLowerCase() === "sde-1";
+                      return (
+                        <span
+                          key={t.id}
+                          className={`text-[11px] px-2 py-0.5 rounded border font-mono ${
+                            isSde1
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold"
+                              : isCompany
+                              ? "bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/30 font-semibold"
+                              : "bg-surface-subtle text-slate-600 dark:text-slate-400 border-surface-border"
+                          }`}
+                        >
+                          {t.name}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 

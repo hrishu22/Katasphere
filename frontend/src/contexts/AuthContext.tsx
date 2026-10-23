@@ -9,6 +9,7 @@ export interface User {
   email: string;
   avatarUrl?: string | null;
   role: string;
+  isPremium?: boolean;
   createdAt?: string;
 }
 
@@ -30,6 +31,8 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  upgradeToPremium: () => Promise<User>;
+  togglePremium: () => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,8 +92,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const upgradeToPremium = async (): Promise<User> => {
+    const response = await apiClient<ApiResponse<User>>("/api/v1/users/upgrade-premium", {
+      method: "POST",
+    });
+    const updatedUser = response.data;
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
+  const togglePremium = async (): Promise<User> => {
+    const response = await apiClient<ApiResponse<User>>("/api/v1/users/toggle-premium", {
+      method: "POST",
+    });
+    const updatedUser = response.data;
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser, upgradeToPremium, togglePremium }}>
       {children}
     </AuthContext.Provider>
   );

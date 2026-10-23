@@ -52,20 +52,23 @@ export default function InterviewPrepPage() {
   const companyTracks = [
     {
       name: "Google Interview Track",
+      slug: "google",
       description: "Focus on graphs, dynamic programming, sliding windows, and deep algorithmic optimization.",
-      problemsCount: "45 Challenges",
+      problemsCount: "12 Curated SDE-1 Challenges",
       accent: "border-blue-500/30 bg-blue-500/5",
     },
     {
       name: "Meta (Facebook) Track",
+      slug: "meta",
       description: "Emphasis on array manipulation, two pointers, binary trees, and rapid coding speed.",
-      problemsCount: "40 Challenges",
+      problemsCount: "12 Curated SDE-1 Challenges",
       accent: "border-indigo-500/30 bg-indigo-500/5",
     },
     {
       name: "Amazon Interview Track",
+      slug: "amazon",
       description: "High priority on priority queues, hash tables, linked lists, and leadership principle alignment.",
-      problemsCount: "50 Challenges",
+      problemsCount: "16 Curated SDE-1 Challenges",
       accent: "border-amber-500/30 bg-amber-500/5",
     },
   ];
@@ -221,8 +224,13 @@ export default function InterviewPrepPage() {
                 className={`p-6 rounded-2xl border ${trk.accent} flex flex-col justify-between space-y-4`}
               >
                 <div className="space-y-2">
-                  <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md bg-surface text-foreground border border-surface-border text-xs font-mono font-semibold">
-                    {trk.problemsCount}
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md bg-surface text-foreground border border-surface-border text-xs font-mono font-semibold">
+                      {trk.problemsCount}
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                      PRO
+                    </span>
                   </div>
                   <h3 className="text-lg font-bold text-foreground">{trk.name}</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -230,10 +238,10 @@ export default function InterviewPrepPage() {
                   </p>
                 </div>
                 <Link
-                  href="/problems"
-                  className="w-full py-2 px-3 rounded-lg bg-surface border border-surface-border hover:border-brand-500 text-foreground text-xs font-semibold text-center block transition"
+                  href={`/companies?company=${trk.slug}`}
+                  className="w-full py-2 px-3 rounded-lg bg-surface border border-surface-border hover:border-amber-500 hover:text-amber-500 text-foreground text-xs font-bold text-center block transition shadow-xs"
                 >
-                  Start Track
+                  Explore {trk.name} &rarr;
                 </Link>
               </div>
             ))}

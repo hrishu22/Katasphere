@@ -1,16 +1,162 @@
 [
   {
+    "slug": "two-sum",
+    "title": "Two Sum",
+    "difficulty": "EASY",
+    "description": "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.",
+    "constraintsText": "• 2 <= nums.length <= 10^4\n• -10^9 <= nums[i] <= 10^9\n• -10^9 <= target <= 10^9\n• Only one valid answer exists.",
+    "tags": ["Array", "Hash Table", "SDE 1", "Amazon", "Google", "Meta", "Apple"],
+    "starterCode": {
+      "PYTHON": "def twoSum(nums: list[int], target: int) -> list[int]:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your solution here\n        return new int[]{};\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function twoSum(nums, target) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [2,7,11,15], target = 9",
+        "expectedOutput": "[0,1]",
+        "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."
+      },
+      {
+        "position": 2,
+        "input": "nums = [3,2,4], target = 6",
+        "expectedOutput": "[1,2]",
+        "explanation": "Because nums[1] + nums[2] == 6, we return [1, 2]."
+      }
+    ]
+  },
+  {
+    "slug": "best-time-to-buy-and-sell-stock",
+    "title": "Best Time to Buy and Sell Stock",
+    "difficulty": "EASY",
+    "description": "You are given an array `prices` where `prices[i]` is the price of a given stock on the `i-th` day.\n\nYou want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.\n\nReturn the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.",
+    "constraintsText": "• 1 <= prices.length <= 10^5\n• 0 <= prices[i] <= 10^4",
+    "tags": ["Array", "Dynamic Programming", "SDE 1", "Amazon", "Google", "Meta", "Microsoft"],
+    "starterCode": {
+      "PYTHON": "def maxProfit(prices: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int maxProfit(int[] prices) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function maxProfit(prices) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "prices = [7,1,5,3,6,4]",
+        "expectedOutput": "5",
+        "explanation": "Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6 - 1 = 5."
+      },
+      {
+        "position": 2,
+        "input": "prices = [7,6,4,3,1]",
+        "expectedOutput": "0",
+        "explanation": "In this case, no transactions are done and the max profit = 0."
+      }
+    ]
+  },
+  {
+    "slug": "valid-parentheses",
+    "title": "Valid Parentheses",
+    "difficulty": "EASY",
+    "description": "Given a string `s` containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.\n\nAn input string is valid if:\n1. Open brackets must be closed by the same type of brackets.\n2. Open brackets must be closed in the correct order.\n3. Every close bracket has a corresponding open bracket of the same type.",
+    "constraintsText": "• 1 <= s.length <= 10^4\n• s consists of parentheses only `()[]{}`.",
+    "tags": ["Stack", "String", "SDE 1", "Meta", "Amazon", "Bloomberg", "Microsoft"],
+    "starterCode": {
+      "PYTHON": "def isValid(s: str) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean isValid(String s) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function isValid(s) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"()\"",
+        "expectedOutput": "true",
+        "explanation": "Matching parentheses."
+      },
+      {
+        "position": 2,
+        "input": "s = \"()[]{}\"",
+        "expectedOutput": "true",
+        "explanation": "All types match correctly."
+      },
+      {
+        "position": 3,
+        "input": "s = \"(]\"",
+        "expectedOutput": "false",
+        "explanation": "Mismatched bracket types."
+      }
+    ]
+  },
+  {
+    "slug": "valid-palindrome",
+    "title": "Valid Palindrome",
+    "difficulty": "EASY",
+    "description": "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.\n\nGiven a string `s`, return `true` if it is a palindrome, or `false` otherwise.",
+    "constraintsText": "• 1 <= s.length <= 2 * 10^5\n• s consists only of printable ASCII characters.",
+    "tags": ["Two Pointers", "String", "SDE 1", "Meta", "Microsoft", "Apple"],
+    "starterCode": {
+      "PYTHON": "def isPalindrome(s: str) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean isPalindrome(String s) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isPalindrome(string s) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function isPalindrome(s) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"A man, a plan, a canal: Panama\"",
+        "expectedOutput": "true",
+        "explanation": "\"amanaplanacanalpanama\" is a palindrome."
+      },
+      {
+        "position": 2,
+        "input": "s = \"race a car\"",
+        "expectedOutput": "false",
+        "explanation": "\"raceacar\" is not a palindrome."
+      }
+    ]
+  },
+  {
+    "slug": "longest-substring-without-repeating-characters",
+    "title": "Longest Substring Without Repeating Characters",
+    "difficulty": "MEDIUM",
+    "description": "Given a string `s`, find the length of the longest substring without repeating characters.",
+    "constraintsText": "• 0 <= s.length <= 5 * 10^4\n• s consists of English letters, digits, symbols and spaces.",
+    "tags": ["Sliding Window", "Hash Table", "String", "SDE 1", "Amazon", "Google", "Bloomberg"],
+    "starterCode": {
+      "PYTHON": "def lengthOfLongestSubstring(s: str) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function lengthOfLongestSubstring(s) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"abcabcbb\"",
+        "expectedOutput": "3",
+        "explanation": "The answer is \"abc\", with the length of 3."
+      },
+      {
+        "position": 2,
+        "input": "s = \"bbbbb\"",
+        "expectedOutput": "1",
+        "explanation": "The answer is \"b\", with the length of 1."
+      }
+    ]
+  },
+  {
     "slug": "container-with-most-water",
     "title": "Container With Most Water",
     "difficulty": "MEDIUM",
     "description": "You are given an integer array `height` of length `n`. There are `n` vertical lines drawn such that the two endpoints of the `i-th` line are `(i, 0)` and `(i, height[i])`.\n\nFind two lines that together with the x-axis form a container, such that the container contains the most water.\n\nReturn the maximum amount of water a container can store.\n\nNotice that you may not slant the container.",
     "constraintsText": "• n == height.length\n• 2 <= n <= 10^5\n• 0 <= height[i] <= 10^4",
-    "tags": ["Array", "Two Pointers", "Greedy"],
+    "tags": ["Array", "Two Pointers", "Greedy", "SDE 1", "Google", "Amazon", "Meta"],
     "starterCode": {
       "PYTHON": "def maxArea(height: list[int]) -> int:\n    # Write your solution here\n    pass",
       "JAVA": "class Solution {\n    public int maxArea(int[] height) {\n        // Write your solution here\n        return 0;\n    }\n}",
       "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        // Write your solution here\n        return 0;\n    }\n};",
-      "JAVASCRIPT": "/**\n * @param {number[]} height\n * @return {number}\n */\nfunction maxArea(height) {\n    // Write your solution here\n}"
+      "JAVASCRIPT": "function maxArea(height) {\n    // Write your solution here\n}"
     },
     "examples": [
       {
@@ -33,7 +179,7 @@
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums`, find the subarray with the largest sum, and return its sum.",
     "constraintsText": "• 1 <= nums.length <= 10^5\n• -10^4 <= nums[i] <= 10^4",
-    "tags": ["Array", "Divide and Conquer", "Dynamic Programming"],
+    "tags": ["Array", "Divide and Conquer", "Dynamic Programming", "SDE 1", "Google", "Amazon", "Microsoft", "Apple"],
     "starterCode": {
       "PYTHON": "def maxSubArray(nums: list[int]) -> int:\n    # Write your solution here (Kadane's algorithm)\n    pass",
       "JAVA": "class Solution {\n    public int maxSubArray(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
@@ -61,7 +207,7 @@
     "difficulty": "EASY",
     "description": "You are climbing a staircase. It takes `n` steps to reach the top.\n\nEach time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
     "constraintsText": "• 1 <= n <= 45",
-    "tags": ["Math", "Dynamic Programming", "Memoization"],
+    "tags": ["Math", "Dynamic Programming", "Memoization", "SDE 1", "Amazon", "Google", "Apple"],
     "starterCode": {
       "PYTHON": "def climbStairs(n: int) -> int:\n    # Write your solution here\n    pass",
       "JAVA": "class Solution {\n    public int climbStairs(int n) {\n        // Write your solution here\n        return 0;\n    }\n}",
@@ -73,7 +219,7 @@
         "position": 1,
         "input": "n = 2",
         "expectedOutput": "2",
-        "explanation": "There are two ways to climb to the top: 1 step + 1 step, or 2 steps."
+        "explanation": "There are two ways: 1 step + 1 step, or 2 steps."
       },
       {
         "position": 2,
@@ -89,7 +235,7 @@
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums`, return all the triplets `[nums[i], nums[j], nums[k]]` such that `i != j`, `i != k`, and `j != k`, and `nums[i] + nums[j] + nums[k] == 0`.\n\nNotice that the solution set must not contain duplicate triplets.",
     "constraintsText": "• 3 <= nums.length <= 3000\n• -10^5 <= nums[i] <= 10^5",
-    "tags": ["Array", "Two Pointers", "Sorting"],
+    "tags": ["Array", "Two Pointers", "Sorting", "SDE 1", "Meta", "Amazon", "Google", "Microsoft"],
     "starterCode": {
       "PYTHON": "def threeSum(nums: list[int]) -> list[list[int]]:\n    # Write your solution here\n    pass",
       "JAVA": "import java.util.*;\nclass Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
@@ -102,6 +248,194 @@
         "input": "nums = [-1,0,1,2,-1,-4]",
         "expectedOutput": "[[-1,-1,2],[-1,0,1]]",
         "explanation": "nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0."
+      }
+    ]
+  },
+  {
+    "slug": "reverse-linked-list",
+    "title": "Reverse Linked List",
+    "difficulty": "EASY",
+    "description": "Given the `head` of a singly linked list, reverse the list, and return the reversed list.\n\nCould you implement both iteratively and recursively?",
+    "constraintsText": "• The number of nodes in the list is the range [0, 5000].\n• -5000 <= Node.val <= 5000",
+    "tags": ["Linked List", "Recursion", "SDE 1", "Amazon", "Google", "Microsoft", "Apple", "Uber"],
+    "starterCode": {
+      "PYTHON": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\ndef reverseList(head):\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public ListNode reverseList(ListNode head) {\n        // Write your solution here\n        return null;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        // Write your solution here\n        return nullptr;\n    }\n};",
+      "JAVASCRIPT": "function reverseList(head) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "head = [1,2,3,4,5]",
+        "expectedOutput": "[5,4,3,2,1]",
+        "explanation": "Reversing list yields [5,4,3,2,1]."
+      },
+      {
+        "position": 2,
+        "input": "head = [1,2]",
+        "expectedOutput": "[2,1]",
+        "explanation": "Reversing list yields [2,1]."
+      }
+    ]
+  },
+  {
+    "slug": "merge-two-sorted-lists",
+    "title": "Merge Two Sorted Lists",
+    "difficulty": "EASY",
+    "description": "You are given the heads of two sorted linked lists `list1` and `list2`.\n\nMerge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.\n\nReturn the head of the merged linked list.",
+    "constraintsText": "• The number of nodes in both lists is in the range [0, 50].\n• -100 <= Node.val <= 100\n• Both list1 and list2 are sorted in non-decreasing order.",
+    "tags": ["Linked List", "Two Pointers", "SDE 1", "Amazon", "Microsoft", "Meta", "Apple"],
+    "starterCode": {
+      "PYTHON": "def mergeTwoLists(list1, list2):\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n        // Write your solution here\n        return null;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n        // Write your solution here\n        return nullptr;\n    }\n};",
+      "JAVASCRIPT": "function mergeTwoLists(list1, list2) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "list1 = [1,2,4], list2 = [1,3,4]",
+        "expectedOutput": "[1,1,2,3,4,4]",
+        "explanation": "Merged list in sorted order."
+      }
+    ]
+  },
+  {
+    "slug": "invert-binary-tree",
+    "title": "Invert Binary Tree",
+    "difficulty": "EASY",
+    "description": "Given the `root` of a binary tree, invert the tree, and return its root.\n\nEvery left child becomes the right child, and every right child becomes the left child.",
+    "constraintsText": "• The number of nodes in the tree is in the range [0, 100].\n• -100 <= Node.val <= 100",
+    "tags": ["Tree", "Binary Tree", "Breadth-First Search", "SDE 1", "Google", "Amazon", "Microsoft", "Uber"],
+    "starterCode": {
+      "PYTHON": "def invertTree(root):\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public TreeNode invertTree(TreeNode root) {\n        // Write your solution here\n        return root;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    TreeNode* invertTree(TreeNode* root) {\n        // Write your solution here\n        return root;\n    }\n};",
+      "JAVASCRIPT": "function invertTree(root) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "root = [4,2,7,1,3,6,9]",
+        "expectedOutput": "[4,7,2,9,6,3,1]",
+        "explanation": "Mirrored binary tree."
+      }
+    ]
+  },
+  {
+    "slug": "binary-tree-level-order-traversal",
+    "title": "Binary Tree Level Order Traversal",
+    "difficulty": "MEDIUM",
+    "description": "Given the `root` of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).",
+    "constraintsText": "• The number of nodes in the tree is in the range [0, 2000].\n• -1000 <= Node.val <= 1000",
+    "tags": ["Tree", "Breadth-First Search", "Binary Tree", "SDE 1", "Amazon", "Meta", "Microsoft", "Bloomberg"],
+    "starterCode": {
+      "PYTHON": "def levelOrder(root: TreeNode) -> list[list[int]]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\nclass Solution {\n    public List<List<Integer>> levelOrder(TreeNode root) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function levelOrder(root) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "root = [3,9,20,null,null,15,7]",
+        "expectedOutput": "[[3],[9,20],[15,7]]",
+        "explanation": "Level 1: [3], Level 2: [9,20], Level 3: [15,7]."
+      }
+    ]
+  },
+  {
+    "slug": "kth-largest-element-in-an-array",
+    "title": "Kth Largest Element in an Array",
+    "difficulty": "MEDIUM",
+    "description": "Given an integer array `nums` and an integer `k`, return the `k-th` largest element in the array.\n\nNote that it is the `k-th` largest element in the sorted order, not the `k-th` distinct element.\n\nCan you solve it in O(n) time complexity?",
+    "constraintsText": "• 1 <= k <= nums.length <= 10^5\n• -10^4 <= nums[i] <= 10^4",
+    "tags": ["Array", "Divide and Conquer", "Sorting", "Heap", "Quickselect", "SDE 1", "Meta", "Amazon", "Google", "Uber"],
+    "starterCode": {
+      "PYTHON": "def findKthLargest(nums: list[int], k: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int findKthLargest(int[] nums, int k) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int findKthLargest(vector<int>& nums, int k) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function findKthLargest(nums, k) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [3,2,1,5,6,4], k = 2",
+        "expectedOutput": "5",
+        "explanation": "Sorted order: [1,2,3,4,5,6], second largest is 5."
+      }
+    ]
+  },
+  {
+    "slug": "product-of-array-except-self",
+    "title": "Product of Array Except Self",
+    "difficulty": "MEDIUM",
+    "description": "Given an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all the elements of `nums` except `nums[i]`.\n\nThe product of any prefix or suffix of `nums` is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in O(n) time and without using the division operation.",
+    "constraintsText": "• 2 <= nums.length <= 10^5\n• -30 <= nums[i] <= 30",
+    "tags": ["Array", "Prefix Sum", "SDE 1", "Amazon", "Apple", "Meta", "Microsoft"],
+    "starterCode": {
+      "PYTHON": "def productExceptSelf(nums: list[int]) -> list[int]:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        // Write your solution here\n        return new int[]{};\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function productExceptSelf(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [1,2,3,4]",
+        "expectedOutput": "[24,12,8,6]",
+        "explanation": "Each index contains the product of all other elements."
+      }
+    ]
+  },
+  {
+    "slug": "group-anagrams",
+    "title": "Group Anagrams",
+    "difficulty": "MEDIUM",
+    "description": "Given an array of strings `strs`, group the anagrams together. You can return the answer in any order.\n\nAn Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
+    "constraintsText": "• 1 <= strs.length <= 10^4\n• 0 <= strs[i].length <= 100\n• strs[i] consists of lowercase English letters.",
+    "tags": ["Array", "Hash Table", "String", "Sorting", "SDE 1", "Amazon", "Meta", "Google", "Apple"],
+    "starterCode": {
+      "PYTHON": "def groupAnagrams(strs: list[str]) -> list[list[str]]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\nclass Solution {\n    public List<List<String>> groupAnagrams(String[] strs) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\n#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<string>> groupAnagrams(vector<string>& strs) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function groupAnagrams(strs) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "strs = [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]",
+        "expectedOutput": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]",
+        "explanation": "Anagram groups matched."
+      }
+    ]
+  },
+  {
+    "slug": "search-in-rotated-sorted-array",
+    "title": "Search in Rotated Sorted Array",
+    "difficulty": "MEDIUM",
+    "description": "There is an integer array `nums` sorted in ascending order (with distinct values).\n\nPrior to being passed to your function, `nums` is possibly rotated at an unknown pivot index `k`.\n\nGiven the array `nums` after the possible rotation and an integer `target`, return the index of `target` if it is in `nums`, or `-1` if it is not in `nums`.\n\nYou must write an algorithm with O(log n) runtime complexity.",
+    "constraintsText": "• 1 <= nums.length <= 5000\n• -10^4 <= nums[i] <= 10^4\n• All values of nums are unique.\n• nums is an ascending array that is possibly rotated.\n• -10^4 <= target <= 10^4",
+    "tags": ["Array", "Binary Search", "SDE 1", "Google", "Meta", "Microsoft", "Amazon"],
+    "starterCode": {
+      "PYTHON": "def search(nums: list[int], target: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int search(int[] nums, int target) {\n        // Write your solution here\n        return -1;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        // Write your solution here\n        return -1;\n    }\n};",
+      "JAVASCRIPT": "function search(nums, target) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [4,5,6,7,0,1,2], target = 0",
+        "expectedOutput": "4",
+        "explanation": "0 is at index 4."
+      },
+      {
+        "position": 2,
+        "input": "nums = [4,5,6,7,0,1,2], target = 3",
+        "expectedOutput": "-1",
+        "explanation": "3 is not in nums."
       }
     ]
   }
