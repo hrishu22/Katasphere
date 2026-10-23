@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiBaseUrl } from "@/lib/api-client";
 import { AppShell } from "@/components/layout/AppShell";
 import { Code2, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
@@ -138,7 +139,7 @@ function LoginForm() {
       <button
         type="button"
         onClick={() => {
-          window.location.href = "http://localhost:8080/oauth2/authorization/google";
+          window.location.href = `${getApiBaseUrl()}/oauth2/authorization/google`;
         }}
         className="w-full py-2.5 px-4 rounded-lg bg-surface-subtle border border-surface-border hover:border-slate-500 text-foreground font-medium text-sm transition flex items-center justify-center space-x-2.5"
       >
