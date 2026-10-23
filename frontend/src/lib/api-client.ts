@@ -25,7 +25,13 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://katasphere.onrender.com";
+const DEFAULT_LOCAL_API_URL = "http://localhost:8080";
+const DEFAULT_PROD_API_URL = "https://katasphere.onrender.com";
+
+const isDev = process.env.NODE_ENV === "development";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (isDev ? DEFAULT_LOCAL_API_URL : DEFAULT_PROD_API_URL);
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL.replace(/\/$/, "");
