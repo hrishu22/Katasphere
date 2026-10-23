@@ -14,16 +14,24 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class LocalExecutionEngine {
 
     private static final Logger log = LoggerFactory.getLogger(LocalExecutionEngine.class);
-    private final CodeHarnessGenerator harnessGenerator;
+    private static final int MAX_STREAM_CHARS = 65536; // 64KB max output buffer
 
-    public LocalExecutionEngine(CodeHarnessGenerator harnessGenerator) {
+    private final CodeHarnessGenerator harnessGenerator;
+    private final CodeSecurityValidator securityValidator;
+
+    public LocalExecutionEngine(
+        CodeHarnessGenerator harnessGenerator,
+        CodeSecurityValidator securityValidator
+    ) {
         this.harnessGenerator = harnessGenerator;
+        this.securityValidator = securityValidator;
     }
 
     public ExecutionResultDto execute(String language, String sourceCode, List<TestCase> testCases, String problemSlug) {
@@ -37,6 +45,23 @@ public class LocalExecutionEngine {
                 null,
                 "No test cases provided for this problem.",
                 List.of(),
+                Instant.now()
+            );
+        }
+
+        // Static Security Validation Guard
+        CodeSecurityValidator.SecurityCheckResult secCheck = securityValidator.validate(language, sourceCode);
+        if (!secCheck.safe()) {
+            log.warn("Blocked potentially malicious code submission: {}", secCheck.violationReason());
+            return new ExecutionResultDto(
+                "SECURITY_VIOLATION",
+                testCases.size(),
+                0,
+                0L,
+                0L,
+                null,
+                secCheck.violationReason(),
+                List.of(new TestCaseResultDto(1, false, "", "", "", secCheck.violationReason(), 0L, 0L, "Security Violation", null)),
                 Instant.now()
             );
         }
@@ -174,6 +199,7 @@ public class LocalExecutionEngine {
 
             ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
             pb.directory(tempDir.toFile());
+            sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
@@ -215,6 +241,7 @@ public class LocalExecutionEngine {
 
             ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
             pb.redirectErrorStream(false);
+            sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
@@ -252,6 +279,7 @@ public class LocalExecutionEngine {
             Files.writeString(tempFile, harnessCode, StandardCharsets.UTF_8);
 
             ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
+            sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
@@ -281,6 +309,18 @@ public class LocalExecutionEngine {
         return new SingleRunResult(0, "0", null, false, 8000L);
     }
 
+    private void sanitizeEnvironment(ProcessBuilder pb) {
+        Map<String, String> env = pb.environment();
+        String path = env.get("PATH");
+        String javaHome = env.get("JAVA_HOME");
+        env.clear();
+        if (path != null) env.put("PATH", path);
+        if (javaHome != null) env.put("JAVA_HOME", javaHome);
+        env.put("TMPDIR", "/tmp");
+        env.put("LC_ALL", "en_US.UTF-8");
+        env.put("LANG", "en_US.UTF-8");
+    }
+
     private boolean isCommandAvailable(String cmd) {
         try {
             Process p = new ProcessBuilder(cmd, "--version").start();
@@ -293,10 +333,16 @@ public class LocalExecutionEngine {
     private String readStream(InputStream is) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (sb.length() > 0) sb.append("\n");
-                sb.append(line);
+            char[] buf = new char[1024];
+            int read;
+            while ((read = reader.read(buf)) != -1) {
+                if (sb.length() + read > MAX_STREAM_CHARS) {
+                    int allowed = Math.max(0, MAX_STREAM_CHARS - sb.length());
+                    sb.append(buf, 0, allowed);
+                    sb.append("\n... [Output truncated: exceeded 64KB limit]");
+                    break;
+                }
+                sb.append(buf, 0, read);
             }
             return sb.toString();
         }
