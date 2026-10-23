@@ -117,6 +117,10 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://katasphere.onrender.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://katasphere.onrender.com" />
+      </head>
       <body className="bg-background text-foreground font-sans antialiased selection:bg-brand-500 selection:text-white">
         <ThemeProvider>
           <AuthProvider>

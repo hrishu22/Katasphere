@@ -72,8 +72,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void unauthenticatedAuthMeShouldReturn401() throws Exception {
+    void unauthenticatedAuthMeShouldReturnOkWithNullData() throws Exception {
         mockMvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 }

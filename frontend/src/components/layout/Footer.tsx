@@ -12,7 +12,7 @@ export function Footer() {
               <Code2 className="h-4 w-4" />
             </div>
             <span className="font-semibold text-sm text-foreground">Katasphere</span>
-            <span className="text-slate-500 text-sm">— Practice. Improve. Repeat.</span>
+            <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">— Practice. Improve. Repeat.</span>
           </div>
 
           <div className="flex items-center space-x-6 text-sm text-slate-400">
@@ -23,7 +23,7 @@ export function Footer() {
               Dashboard
             </Link>
             <span className="text-slate-600">|</span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
               Backend API & Judge0 Execution Engine
             </span>
           </div>

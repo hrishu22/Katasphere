@@ -150,7 +150,7 @@ export default function LandingPage() {
 
             {/* Supported Languages Pills */}
             <div className="pt-8 flex flex-wrap items-center justify-center gap-2">
-              <span className="text-xs uppercase font-semibold text-slate-500 mr-2">
+              <span className="text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 mr-2">
                 Languages:
               </span>
               {languages.map((lang) => (
@@ -159,7 +159,7 @@ export default function LandingPage() {
                   className="px-3 py-1 rounded-md bg-surface-subtle border border-surface-border text-xs font-mono text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 shadow-sm"
                 >
                   <span className="text-brand-600 dark:text-brand-400 font-semibold">{lang.name}</span>
-                  <span className="text-slate-500">({lang.version})</span>
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">({lang.version})</span>
                 </div>
               ))}
             </div>
@@ -252,11 +252,12 @@ export default function LandingPage() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end space-x-6">
-                  <div className="text-xs text-slate-500 font-mono">
+                  <div className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                     Acceptance: <span className="font-semibold text-slate-800 dark:text-slate-200">{prob.acceptance}</span>
                   </div>
                   <Link
                     href={`/problems/${prob.slug}`}
+                    aria-label={`Solve ${prob.title} challenge`}
                     className="px-4 py-2 text-xs font-semibold rounded-lg bg-surface-subtle hover:bg-brand-600 text-slate-700 dark:text-slate-200 hover:text-white border border-surface-border hover:border-brand-500 transition shadow-sm"
                   >
                     Solve Challenge

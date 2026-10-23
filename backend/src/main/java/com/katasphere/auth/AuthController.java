@@ -81,8 +81,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<UserDto>> getCurrentUser(HttpServletRequest httpRequest) {
         HttpSession session = httpRequest.getSession(false);
         if (session == null || session.getAttribute("USER_ID") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Not authenticated"));
+            return ResponseEntity.ok(ApiResponse.ok("No active session", null));
         }
 
         UUID userId = (UUID) session.getAttribute("USER_ID");
@@ -91,8 +90,7 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.ok("User retrieved", user));
         } catch (IllegalArgumentException e) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("User session expired"));
+            return ResponseEntity.ok(ApiResponse.ok("User session expired", null));
         }
     }
 
