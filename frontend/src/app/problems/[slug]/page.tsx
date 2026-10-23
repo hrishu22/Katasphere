@@ -72,6 +72,7 @@ interface TestCaseResult {
   executionTimeMs?: number;
   memoryKb?: number;
   status: string;
+  stdout?: string | null;
 }
 
 interface ExecutionResult {
@@ -931,6 +932,15 @@ export default function ProblemWorkspacePage() {
                                 </div>
                               </div>
                             </div>
+
+                            {executionResult.testCases[selectedResultCaseIdx].stdout && (
+                              <div>
+                                <span className="text-slate-500 dark:text-slate-400">Stdout / Debug Console:</span>
+                                <div className="mt-1 p-2.5 rounded bg-surface-subtle border border-surface-border text-foreground font-mono text-xs whitespace-pre-wrap">
+                                  {executionResult.testCases[selectedResultCaseIdx].stdout}
+                                </div>
+                              </div>
+                            )}
 
                             {executionResult.testCases[selectedResultCaseIdx].error && (
                               <div>

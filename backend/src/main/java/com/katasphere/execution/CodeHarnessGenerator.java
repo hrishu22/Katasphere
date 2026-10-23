@@ -2,14 +2,19 @@ package com.katasphere.execution;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
 public class CodeHarnessGenerator {
 
+    public record ParsedOutput(String actualOutput, String userStdout) {}
+
     private static final Pattern PYTHON_FUNC_PATTERN = Pattern.compile("def\\s+([a-zA-Z0-9_]+)\\s*\\(");
     private static final Pattern JS_FUNC_PATTERN = Pattern.compile("function\\s+([a-zA-Z0-9_]+)\\s*\\(");
+    public static final String RET_DELIMITER = "__KATASPHERE_RET__:";
 
     /**
      * Prepares an executable harness wrapping the user's solution function and driving the test case input.
@@ -34,14 +39,12 @@ public class CodeHarnessGenerator {
 
     private String generatePythonHarness(String sourceCode, String input) {
         String cleanInput = input != null ? input.trim() : "";
-        // Detect function name
         String funcName = "solution";
         Matcher matcher = PYTHON_FUNC_PATTERN.matcher(sourceCode);
         if (matcher.find()) {
             funcName = matcher.group(1);
         }
 
-        // Format input lines for exec
         String formattedLines = cleanInput.replace(", ", "\n").replace(";", "\n");
 
         return sourceCode + "\n\n" +
@@ -72,11 +75,11 @@ public class CodeHarnessGenerator {
             "            else:\n" +
             "                res = func(*list(scope.values()))\n" +
             "            if isinstance(res, bool):\n" +
-            "                print(str(res).lower())\n" +
+            "                print('" + RET_DELIMITER + "' + str(res).lower())\n" +
             "            elif isinstance(res, (list, dict)):\n" +
-            "                print(json.dumps(res, separators=(',', ':')))\n" +
+            "                print('" + RET_DELIMITER + "' + json.dumps(res, separators=(',', ':')))\n" +
             "            else:\n" +
-            "                print(res)\n" +
+            "                print('" + RET_DELIMITER + "' + str(res))\n" +
             "        except Exception as e:\n" +
             "            sys.stderr.write(str(e))\n" +
             "            sys.exit(1)\n";
@@ -110,9 +113,9 @@ public class CodeHarnessGenerator {
             "        try {\n" +
             "            const res = fn.apply(null, Object.values(scope));\n" +
             "            if (typeof res === 'object') {\n" +
-            "                console.log(JSON.stringify(res));\n" +
+            "                console.log('" + RET_DELIMITER + "' + JSON.stringify(res));\n" +
             "            } else {\n" +
-            "                console.log(String(res));\n" +
+            "                console.log('" + RET_DELIMITER + "' + String(res));\n" +
             "            }\n" +
             "        } catch(err) {\n" +
             "            console.error(err);\n" +
@@ -123,11 +126,139 @@ public class CodeHarnessGenerator {
     }
 
     private String generateJavaHarness(String sourceCode, String input) {
-        // If code already contains public static void main, return as is
-        if (sourceCode.contains("public static void main")) {
-            return sourceCode;
+        String cleanInput = input != null ? input.trim() : "";
+        String escapedInput = cleanInput
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "");
+
+        StringBuilder userImports = new StringBuilder();
+        StringBuilder cleanCode = new StringBuilder();
+        for (String line : sourceCode.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("package ")) {
+                continue;
+            }
+            if (trimmed.startsWith("import ")) {
+                userImports.append(line).append("\n");
+            } else {
+                cleanCode.append(line).append("\n");
+            }
         }
-        return sourceCode;
+
+        String finalUserCode = cleanCode.toString().replaceAll("public\\s+class\\s+Solution", "class Solution");
+
+        return "import java.util.*;\n" +
+            "import java.util.stream.*;\n" +
+            "import java.lang.reflect.*;\n" +
+            userImports + "\n" +
+            "public class KatasphereRunner {\n" +
+            "    public static void main(String[] args) {\n" +
+            "        try {\n" +
+            "            String input = \"" + escapedInput + "\";\n" +
+            "            Class<?> clazz = Class.forName(\"Solution\");\n" +
+            "            Object instance = clazz.getDeclaredConstructor().newInstance();\n" +
+            "            List<String> raw = extractTokens(input);\n" +
+            "            Method targetMethod = null;\n" +
+            "            for (Method m : clazz.getDeclaredMethods()) {\n" +
+            "                if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers())) {\n" +
+            "                    if (m.getParameterCount() == raw.size() && m.getReturnType() != void.class) {\n" +
+            "                        targetMethod = m;\n" +
+            "                        break;\n" +
+            "                    }\n" +
+            "                    if (targetMethod == null) targetMethod = m;\n" +
+            "                }\n" +
+            "            }\n" +
+            "            if (targetMethod == null) {\n" +
+            "                System.err.println(\"No public solution method found in Solution\");\n" +
+            "                System.exit(1);\n" +
+            "            }\n" +
+            "            Class<?>[] paramTypes = targetMethod.getParameterTypes();\n" +
+            "            Object[] parsedArgs = new Object[paramTypes.length];\n" +
+            "            for (int i = 0; i < paramTypes.length && i < raw.size(); i++) {\n" +
+            "                parsedArgs[i] = convert(paramTypes[i], raw.get(i));\n" +
+            "            }\n" +
+            "            Object res = targetMethod.invoke(instance, parsedArgs);\n" +
+            "            String strRes;\n" +
+            "            if (res == null) strRes = \"null\";\n" +
+            "            else if (res instanceof int[]) strRes = Arrays.toString((int[]) res);\n" +
+            "            else if (res instanceof long[]) strRes = Arrays.toString((long[]) res);\n" +
+            "            else if (res instanceof double[]) strRes = String.format(Locale.US, \"%.5f\", (Double) res);\n" +
+            "            else if (res instanceof boolean[]) strRes = String.valueOf(res);\n" +
+            "            else if (res instanceof Object[]) strRes = Arrays.deepToString((Object[]) res);\n" +
+            "            else strRes = String.valueOf(res);\n" +
+            "            System.out.println(\"" + RET_DELIMITER + "\" + strRes);\n" +
+            "        } catch (Throwable t) {\n" +
+            "            Throwable cause = t.getCause() != null ? t.getCause() : t;\n" +
+            "            cause.printStackTrace(System.err);\n" +
+            "            System.exit(1);\n" +
+            "        }\n" +
+            "    }\n" +
+            "    static List<String> extractTokens(String input) {\n" +
+            "        List<String> tokens = new ArrayList<>();\n" +
+            "        if (input == null || input.isBlank()) return tokens;\n" +
+            "        int len = input.length(); int i = 0;\n" +
+            "        while (i < len) {\n" +
+            "            int eq = input.indexOf('=', i);\n" +
+            "            if (eq == -1) break;\n" +
+            "            i = eq + 1;\n" +
+            "            while (i < len && Character.isWhitespace(input.charAt(i))) i++;\n" +
+            "            int start = i;\n" +
+            "            if (i < len && input.charAt(i) == '\"') {\n" +
+            "                i++;\n" +
+            "                while (i < len && input.charAt(i) != '\"') {\n" +
+            "                    if (input.charAt(i) == '\\\\' && i + 1 < len) i++;\n" +
+            "                    i++;\n" +
+            "                }\n" +
+            "                if (i < len) i++;\n" +
+            "            } else if (i < len && input.charAt(i) == '[') {\n" +
+            "                int depth = 1; i++;\n" +
+            "                while (i < len && depth > 0) {\n" +
+            "                    if (input.charAt(i) == '[') depth++;\n" +
+            "                    else if (input.charAt(i) == ']') depth--;\n" +
+            "                    i++;\n" +
+            "                }\n" +
+            "            } else {\n" +
+            "                while (i < len && input.charAt(i) != ',') i++;\n" +
+            "            }\n" +
+            "            tokens.add(input.substring(start, i).trim());\n" +
+            "            while (i < len && (input.charAt(i) == ',' || Character.isWhitespace(input.charAt(i)))) i++;\n" +
+            "        }\n" +
+            "        return tokens;\n" +
+            "    }\n" +
+            "    static Object convert(Class<?> type, String val) {\n" +
+            "        val = val.trim();\n" +
+            "        if (type == int.class || type == Integer.class) return Integer.parseInt(val);\n" +
+            "        if (type == long.class || type == Long.class) return Long.parseLong(val);\n" +
+            "        if (type == double.class || type == Double.class) return Double.parseDouble(val);\n" +
+            "        if (type == boolean.class || type == Boolean.class) return Boolean.parseBoolean(val);\n" +
+            "        if (type == String.class) {\n" +
+            "            if (val.startsWith(\"\\\"\") && val.endsWith(\"\\\"\") && val.length() >= 2) {\n" +
+            "                return val.substring(1, val.length() - 1);\n" +
+            "            }\n" +
+            "            return val;\n" +
+            "        }\n" +
+            "        if (type == int[].class) {\n" +
+            "            val = val.replaceAll(\"[\\\\[\\\\]\\\\s]\", \"\");\n" +
+            "            if (val.isEmpty()) return new int[0];\n" +
+            "            String[] p = val.split(\",\");\n" +
+            "            int[] a = new int[p.length];\n" +
+            "            for (int k = 0; k < p.length; k++) a[k] = Integer.parseInt(p[k].trim());\n" +
+            "            return a;\n" +
+            "        }\n" +
+            "        if (type == double[].class) {\n" +
+            "            val = val.replaceAll(\"[\\\\[\\\\]\\\\s]\", \"\");\n" +
+            "            if (val.isEmpty()) return new double[0];\n" +
+            "            String[] p = val.split(\",\");\n" +
+            "            double[] a = new double[p.length];\n" +
+            "            for (int k = 0; k < p.length; k++) a[k] = Double.parseDouble(p[k].trim());\n" +
+            "            return a;\n" +
+            "        }\n" +
+            "        return val;\n" +
+            "    }\n" +
+            "}\n\n" +
+            finalUserCode;
     }
 
     private String generateCppHarness(String sourceCode, String input) {
@@ -138,13 +269,30 @@ public class CodeHarnessGenerator {
     }
 
     /**
+     * Splits process stdout into user console output (debug logs) and the function return value.
+     */
+    public ParsedOutput parseOutput(String rawStdout) {
+        if (rawStdout == null) {
+            return new ParsedOutput("", null);
+        }
+        int idx = rawStdout.indexOf(RET_DELIMITER);
+        if (idx != -1) {
+            String debug = rawStdout.substring(0, idx).trim();
+            String ret = rawStdout.substring(idx + RET_DELIMITER.length()).trim();
+            return new ParsedOutput(ret, debug.isEmpty() ? null : debug);
+        }
+        return new ParsedOutput(rawStdout.trim(), null);
+    }
+
+    /**
      * Normalizes output string for deterministic comparison.
      */
     public boolean compareOutputs(String actual, String expected) {
         if (actual == null && expected == null) return true;
         if (actual == null || expected == null) return false;
 
-        String a = normalize(actual);
+        ParsedOutput parsed = parseOutput(actual);
+        String a = normalize(parsed.actualOutput());
         String e = normalize(expected);
         return a.equals(e);
     }

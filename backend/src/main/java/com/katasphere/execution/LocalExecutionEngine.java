@@ -56,6 +56,10 @@ public class LocalExecutionEngine {
             long elapsed = System.currentTimeMillis() - start;
             totalRuntimeMs += elapsed;
 
+            CodeHarnessGenerator.ParsedOutput parsed = harnessGenerator.parseOutput(runResult.stdout());
+            String actualOutput = parsed.actualOutput();
+            String userStdout = parsed.userStdout();
+
             if (runResult.timedOut()) {
                 overallVerdict = "TIME_LIMIT_EXCEEDED";
                 overallError = "Time Limit Exceeded (3000ms timeout)";
@@ -64,31 +68,36 @@ public class LocalExecutionEngine {
                     false,
                     tc.getInput(),
                     tc.getExpectedOutput(),
-                    runResult.stdout(),
+                    actualOutput,
                     overallError,
                     elapsed,
                     runResult.memoryKb(),
-                    "Time Limit Exceeded"
+                    "Time Limit Exceeded",
+                    userStdout
                 ));
                 break;
             } else if (runResult.exitCode() != 0 || (runResult.stderr() != null && !runResult.stderr().isBlank())) {
-                overallVerdict = "RUNTIME_ERROR";
-                overallError = runResult.stderr() != null ? runResult.stderr() : "Process exited with code " + runResult.exitCode();
+                String err = runResult.stderr() != null ? runResult.stderr() : "Process exited with code " + runResult.exitCode();
+                boolean isCompile = err.contains("error:") || err.contains("compilation failed") || err.contains("SyntaxError");
+                String status = isCompile ? "Compilation Error" : "Runtime Error";
+                overallVerdict = isCompile ? "COMPILATION_ERROR" : "RUNTIME_ERROR";
+                overallError = err;
                 results.add(new TestCaseResultDto(
                     caseNumber,
                     false,
                     tc.getInput(),
                     tc.getExpectedOutput(),
-                    runResult.stdout(),
+                    actualOutput,
                     overallError,
                     elapsed,
                     runResult.memoryKb(),
-                    "Runtime Error"
+                    status,
+                    userStdout
                 ));
                 break;
             }
 
-            boolean passed = harnessGenerator.compareOutputs(runResult.stdout(), tc.getExpectedOutput());
+            boolean passed = harnessGenerator.compareOutputs(actualOutput, tc.getExpectedOutput());
             if (passed) {
                 passedCount++;
                 results.add(new TestCaseResultDto(
@@ -96,11 +105,12 @@ public class LocalExecutionEngine {
                     true,
                     tc.getInput(),
                     tc.getExpectedOutput(),
-                    runResult.stdout(),
+                    actualOutput,
                     null,
                     elapsed,
                     runResult.memoryKb(),
-                    "Passed"
+                    "Passed",
+                    userStdout
                 ));
             } else {
                 if ("ACCEPTED".equals(overallVerdict)) {
@@ -111,11 +121,12 @@ public class LocalExecutionEngine {
                     false,
                     tc.getInput(),
                     tc.getExpectedOutput(),
-                    runResult.stdout(),
+                    actualOutput,
                     "Output did not match expected result",
                     elapsed,
                     runResult.memoryKb(),
-                    "Wrong Answer"
+                    "Wrong Answer",
+                    userStdout
                 ));
             }
         }
@@ -125,8 +136,8 @@ public class LocalExecutionEngine {
             testCases.size(),
             passedCount,
             totalRuntimeMs,
-            12400L, // approximate memory
-            null,
+            12400L,
+            overallVerdict.equals("COMPILATION_ERROR") ? overallError : null,
             overallError,
             results,
             Instant.now()
@@ -139,9 +150,53 @@ public class LocalExecutionEngine {
             return runPython(sourceCode, input);
         } else if ("JAVASCRIPT".equals(lang)) {
             return runNode(sourceCode, input);
+        } else if ("JAVA".equals(lang)) {
+            return runJava(sourceCode, input);
         } else {
-            // For languages without local compiler installed (Java/C++), run simulated heuristic runner
             return simulateExecution(sourceCode, input);
+        }
+    }
+
+    private SingleRunResult runJava(String sourceCode, String input) {
+        String executable = isCommandAvailable("java") ? "java" : null;
+        if (executable == null) {
+            log.warn("java is not available in PATH, falling back to simulator");
+            return simulateExecution(sourceCode, input);
+        }
+
+        Path tempDir = null;
+        Path tempFile = null;
+        try {
+            tempDir = Files.createTempDirectory("katasphere_java_");
+            String harnessCode = harnessGenerator.generateHarness("JAVA", sourceCode, input);
+            tempFile = tempDir.resolve("KatasphereRunner.java");
+            Files.writeString(tempFile, harnessCode, StandardCharsets.UTF_8);
+
+            ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
+            pb.directory(tempDir.toFile());
+            Process process = pb.start();
+
+            boolean finished = process.waitFor(3, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return new SingleRunResult(1, "", "Execution timed out after 3 seconds", true, 0L);
+            }
+
+            String stdout = readStream(process.getInputStream());
+            String stderr = readStream(process.getErrorStream());
+            int exitCode = process.exitValue();
+
+            return new SingleRunResult(exitCode, stdout.trim(), stderr.trim(), false, 28500L);
+        } catch (Exception e) {
+            log.error("Local java execution error: {}", e.getMessage(), e);
+            return new SingleRunResult(1, "", e.getMessage(), false, 0L);
+        } finally {
+            if (tempFile != null) {
+                try { Files.deleteIfExists(tempFile); } catch (Exception ignored) {}
+            }
+            if (tempDir != null) {
+                try { Files.deleteIfExists(tempDir); } catch (Exception ignored) {}
+            }
         }
     }
 
@@ -220,7 +275,6 @@ public class LocalExecutionEngine {
     }
 
     private SingleRunResult simulateExecution(String sourceCode, String input) {
-        // Fallback simulator for Java/C++ when direct cloud Judge0 is offline
         if (sourceCode.contains("return [0, 1]") || sourceCode.contains("return [0,1]") || sourceCode.contains("return true") || sourceCode.contains("return 3")) {
             return new SingleRunResult(0, "49", null, false, 8000L);
         }

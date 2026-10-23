@@ -134,29 +134,33 @@ public class Judge0Adapter implements CodeExecutionProvider {
                         );
                     }
 
+                    CodeHarnessGenerator.ParsedOutput parsed = harnessGenerator.parseOutput(stdout);
+                    String actualOutput = parsed.actualOutput();
+                    String userStdout = parsed.userStdout();
+
                     if (statusId == 5) { // Time Limit Exceeded
                         overallVerdict = "TIME_LIMIT_EXCEEDED";
                         overallError = "Time Limit Exceeded";
-                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), stdout, "Time Limit Exceeded", caseRuntimeMs, memoryKb, "Time Limit Exceeded"));
+                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), actualOutput, "Time Limit Exceeded", caseRuntimeMs, memoryKb, "Time Limit Exceeded", userStdout));
                         break;
                     }
 
                     if (statusId >= 7 && statusId <= 12) { // Runtime Error
                         overallVerdict = "RUNTIME_ERROR";
                         overallError = stderr.isBlank() ? statusDesc : stderr;
-                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), stdout, overallError, caseRuntimeMs, memoryKb, "Runtime Error"));
+                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), actualOutput, overallError, caseRuntimeMs, memoryKb, "Runtime Error", userStdout));
                         break;
                     }
 
-                    boolean passed = harnessGenerator.compareOutputs(stdout, tc.getExpectedOutput());
+                    boolean passed = harnessGenerator.compareOutputs(actualOutput, tc.getExpectedOutput());
                     if (passed) {
                         passedCount++;
-                        results.add(new TestCaseResultDto(caseNumber, true, tc.getInput(), tc.getExpectedOutput(), stdout, null, caseRuntimeMs, memoryKb, "Passed"));
+                        results.add(new TestCaseResultDto(caseNumber, true, tc.getInput(), tc.getExpectedOutput(), actualOutput, null, caseRuntimeMs, memoryKb, "Passed", userStdout));
                     } else {
                         if ("ACCEPTED".equals(overallVerdict)) {
                             overallVerdict = "WRONG_ANSWER";
                         }
-                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), stdout, "Output did not match expected result", caseRuntimeMs, memoryKb, "Wrong Answer"));
+                        results.add(new TestCaseResultDto(caseNumber, false, tc.getInput(), tc.getExpectedOutput(), actualOutput, "Output did not match expected result", caseRuntimeMs, memoryKb, "Wrong Answer", userStdout));
                     }
                 } catch (Exception parseEx) {
                     log.error("Failed to parse Judge0 response: {}", parseEx.getMessage());
