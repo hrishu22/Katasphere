@@ -250,18 +250,13 @@ function CompaniesContent() {
 
             <div className="flex items-center space-x-2 w-full sm:w-auto">
               {!isUserPremium ? (
-                <button
-                  onClick={() => handleUpgradeOrToggle("upgrade")}
-                  disabled={isUpgrading}
+                <Link
+                  href="/pricing"
                   className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm transition flex items-center justify-center space-x-1.5"
                 >
-                  {isUpgrading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Zap className="h-3.5 w-3.5" />
-                  )}
+                  <Crown className="h-3.5 w-3.5" />
                   <span>Unlock Pro</span>
-                </button>
+                </Link>
               ) : (
                 <button
                   onClick={() => handleUpgradeOrToggle("toggle")}
@@ -507,13 +502,13 @@ function CompaniesContent() {
                       {/* Action Button */}
                       <div className="shrink-0 flex items-center justify-end">
                         {isLocked ? (
-                          <button
-                            onClick={() => handleUpgradeOrToggle("upgrade")}
+                          <Link
+                            href="/pricing"
                             className="px-4 py-2 rounded-lg bg-surface-subtle hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center space-x-1.5 transition"
                           >
                             <Lock className="h-3.5 w-3.5" />
                             <span>Unlock with Pro</span>
-                          </button>
+                          </Link>
                         ) : (
                           <Link
                             href={`/problems/${problem.slug}`}
@@ -571,18 +566,14 @@ function CompaniesContent() {
                   </div>
 
                   <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <button
-                      onClick={() => handleUpgradeOrToggle("upgrade")}
-                      disabled={isUpgrading}
+                    <Link
+                      href="/pricing"
                       className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-sm shadow-lg shadow-amber-500/20 transition flex items-center justify-center space-x-2"
                     >
-                      {isUpgrading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Crown className="h-4 w-4" />
-                      )}
+                      <Crown className="h-4 w-4" />
                       <span>Upgrade to Katasphere Pro</span>
-                    </button>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
 
                     <button
                       onClick={() => handleUpgradeOrToggle("toggle")}

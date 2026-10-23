@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Building2,
   Crown,
+  Sparkles,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -25,6 +26,23 @@ export function Navbar() {
   const { user, logout, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking anywhere outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+
+    if (userDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userDropdownOpen]);
 
   const isPremiumUser = Boolean(user && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN"));
 
@@ -33,6 +51,7 @@ export function Navbar() {
     { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
     { href: "/companies", label: "Companies", icon: Building2, isPro: true },
     { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
+    { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },
     ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false }] : []),
   ];
 
@@ -94,7 +113,7 @@ export function Navbar() {
             <ThemeToggle />
 
             {!isLoading && user ? (
-              <div className="relative">
+              <div ref={dropdownRef} className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center space-x-2.5 p-1.5 pr-3 rounded-full bg-surface border border-surface-border hover:border-slate-500 transition"
@@ -136,6 +155,19 @@ export function Navbar() {
                         </span>
                       </div>
                     </div>
+
+                    {!isPremiumUser && (
+                      <div className="p-2 border-b border-surface-border bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+                        <Link
+                          href="/pricing"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center justify-center space-x-1.5 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-xs transition"
+                        >
+                          <Crown className="h-3.5 w-3.5" />
+                          <span>Unlock Pro Access</span>
+                        </Link>
+                      </div>
+                    )}
 
                     <Link
                       href="/dashboard"
