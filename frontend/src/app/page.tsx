@@ -71,8 +71,47 @@ export default function LandingPage() {
     },
   ];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://katasphere.com/#website",
+        "url": "https://katasphere.com",
+        "name": "Katasphere",
+        "description":
+          "Full-stack algorithmic coding platform with multi-language execution engine and real-time test verification.",
+        "potentialAction": [
+          {
+            "@type": "SearchAction",
+            "target": "https://katasphere.com/problems?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        ],
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://katasphere.com/#software",
+        "name": "Katasphere",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "All",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+        },
+        "description":
+          "Solve algorithmic coding katas, execute code in isolated sandboxes across Java, Python, C++, and JavaScript, and master technical interviews.",
+      },
+    ],
+  };
+
   return (
     <AppShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-24 border-b border-surface-border">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))] pointer-events-none" />
