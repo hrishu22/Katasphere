@@ -6,9 +6,12 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Lightweight runtime stage
-FROM eclipse-temurin:17-jre-alpine
+# Stage 2: Runtime stage with JDK, Python 3, and Node.js for code execution sandboxing
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
+
+# Install Python 3 and Node.js so local execution engine supports all languages
+RUN apk add --no-cache python3 nodejs
 
 # Run as non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
