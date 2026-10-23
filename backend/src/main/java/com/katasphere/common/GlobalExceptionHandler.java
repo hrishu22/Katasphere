@@ -47,6 +47,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        String requestId = UUID.randomUUID().toString();
+        log.warn("Malformed JSON request [req={}]: {}", requestId, ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+            "BAD_REQUEST",
+            "Malformed JSON request body.",
+            requestId
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         String requestId = UUID.randomUUID().toString();
