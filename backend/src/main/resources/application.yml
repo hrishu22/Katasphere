@@ -23,6 +23,14 @@ spring:
 
 server:
   port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        name: KATASPHERE_SESSION
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}
+        max-age: 604800s
   error:
     include-message: always
     include-binding-errors: always

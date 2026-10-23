@@ -21,9 +21,11 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthRateLimiter rateLimiter;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuthRateLimiter rateLimiter) {
         this.authService = authService;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/register")
@@ -31,6 +33,13 @@ public class AuthController {
         @Valid @RequestBody RegisterRequest request,
         HttpServletRequest httpRequest
     ) {
+        String clientIp = resolveClientIp(httpRequest);
+        if (!rateLimiter.tryAcquireRegister(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                ApiResponse.error("Too many registration attempts. Please wait a minute before creating a new account.")
+            );
+        }
+
         UserDto user = authService.register(request);
         establishSession(httpRequest, user);
 
@@ -43,6 +52,13 @@ public class AuthController {
         @Valid @RequestBody LoginRequest request,
         HttpServletRequest httpRequest
     ) {
+        String clientIp = resolveClientIp(httpRequest);
+        if (!rateLimiter.tryAcquireLogin(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                ApiResponse.error("Too many failed attempts. Please wait 60 seconds before trying again.")
+            );
+        }
+
         UserDto user = authService.authenticate(request);
         establishSession(httpRequest, user);
 
@@ -81,7 +97,13 @@ public class AuthController {
     }
 
     private void establishSession(HttpServletRequest httpRequest, UserDto user) {
-        HttpSession session = httpRequest.getSession(true);
+        HttpSession session = httpRequest.getSession(false);
+        if (session != null) {
+            httpRequest.changeSessionId();
+        } else {
+            session = httpRequest.getSession(true);
+        }
+
         session.setAttribute("USER_ID", user.id());
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
@@ -93,5 +115,13 @@ public class AuthController {
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
         session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

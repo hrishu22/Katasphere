@@ -14,6 +14,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
 logging:
   level:
     com.katasphere: INFO

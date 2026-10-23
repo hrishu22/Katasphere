@@ -197,13 +197,20 @@ public class LocalExecutionEngine {
             tempFile = tempDir.resolve("KatasphereRunner.java");
             Files.writeString(tempFile, harnessCode, StandardCharsets.UTF_8);
 
-            ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
+            ProcessBuilder pb = new ProcessBuilder(
+                executable,
+                "-Xmx128m",
+                "-Xms32m",
+                "-XX:+UseSerialGC",
+                tempFile.toAbsolutePath().toString()
+            );
             pb.directory(tempDir.toFile());
             sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
             if (!finished) {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 return new SingleRunResult(1, "", "Execution timed out after 3 seconds", true, 0L);
             }
@@ -239,13 +246,16 @@ public class LocalExecutionEngine {
             tempFile = Files.createTempFile("katasphere_py_", ".py");
             Files.writeString(tempFile, harnessCode, StandardCharsets.UTF_8);
 
-            ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
+            // -I: isolated mode (ignore PYTHON* env vars, do not import user site-packages)
+            // -B: don't write .pyc bytecode files to disk
+            ProcessBuilder pb = new ProcessBuilder(executable, "-I", "-B", tempFile.toAbsolutePath().toString());
             pb.redirectErrorStream(false);
             sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
             if (!finished) {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 return new SingleRunResult(1, "", "Execution timed out after 3 seconds", true, 0L);
             }
@@ -278,12 +288,14 @@ public class LocalExecutionEngine {
             tempFile = Files.createTempFile("katasphere_js_", ".js");
             Files.writeString(tempFile, harnessCode, StandardCharsets.UTF_8);
 
-            ProcessBuilder pb = new ProcessBuilder(executable, tempFile.toAbsolutePath().toString());
+            // --max-old-space-size=128: limits V8 heap memory to 128MB
+            ProcessBuilder pb = new ProcessBuilder(executable, "--max-old-space-size=128", tempFile.toAbsolutePath().toString());
             sanitizeEnvironment(pb);
             Process process = pb.start();
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
             if (!finished) {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 return new SingleRunResult(1, "", "Execution timed out after 3 seconds", true, 0L);
             }
