@@ -1,24 +1,7 @@
 import { MetadataRoute } from "next";
+import { INITIAL_PROBLEMS } from "@/lib/problems-catalog";
 
-const DEFAULT_SLUGS = [
-  "two-sum",
-  "3sum",
-  "longest-substring-without-repeating-characters",
-  "best-time-to-buy-and-sell-stock",
-  "valid-parentheses",
-  "valid-palindrome",
-  "container-with-most-water",
-  "maximum-subarray",
-  "climbing-stairs",
-  "reverse-linked-list",
-  "merge-two-sorted-lists",
-  "invert-binary-tree",
-  "binary-tree-level-order-traversal",
-  "kth-largest-element-in-an-array",
-  "product-of-array-except-self",
-  "group-anagrams",
-  "search-in-rotated-sorted-array",
-];
+const DEFAULT_SLUGS = INITIAL_PROBLEMS.map((p) => p.slug);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://katasphere.com";
