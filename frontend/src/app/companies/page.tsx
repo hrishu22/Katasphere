@@ -27,18 +27,11 @@ import {
   Zap,
 } from "lucide-react";
 
-interface CompanySummary {
-  name: string;
-  slug: string;
-  accentColor: string;
-  description: string;
-  interviewRounds: string;
-  totalProblems: number;
-  easyCount: number;
-  mediumCount: number;
-  hardCount: number;
-  isPremium: boolean;
-}
+import {
+  INITIAL_COMPANIES,
+  INITIAL_PROBLEMS,
+  CompanySummary,
+} from "@/lib/problems-catalog";
 
 interface CompanyProblem {
   id: string;
@@ -63,6 +56,37 @@ interface ApiResponse<T> {
   data: T;
 }
 
+function getFallbackCompanyDetail(slug: string, isPremium: boolean): CompanyDetailResponse | null {
+  const company = INITIAL_COMPANIES.find((c) => c.slug === slug);
+  if (!company) return null;
+
+  const matchingProblems = INITIAL_PROBLEMS.filter((p) =>
+    p.tags.some((t) => t.slug.toLowerCase() === slug.toLowerCase())
+  );
+
+  const problems: CompanyProblem[] = matchingProblems.map((p, idx) => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    difficulty: p.difficulty,
+    frequencyPercent: Math.max(65, 92 - idx * 4),
+    typicalRound:
+      idx === 0
+        ? "Online Assessment (OA)"
+        : idx === 1
+        ? "Technical Phone Screen"
+        : "Onsite Round 1 (DSA)",
+    tags: p.tags.map((t) => t.name),
+    isLocked: !isPremium && idx >= 2,
+  }));
+
+  return {
+    company,
+    isUnlocked: isPremium,
+    problems,
+  };
+}
+
 function CompaniesContent() {
   const searchParams = useSearchParams();
   const initialCompany = searchParams.get("company") || "google";
@@ -70,12 +94,14 @@ function CompaniesContent() {
   const { user, isLoading: authLoading, upgradeToPremium, togglePremium } = useAuth();
   const isUserPremium = Boolean(user && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN"));
 
-  const [companies, setCompanies] = useState<CompanySummary[]>([]);
+  const [companies, setCompanies] = useState<CompanySummary[]>(INITIAL_COMPANIES);
   const [selectedSlug, setSelectedSlug] = useState<string>(initialCompany);
-  const [companyDetail, setCompanyDetail] = useState<CompanyDetailResponse | null>(null);
+  const [companyDetail, setCompanyDetail] = useState<CompanyDetailResponse | null>(() =>
+    getFallbackCompanyDetail(initialCompany, isUserPremium)
+  );
 
-  const [loadingCompanies, setLoadingCompanies] = useState(true);
-  const [loadingDetail, setLoadingDetail] = useState(true);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,42 +109,44 @@ function CompaniesContent() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Fetch Companies List
+  // Fetch Companies List from Live Backend
   useEffect(() => {
     async function loadCompanies() {
       try {
-        setLoadingCompanies(true);
-        const res = await apiClient<ApiResponse<CompanySummary[]>>("/api/v1/companies");
-        if (res && res.data) {
+        const res = await apiClient<ApiResponse<CompanySummary[]>>("/api/v1/companies", { timeoutMs: 8000 });
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           setCompanies(res.data);
-          // If the initial slug doesn't match any company, pick the first
-          if (!res.data.some((c) => c.slug === selectedSlug) && res.data.length > 0) {
+          if (!res.data.some((c) => c.slug === selectedSlug)) {
             setSelectedSlug(res.data[0].slug);
           }
         }
       } catch (err: any) {
-        setError("Failed to load company directory.");
-      } finally {
-        setLoadingCompanies(false);
+        // Keep initial curated companies
       }
     }
     loadCompanies();
   }, []);
 
-  // Fetch Selected Company Details
+  // Fetch Selected Company Details with Live Sync
   const fetchCompanyDetails = useCallback(async (slug: string) => {
-    setLoadingDetail(true);
+    // If we don't have companyDetail for this slug yet, load the fallback immediately
+    setCompanyDetail((prev) => {
+      if (prev?.company.slug === slug) return prev;
+      return getFallbackCompanyDetail(slug, isUserPremium);
+    });
+
     try {
-      const res = await apiClient<ApiResponse<CompanyDetailResponse>>(`/api/v1/companies/${slug}`);
-      if (res && res.data) {
+      const res = await apiClient<ApiResponse<CompanyDetailResponse>>(
+        `/api/v1/companies/${slug}`,
+        { timeoutMs: 9000 }
+      );
+      if (res && res.data && res.data.problems) {
         setCompanyDetail(res.data);
       }
     } catch (err: any) {
-      console.error("Failed to load company detail", err);
-    } finally {
-      setLoadingDetail(false);
+      console.warn("Company detail live sync notice:", err?.message || err);
     }
-  }, []);
+  }, [isUserPremium]);
 
   useEffect(() => {
     if (selectedSlug) {
@@ -316,7 +344,7 @@ function CompaniesContent() {
         </div>
 
         {/* Selected Company Focus Section */}
-        {loadingDetail ? (
+        {loadingDetail && !currentCompany ? (
           <div className="p-16 text-center rounded-2xl bg-surface border border-surface-border space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-brand-500 mx-auto" />
             <p className="text-sm text-slate-500">Loading {selectedSlug} interview questions...</p>

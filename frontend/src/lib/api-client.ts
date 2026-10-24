@@ -39,7 +39,7 @@ export function getApiBaseUrl(): string {
 
 export async function apiClient<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & { timeoutMs?: number } = {}
 ): Promise<T> {
   const url = endpoint.startsWith("http")
     ? endpoint
@@ -51,31 +51,47 @@ export async function apiClient<T>(
     ...options.headers,
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: "include", // Required for HttpOnly session cookie transmission
-  });
+  const timeoutMs = options.timeoutMs ?? 15000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    let errorDetails: ApiErrorResponse | undefined;
-    try {
-      errorDetails = await response.json();
-    } catch {
-      // Fallback if response is not JSON
+  const signal = options.signal || controller.signal;
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal,
+      headers,
+      credentials: "include", // Required for HttpOnly session cookie transmission
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorDetails: ApiErrorResponse | undefined;
+      try {
+        errorDetails = await response.json();
+      } catch {
+        // Fallback if response is not JSON
+      }
+
+      const errorMessage =
+        errorDetails?.message || `API request failed with status ${response.status}`;
+      throw new ApiError(response.status, errorMessage, errorDetails);
     }
 
-    const errorMessage =
-      errorDetails?.message || `API request failed with status ${response.status}`;
-    throw new ApiError(response.status, errorMessage, errorDetails);
-  }
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return {} as T;
+    }
 
-  // Handle 204 No Content
-  if (response.status === 204) {
-    return {} as T;
+    return response.json() as Promise<T>;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      throw new ApiError(504, `Request timed out after ${timeoutMs / 1000}s`);
+    }
+    throw err;
   }
-
-  return response.json() as Promise<T>;
 }
 
 // Health check convenience function

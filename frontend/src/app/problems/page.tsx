@@ -20,20 +20,12 @@ import {
   Target,
 } from "lucide-react";
 
-interface TagDto {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface ProblemSummary {
-  id: string;
-  slug: string;
-  title: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  tags: TagDto[];
-  acceptanceRate: string;
-}
+import {
+  INITIAL_PROBLEMS,
+  INITIAL_TAGS,
+  TagDto,
+  ProblemSummary,
+} from "@/lib/problems-catalog";
 
 interface PageResponse<T> {
   content: T[];
@@ -49,10 +41,40 @@ interface ApiResponse<T> {
   data: T;
 }
 
+function filterFallbackProblems(
+  catalog: ProblemSummary[],
+  search: string,
+  difficulty: string,
+  tag: string
+): ProblemSummary[] {
+  return catalog.filter((p) => {
+    const query = search.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      p.title.toLowerCase().includes(query) ||
+      p.tags.some((t) => t.name.toLowerCase().includes(query) || t.slug.toLowerCase().includes(query));
+
+    const matchesDiff =
+      difficulty === "ALL" || p.difficulty.toUpperCase() === difficulty.toUpperCase();
+
+    const matchesTag =
+      !tag ||
+      p.tags.some(
+        (t) =>
+          t.slug.toLowerCase() === tag.toLowerCase() ||
+          t.name.toLowerCase() === tag.toLowerCase()
+      );
+
+    return matchesSearch && matchesDiff && matchesTag;
+  });
+}
+
 export default function ProblemsPage() {
-  const [problems, setProblems] = useState<ProblemSummary[]>([]);
-  const [tags, setTags] = useState<TagDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [problems, setProblems] = useState<ProblemSummary[]>(INITIAL_PROBLEMS);
+  const [tags, setTags] = useState<TagDto[]>(INITIAL_TAGS);
+  const [loading, setLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(true);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -60,27 +82,40 @@ export default function ProblemsPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [page, setPage] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
+  const [totalElements, setTotalElements] = useState(INITIAL_PROBLEMS.length);
 
-  // Fetch Tags
+  // Fetch Tags from Backend
   useEffect(() => {
     async function fetchTags() {
       try {
-        const res = await apiClient<ApiResponse<TagDto[]>>("/api/v1/tags");
-        if (res && res.data) {
-          setTags(res.data);
+        const res = await apiClient<ApiResponse<TagDto[]>>("/api/v1/tags", { timeoutMs: 7000 });
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+          // Merge unique tags
+          const existingSlugs = new Set(INITIAL_TAGS.map((t) => t.slug.toLowerCase()));
+          const newTags = res.data.filter((t) => !existingSlugs.has(t.slug.toLowerCase()));
+          setTags([...INITIAL_TAGS, ...newTags]);
         }
       } catch (err) {
-        console.error("Failed to load tags", err);
+        // Retain initial curated tags
       }
     }
     fetchTags();
   }, []);
 
-  // Fetch Problems
+  // Fetch Problems from Backend with instant fallback
   const fetchProblems = useCallback(async () => {
-    setLoading(true);
     setError(null);
+    setIsSyncing(true);
+
+    // Apply immediate client-side filter so UI never waits
+    const localFiltered = filterFallbackProblems(
+      INITIAL_PROBLEMS,
+      search,
+      selectedDifficulty,
+      selectedTag
+    );
+    setProblems(localFiltered);
+    setTotalElements(localFiltered.length);
 
     try {
       const params = new URLSearchParams();
@@ -93,17 +128,21 @@ export default function ProblemsPage() {
       params.append("size", "20");
 
       const res = await apiClient<ApiResponse<PageResponse<ProblemSummary>>>(
-        `/api/v1/problems?${params.toString()}`
+        `/api/v1/problems?${params.toString()}`,
+        { timeoutMs: 9000 }
       );
 
-      if (res && res.data) {
-        setProblems(res.data.content || []);
-        setTotalElements(res.data.totalElements || 0);
+      if (res && res.data && Array.isArray(res.data.content) && res.data.content.length > 0) {
+        setProblems(res.data.content);
+        setTotalElements(res.data.totalElements || res.data.content.length);
+        setIsLiveConnected(true);
       }
     } catch (err: any) {
-      setError("Unable to load problem catalog. Please ensure the backend is running.");
+      console.warn("Live database sync notice (using offline catalog):", err?.message || err);
+      setIsLiveConnected(false);
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
   }, [search, selectedDifficulty, selectedTag, page]);
 
@@ -151,9 +190,22 @@ export default function ProblemsPage() {
             >
               <span>+ Add Challenge</span>
             </Link>
-            <div className="text-xs text-slate-500 font-mono hidden sm:block">
-              <span className="font-bold text-foreground">{problems.length}</span> of{" "}
-              <span className="font-bold text-foreground">{totalElements}</span> challenges
+            <div className="flex items-center space-x-2 text-xs">
+              {isSyncing ? (
+                <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/25 text-[11px] font-medium animate-pulse">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Syncing database...</span>
+                </span>
+              ) : isLiveConnected ? (
+                <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 text-[11px] font-medium">
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>Live DB</span>
+                </span>
+              ) : null}
+              <div className="text-xs text-slate-500 font-mono hidden sm:block">
+                <span className="font-bold text-foreground">{problems.length}</span> of{" "}
+                <span className="font-bold text-foreground">{totalElements}</span> challenges
+              </div>
             </div>
           </div>
         </div>
@@ -335,12 +387,12 @@ export default function ProblemsPage() {
         </div>
 
         {/* Problems List */}
-        {loading ? (
+        {loading && problems.length === 0 ? (
           <div className="p-16 text-center rounded-xl bg-surface border border-surface-border space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-brand-500 mx-auto" />
             <p className="text-sm text-slate-500">Loading catalog from database...</p>
           </div>
-        ) : error ? (
+        ) : error && problems.length === 0 ? (
           <div className="p-8 text-center rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 space-y-2">
             <AlertCircle className="h-8 w-8 mx-auto" />
             <p className="text-sm font-medium">{error}</p>
