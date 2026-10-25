@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft,
   Play,
@@ -20,6 +21,11 @@ import {
   ChevronUp,
   ChevronDown,
   Terminal,
+  Lock,
+  X,
+  LogIn,
+  UserPlus,
+  Sparkles,
 } from "lucide-react";
 
 export interface TagDto {
@@ -114,6 +120,10 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
       initialStarters = {};
     }
   }
+
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAction, setAuthAction] = useState<"run" | "submit">("run");
 
   const [problem, setProblem] = useState<ProblemDetail | null>(initialProblem || null);
   const [loading, setLoading] = useState(!initialProblem);
@@ -283,6 +293,12 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   };
 
   const handleRunCode = async () => {
+    if (!user) {
+      setAuthAction("run");
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!slug || isRunning || isSubmitting) return;
     setIsRunning(true);
     setSubmissionResult(null);
@@ -304,6 +320,11 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
         setSelectedResultCaseIdx(0);
       }
     } catch (err: any) {
+      if (err?.status === 401) {
+        setAuthAction("run");
+        setShowAuthModal(true);
+        return;
+      }
       setExecutionResult({
         verdict: "INTERNAL_ERROR",
         totalTestCases: 0,
@@ -320,6 +341,12 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      setAuthAction("submit");
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!slug || isRunning || isSubmitting) return;
     setIsSubmitting(true);
     setExecutionResult(null);
@@ -340,6 +367,11 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
         setSubmissionResult(res.data);
       }
     } catch (err: any) {
+      if (err?.status === 401) {
+        setAuthAction("submit");
+        setShowAuthModal(true);
+        return;
+      }
       setSubmissionResult({
         id: "",
         problemSlug: slug,
@@ -480,9 +512,12 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             onClick={handleRunCode}
             disabled={isRunning || isSubmitting}
             className="px-3.5 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-surface-border text-xs font-semibold text-foreground transition flex items-center space-x-1.5 disabled:opacity-50"
+            title={!user ? "Sign in required to run code" : "Run code against sample test cases"}
           >
             {isRunning ? (
               <Loader2 className="h-3 w-3 animate-spin text-brand-500" />
+            ) : !user ? (
+              <Lock className="h-3 w-3 text-amber-500" />
             ) : (
               <Play className="h-3 w-3 text-emerald-500 fill-emerald-500" />
             )}
@@ -493,9 +528,12 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             onClick={handleSubmit}
             disabled={isRunning || isSubmitting}
             className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition flex items-center space-x-1.5 disabled:opacity-50"
+            title={!user ? "Sign in required to submit code" : "Submit solution for automated grading"}
           >
             {isSubmitting ? (
               <Loader2 className="h-3 w-3 animate-spin" />
+            ) : !user ? (
+              <Lock className="h-3 w-3 text-white/80" />
             ) : (
               <Send className="h-3 w-3" />
             )}
@@ -1023,6 +1061,28 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
                       </div>
                     )}
                   </div>
+                ) : !user ? (
+                  <div className="py-6 text-center space-y-3 text-slate-500 dark:text-slate-400">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 mx-auto">
+                      <Lock className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-foreground">Sign in to Run & Submit Code</h4>
+                      <p className="text-xs max-w-sm mx-auto">
+                        Execute against test cases in isolated sandboxes, view real-time diagnostics, and save your submissions.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setAuthAction("run");
+                        setShowAuthModal(true);
+                      }}
+                      className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition"
+                    >
+                      <LogIn className="h-3.5 w-3.5" />
+                      <span>Sign In to Continue</span>
+                    </button>
+                  </div>
                 ) : (
                   <div className="py-6 text-center space-y-2 text-slate-500 dark:text-slate-400">
                     <div className="h-9 w-9 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-500 mx-auto">
@@ -1042,6 +1102,81 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           </div>
         </div>
       </div>
+
+      {/* Authentication Required Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-md rounded-2xl bg-surface border border-surface-border shadow-2xl p-6 space-y-5 animate-in zoom-in-95">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute right-4 top-4 p-1.5 rounded-lg text-slate-400 hover:text-foreground hover:bg-surface-subtle transition"
+              aria-label="Close modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-start space-x-3.5">
+              <div className="h-11 w-11 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">
+                  {authAction === "run" ? "Sign in to Run Code" : "Sign in to Submit Solution"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  An active account is required to execute code in isolated runtime environments.
+                </p>
+              </div>
+            </div>
+
+            {/* Perks */}
+            <div className="p-3.5 rounded-xl bg-surface-subtle border border-surface-border space-y-2 text-xs">
+              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Multi-language sandboxes (Python, Java, C++, JS)</span>
+              </div>
+              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Runtime & memory consumption benchmarking</span>
+              </div>
+              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Track Blind 75 and SDE-1 roadmap progress</span>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="space-y-2 pt-1">
+              <Link
+                href={`/login?redirect=${encodeURIComponent(`/problems/${slug}`)}`}
+                className="w-full py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold text-center block transition shadow-sm flex items-center justify-center space-x-2"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>Sign In to Continue</span>
+              </Link>
+
+              <Link
+                href={`/register?redirect=${encodeURIComponent(`/problems/${slug}`)}`}
+                className="w-full py-2.5 px-4 rounded-lg bg-surface-subtle border border-surface-border hover:bg-surface-muted text-foreground text-sm font-semibold text-center block transition flex items-center justify-center space-x-2"
+              >
+                <UserPlus className="h-4 w-4 text-slate-400" />
+                <span>Create Free Account</span>
+              </Link>
+            </div>
+
+            <div className="text-center">
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="text-xs text-slate-400 hover:text-foreground transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

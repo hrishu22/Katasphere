@@ -40,6 +40,13 @@ public class SubmissionController {
         @Valid @RequestBody RunCodeRequest request,
         HttpServletRequest httpRequest
     ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiResponse.error("Authentication required. Please sign in to run code.")
+            );
+        }
+
         String clientIp = resolveClientIp(httpRequest);
         if (!rateLimiter.tryAcquire(clientIp)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
@@ -57,6 +64,13 @@ public class SubmissionController {
         @Valid @RequestBody SubmitCodeRequest request,
         HttpServletRequest httpRequest
     ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiResponse.error("Authentication required. Please sign in to submit code.")
+            );
+        }
+
         String clientIp = resolveClientIp(httpRequest);
         if (!rateLimiter.tryAcquire(clientIp)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
@@ -65,7 +79,6 @@ public class SubmissionController {
             );
         }
 
-        User user = resolveCurrentUser(httpRequest);
         SubmissionDto submission = executionService.submitCode(request, user);
         return ResponseEntity.ok(ApiResponse.ok("Code submitted successfully", submission));
     }
@@ -76,6 +89,12 @@ public class SubmissionController {
         HttpServletRequest httpRequest
     ) {
         User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiResponse.error("Authentication required. Please sign in to view submissions.")
+            );
+        }
+
         List<SubmissionDto> submissions = executionService.getProblemSubmissions(user, slug);
         return ResponseEntity.ok(ApiResponse.ok("Submissions retrieved", submissions));
     }
