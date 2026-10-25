@@ -23,7 +23,7 @@ import {
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -112,7 +112,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-3">
             <ThemeToggle />
 
-            {!isLoading && user ? (
+            {user ? (
               <div ref={dropdownRef} className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -199,7 +199,7 @@ export function Navbar() {
                   </div>
                 )}
               </div>
-            ) : !isLoading ? (
+            ) : (
               <div className="flex items-center space-x-2">
                 <Link
                   href="/login"
@@ -214,7 +214,7 @@ export function Navbar() {
                   Create Account
                 </Link>
               </div>
-            ) : null}
+            )}
           </div>
 
           {/* Mobile menu button */}

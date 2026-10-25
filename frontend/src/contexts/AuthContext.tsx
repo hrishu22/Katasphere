@@ -41,16 +41,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Initialize cached user from localStorage immediately on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("katasphere_user");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === "object" && parsed.email) {
+          setUser(parsed);
+          setIsLoading(false);
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
   const refreshUser = useCallback(async () => {
     try {
-      const response = await apiClient<ApiResponse<User>>("/api/v1/auth/me");
+      // 4000ms max timeout so auth check never hangs the page
+      const response = await apiClient<ApiResponse<User>>("/api/v1/auth/me", { timeoutMs: 4000 });
       if (response && response.data) {
         setUser(response.data);
+        try {
+          localStorage.setItem("katasphere_user", JSON.stringify(response.data));
+        } catch {}
       } else {
         setUser(null);
+        try {
+          localStorage.removeItem("katasphere_user");
+        } catch {}
       }
-    } catch (err) {
-      setUser(null);
+    } catch (err: any) {
+      // Only clear user on explicit 401 Unauthorized
+      if (err instanceof ApiError && err.status === 401) {
+        setUser(null);
+        try {
+          localStorage.removeItem("katasphere_user");
+        } catch {}
+      }
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const loggedInUser = response.data.user;
     setUser(loggedInUser);
+    try {
+      localStorage.setItem("katasphere_user", JSON.stringify(loggedInUser));
+    } catch {}
     return loggedInUser;
   };
 
@@ -79,6 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const registeredUser = response.data.user;
     setUser(registeredUser);
+    try {
+      localStorage.setItem("katasphere_user", JSON.stringify(registeredUser));
+    } catch {}
     return registeredUser;
   };
 
@@ -89,6 +124,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ignore network errors on logout
     } finally {
       setUser(null);
+      try {
+        localStorage.removeItem("katasphere_user");
+      } catch {}
     }
   };
 
@@ -98,6 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const updatedUser = response.data;
     setUser(updatedUser);
+    try {
+      localStorage.setItem("katasphere_user", JSON.stringify(updatedUser));
+    } catch {}
     return updatedUser;
   };
 
@@ -107,6 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const updatedUser = response.data;
     setUser(updatedUser);
+    try {
+      localStorage.setItem("katasphere_user", JSON.stringify(updatedUser));
+    } catch {}
     return updatedUser;
   };
 
