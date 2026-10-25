@@ -18,7 +18,6 @@ import {
   Building2,
   Crown,
   Target,
-  Globe,
   Flame,
 } from "lucide-react";
 
@@ -162,13 +161,12 @@ export default function ProblemsPage() {
   };
 
   const COMPANY_SLUGS = ["amazon", "google", "meta", "microsoft", "apple", "uber", "bloomberg", "netflix"];
-  const PLATFORM_SLUGS = ["leetcode", "geeksforgeeks"];
   const companyTags = tags.filter((t) => COMPANY_SLUGS.includes(t.slug.toLowerCase()));
-  const platformTags = tags.filter((t) => PLATFORM_SLUGS.includes(t.slug.toLowerCase()));
   const topicTags = tags.filter(
     (t) =>
       !COMPANY_SLUGS.includes(t.slug.toLowerCase()) &&
-      !PLATFORM_SLUGS.includes(t.slug.toLowerCase()) &&
+      t.slug.toLowerCase() !== "leetcode" &&
+      t.slug.toLowerCase() !== "geeksforgeeks" &&
       t.slug.toLowerCase() !== "sde-1" &&
       t.slug.toLowerCase() !== "blind-75"
   );
@@ -332,52 +330,6 @@ export default function ProblemsPage() {
             </div>
           </div>
 
-          {/* Platform Source Filter Chips */}
-          <div className="flex items-center space-x-2 overflow-x-auto pt-3 border-t border-surface-border pb-1 text-xs">
-            <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-              <Globe className="h-3.5 w-3.5 text-brand-500" /> Platform:
-            </span>
-            <button
-              onClick={() => {
-                if (PLATFORM_SLUGS.includes(selectedTag.toLowerCase())) setSelectedTag("");
-                setPage(0);
-              }}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition ${
-                !PLATFORM_SLUGS.includes(selectedTag.toLowerCase())
-                  ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
-                  : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => {
-                setSelectedTag(selectedTag.toLowerCase() === "leetcode" ? "" : "leetcode");
-                setPage(0);
-              }}
-              className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition flex items-center gap-1.5 border ${
-                selectedTag.toLowerCase() === "leetcode"
-                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
-                  : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
-              }`}
-            >
-              <span>🟡 LeetCode Curated</span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedTag(selectedTag.toLowerCase() === "geeksforgeeks" ? "" : "geeksforgeeks");
-                setPage(0);
-              }}
-              className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition flex items-center gap-1.5 border ${
-                selectedTag.toLowerCase() === "geeksforgeeks"
-                  ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
-                  : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
-              }`}
-            >
-              <span>🟢 GeeksforGeeks Must-Do</span>
-            </button>
-          </div>
-
           {/* Company Filter Chips */}
           {companyTags.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pt-3 border-t border-surface-border pb-1 text-xs">
@@ -515,33 +467,33 @@ export default function ProblemsPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 pl-7">
-                    {problem.tags.map((t) => {
-                      const isCompany = COMPANY_SLUGS.includes(t.slug.toLowerCase());
-                      const isSde1 = t.slug.toLowerCase() === "sde-1";
-                      const isBlind75 = t.slug.toLowerCase() === "blind-75";
-                      const isLeetcode = t.slug.toLowerCase() === "leetcode";
-                      const isGfg = t.slug.toLowerCase() === "geeksforgeeks";
-                      return (
-                        <span
-                          key={t.id}
-                          className={`text-[11px] px-2 py-0.5 rounded border font-mono ${
-                            isBlind75
-                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-semibold"
-                              : isSde1
-                              ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 font-semibold"
-                              : isLeetcode
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 font-medium"
-                              : isGfg
-                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 font-medium"
-                              : isCompany
-                              ? "bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/30 font-semibold"
-                              : "bg-surface-subtle text-slate-600 dark:text-slate-400 border-surface-border"
-                          }`}
-                        >
-                          {t.name}
-                        </span>
-                      );
-                    })}
+                    {problem.tags
+                      .filter(
+                        (t) =>
+                          t.slug.toLowerCase() !== "leetcode" &&
+                          t.slug.toLowerCase() !== "geeksforgeeks"
+                      )
+                      .map((t) => {
+                        const isCompany = COMPANY_SLUGS.includes(t.slug.toLowerCase());
+                        const isSde1 = t.slug.toLowerCase() === "sde-1";
+                        const isBlind75 = t.slug.toLowerCase() === "blind-75";
+                        return (
+                          <span
+                            key={t.id}
+                            className={`text-[11px] px-2 py-0.5 rounded border font-mono ${
+                              isBlind75
+                                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-semibold"
+                                : isSde1
+                                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 font-semibold"
+                                : isCompany
+                                ? "bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/30 font-semibold"
+                                : "bg-surface-subtle text-slate-600 dark:text-slate-400 border-surface-border"
+                            }`}
+                          >
+                            {t.name}
+                          </span>
+                        );
+                      })}
                   </div>
                 </div>
 
