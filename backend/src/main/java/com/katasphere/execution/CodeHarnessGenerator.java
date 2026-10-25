@@ -147,23 +147,30 @@ public class CodeHarnessGenerator {
             }
         }
 
-        String finalUserCode = cleanCode.toString().replaceAll("public\\s+class\\s+Solution", "class Solution");
+        String className = "Solution";
+        Matcher classMatcher = Pattern.compile("(?:public\\s+)?class\\s+([A-Za-z0-9_]+)").matcher(cleanCode.toString());
+        if (classMatcher.find()) {
+            className = classMatcher.group(1);
+        }
+
+        String finalUserCode = cleanCode.toString().replaceAll("public\\s+class\\s+" + className, "class " + className);
 
         return "import java.util.*;\n" +
             "import java.util.stream.*;\n" +
             "import java.lang.reflect.*;\n" +
+            "import java.math.*;\n" +
             userImports + "\n" +
             "public class KatasphereRunner {\n" +
             "    public static void main(String[] args) {\n" +
             "        try {\n" +
-            "            String input = \"" + escapedInput + "\";\n" +
-            "            Class<?> clazz = Class.forName(\"Solution\");\n" +
+            "            String input = args != null && args.length > 0 ? args[0] : \"" + escapedInput + "\";\n" +
+            "            Class<?> clazz = Class.forName(\"" + className + "\");\n" +
             "            Object instance = clazz.getDeclaredConstructor().newInstance();\n" +
             "            List<String> raw = extractTokens(input);\n" +
             "            Method targetMethod = null;\n" +
             "            for (Method m : clazz.getDeclaredMethods()) {\n" +
             "                if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers())) {\n" +
-            "                    if (m.getParameterCount() == raw.size() && m.getReturnType() != void.class) {\n" +
+            "                    if (m.getParameterCount() == raw.size()) {\n" +
             "                        targetMethod = m;\n" +
             "                        break;\n" +
             "                    }\n" +
@@ -171,7 +178,7 @@ public class CodeHarnessGenerator {
             "                }\n" +
             "            }\n" +
             "            if (targetMethod == null) {\n" +
-            "                System.err.println(\"No public solution method found in Solution\");\n" +
+            "                System.err.println(\"No public solution method found in " + className + "\");\n" +
             "                System.exit(1);\n" +
             "            }\n" +
             "            Class<?>[] paramTypes = targetMethod.getParameterTypes();\n" +
@@ -179,14 +186,23 @@ public class CodeHarnessGenerator {
             "            for (int i = 0; i < paramTypes.length && i < raw.size(); i++) {\n" +
             "                parsedArgs[i] = convert(paramTypes[i], raw.get(i));\n" +
             "            }\n" +
-            "            Object res = targetMethod.invoke(instance, parsedArgs);\n" +
+            "            Object res;\n" +
+            "            if (targetMethod.getReturnType() == void.class) {\n" +
+            "                targetMethod.invoke(instance, parsedArgs);\n" +
+            "                res = parsedArgs.length > 0 ? parsedArgs[0] : null;\n" +
+            "            } else {\n" +
+            "                res = targetMethod.invoke(instance, parsedArgs);\n" +
+            "            }\n" +
             "            String strRes;\n" +
             "            if (res == null) strRes = \"null\";\n" +
             "            else if (res instanceof int[]) strRes = Arrays.toString((int[]) res);\n" +
             "            else if (res instanceof long[]) strRes = Arrays.toString((long[]) res);\n" +
             "            else if (res instanceof double[]) strRes = String.format(Locale.US, \"%.5f\", (Double) res);\n" +
-            "            else if (res instanceof boolean[]) strRes = String.valueOf(res);\n" +
+            "            else if (res instanceof boolean[]) strRes = Arrays.toString((boolean[]) res);\n" +
+            "            else if (res instanceof char[]) strRes = new String((char[]) res);\n" +
+            "            else if (res instanceof int[][]) strRes = Arrays.deepToString((int[][]) res);\n" +
             "            else if (res instanceof Object[]) strRes = Arrays.deepToString((Object[]) res);\n" +
+            "            else if (res instanceof Collection) strRes = String.valueOf(res);\n" +
             "            else strRes = String.valueOf(res);\n" +
             "            System.out.println(\"" + RET_DELIMITER + "\" + strRes);\n" +
             "        } catch (Throwable t) {\n" +
@@ -198,32 +214,53 @@ public class CodeHarnessGenerator {
             "    static List<String> extractTokens(String input) {\n" +
             "        List<String> tokens = new ArrayList<>();\n" +
             "        if (input == null || input.isBlank()) return tokens;\n" +
-            "        int len = input.length(); int i = 0;\n" +
-            "        while (i < len) {\n" +
-            "            int eq = input.indexOf('=', i);\n" +
-            "            if (eq == -1) break;\n" +
-            "            i = eq + 1;\n" +
-            "            while (i < len && Character.isWhitespace(input.charAt(i))) i++;\n" +
-            "            int start = i;\n" +
-            "            if (i < len && input.charAt(i) == '\"') {\n" +
-            "                i++;\n" +
-            "                while (i < len && input.charAt(i) != '\"') {\n" +
-            "                    if (input.charAt(i) == '\\\\' && i + 1 < len) i++;\n" +
+            "        boolean hasEq = false; boolean inQ = false;\n" +
+            "        for (int k = 0; k < input.length(); k++) {\n" +
+            "            char ch = input.charAt(k);\n" +
+            "            if (ch == '\"') inQ = !inQ;\n" +
+            "            else if (ch == '=' && !inQ) { hasEq = true; break; }\n" +
+            "        }\n" +
+            "        if (hasEq) {\n" +
+            "            int len = input.length(); int i = 0;\n" +
+            "            while (i < len) {\n" +
+            "                int eq = input.indexOf('=', i);\n" +
+            "                if (eq == -1) break;\n" +
+            "                i = eq + 1;\n" +
+            "                while (i < len && Character.isWhitespace(input.charAt(i))) i++;\n" +
+            "                int start = i;\n" +
+            "                if (i < len && input.charAt(i) == '\"') {\n" +
             "                    i++;\n" +
+            "                    while (i < len && input.charAt(i) != '\"') {\n" +
+            "                        if (input.charAt(i) == '\\\\' && i + 1 < len) i++;\n" +
+            "                        i++;\n" +
+            "                    }\n" +
+            "                    if (i < len) i++;\n" +
+            "                } else if (i < len && input.charAt(i) == '[') {\n" +
+            "                    int depth = 1; i++;\n" +
+            "                    while (i < len && depth > 0) {\n" +
+            "                        if (input.charAt(i) == '[') depth++;\n" +
+            "                        else if (input.charAt(i) == ']') depth--;\n" +
+            "                        i++;\n" +
+            "                    }\n" +
+            "                } else {\n" +
+            "                    while (i < len && input.charAt(i) != ',') i++;\n" +
             "                }\n" +
-            "                if (i < len) i++;\n" +
-            "            } else if (i < len && input.charAt(i) == '[') {\n" +
-            "                int depth = 1; i++;\n" +
-            "                while (i < len && depth > 0) {\n" +
-            "                    if (input.charAt(i) == '[') depth++;\n" +
-            "                    else if (input.charAt(i) == ']') depth--;\n" +
-            "                    i++;\n" +
-            "                }\n" +
-            "            } else {\n" +
-            "                while (i < len && input.charAt(i) != ',') i++;\n" +
+            "                tokens.add(input.substring(start, i).trim());\n" +
+            "                while (i < len && (input.charAt(i) == ',' || Character.isWhitespace(input.charAt(i)))) i++;\n" +
             "            }\n" +
-            "            tokens.add(input.substring(start, i).trim());\n" +
-            "            while (i < len && (input.charAt(i) == ',' || Character.isWhitespace(input.charAt(i)))) i++;\n" +
+            "        } else {\n" +
+            "            int start = 0; int depth = 0; boolean inQuotes = false;\n" +
+            "            for (int i = 0; i < input.length(); i++) {\n" +
+            "                char ch = input.charAt(i);\n" +
+            "                if (ch == '\"') inQuotes = !inQuotes;\n" +
+            "                else if (ch == '[' && !inQuotes) depth++;\n" +
+            "                else if (ch == ']' && !inQuotes) depth--;\n" +
+            "                else if (ch == ',' && depth == 0 && !inQuotes) {\n" +
+            "                    tokens.add(input.substring(start, i).trim());\n" +
+            "                    start = i + 1;\n" +
+            "                }\n" +
+            "            }\n" +
+            "            if (start < input.length()) tokens.add(input.substring(start).trim());\n" +
             "        }\n" +
             "        return tokens;\n" +
             "    }\n" +
@@ -255,6 +292,63 @@ public class CodeHarnessGenerator {
             "            for (int k = 0; k < p.length; k++) a[k] = Double.parseDouble(p[k].trim());\n" +
             "            return a;\n" +
             "        }\n" +
+            "        if (type == String[].class) {\n" +
+            "            val = val.trim();\n" +
+            "            if (val.startsWith(\"[\")) val = val.substring(1);\n" +
+            "            if (val.endsWith(\"]\")) val = val.substring(0, val.length() - 1);\n" +
+            "            val = val.trim();\n" +
+            "            if (val.isEmpty()) return new String[0];\n" +
+            "            List<String> items = new ArrayList<>();\n" +
+            "            boolean inQuotes = false;\n" +
+            "            StringBuilder cur = new StringBuilder();\n" +
+            "            for (int k = 0; k < val.length(); k++) {\n" +
+            "                char c = val.charAt(k);\n" +
+            "                if (c == '\"') inQuotes = !inQuotes;\n" +
+            "                else if (c == ',' && !inQuotes) {\n" +
+            "                    items.add(cur.toString().trim().replaceAll(\"^\\\"|\\\"$\", \"\"));\n" +
+            "                    cur.setLength(0);\n" +
+            "                    continue;\n" +
+            "                }\n" +
+            "                cur.append(c);\n" +
+            "            }\n" +
+            "            if (cur.length() > 0) items.add(cur.toString().trim().replaceAll(\"^\\\"|\\\"$\", \"\"));\n" +
+            "            return items.toArray(new String[0]);\n" +
+            "        }\n" +
+            "        if (type == int[][].class) {\n" +
+            "            val = val.trim();\n" +
+            "            if (val.startsWith(\"[\")) val = val.substring(1);\n" +
+            "            if (val.endsWith(\"]\")) val = val.substring(0, val.length() - 1);\n" +
+            "            val = val.trim();\n" +
+            "            if (val.isEmpty()) return new int[0][0];\n" +
+            "            List<int[]> rows = new ArrayList<>();\n" +
+            "            int depth = 0; int start = -1;\n" +
+            "            for (int k = 0; k < val.length(); k++) {\n" +
+            "                char c = val.charAt(k);\n" +
+            "                if (c == '[') { depth++; if (depth == 1) start = k; }\n" +
+            "                else if (c == ']') {\n" +
+            "                    depth--;\n" +
+            "                    if (depth == 0 && start != -1) {\n" +
+            "                        rows.add((int[]) convert(int[].class, val.substring(start, k + 1)));\n" +
+            "                        start = -1;\n" +
+            "                    }\n" +
+            "                }\n" +
+            "            }\n" +
+            "            return rows.toArray(new int[0][]);\n" +
+            "        }\n" +
+            "        if (List.class.isAssignableFrom(type)) {\n" +
+            "            val = val.trim();\n" +
+            "            if (val.startsWith(\"[\")) val = val.substring(1);\n" +
+            "            if (val.endsWith(\"]\")) val = val.substring(0, val.length() - 1);\n" +
+            "            val = val.trim();\n" +
+            "            if (val.isEmpty()) return new ArrayList<>();\n" +
+            "            List<Object> list = new ArrayList<>();\n" +
+            "            String[] p = val.split(\",\");\n" +
+            "            for (String item : p) {\n" +
+            "                String s = item.trim();\n" +
+            "                try { list.add(Integer.parseInt(s)); } catch (Exception e) { list.add(s.replaceAll(\"^\\\"|\\\"$\", \"\")); }\n" +
+            "            }\n" +
+            "            return list;\n" +
+            "        }\n" +
             "        return val;\n" +
             "    }\n" +
             "}\n\n" +
@@ -272,16 +366,34 @@ public class CodeHarnessGenerator {
      * Splits process stdout into user console output (debug logs) and the function return value.
      */
     public ParsedOutput parseOutput(String rawStdout) {
-        if (rawStdout == null) {
+        if (rawStdout == null || rawStdout.isBlank()) {
             return new ParsedOutput("", null);
         }
         int idx = rawStdout.indexOf(RET_DELIMITER);
-        if (idx != -1) {
-            String debug = rawStdout.substring(0, idx).trim();
-            String ret = rawStdout.substring(idx + RET_DELIMITER.length()).trim();
-            return new ParsedOutput(ret, debug.isEmpty() ? null : debug);
+        if (idx == -1) {
+            return new ParsedOutput("", rawStdout.trim());
         }
-        return new ParsedOutput(rawStdout.trim(), null);
+
+        StringBuilder debug = new StringBuilder();
+        String actual = "";
+
+        for (String line : rawStdout.split("\\r?\\n")) {
+            if (line.contains(RET_DELIMITER)) {
+                int pos = line.indexOf(RET_DELIMITER);
+                String before = line.substring(0, pos).trim();
+                if (!before.isEmpty()) {
+                    if (debug.length() > 0) debug.append("\n");
+                    debug.append(before);
+                }
+                actual = line.substring(pos + RET_DELIMITER.length()).trim();
+            } else {
+                if (debug.length() > 0) debug.append("\n");
+                debug.append(line);
+            }
+        }
+
+        String debugStr = debug.toString().trim();
+        return new ParsedOutput(actual, debugStr.isEmpty() ? null : debugStr);
     }
 
     /**
@@ -291,8 +403,11 @@ public class CodeHarnessGenerator {
         if (actual == null && expected == null) return true;
         if (actual == null || expected == null) return false;
 
-        ParsedOutput parsed = parseOutput(actual);
-        String a = normalize(parsed.actualOutput());
+        String cleanActual = actual;
+        if (cleanActual.contains(RET_DELIMITER)) {
+            cleanActual = parseOutput(cleanActual).actualOutput();
+        }
+        String a = normalize(cleanActual);
         String e = normalize(expected);
         return a.equals(e);
     }

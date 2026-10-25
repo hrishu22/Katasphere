@@ -1038,11 +1038,17 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
                             </div>
 
                             {executionResult.testCases[selectedResultCaseIdx].stdout && (
-                              <div>
-                                <span className="text-slate-500 dark:text-slate-400">
-                                  Stdout / Debug Console:
-                                </span>
-                                <div className="mt-1 p-2.5 rounded bg-surface-subtle border border-surface-border text-foreground font-mono text-xs whitespace-pre-wrap">
+                              <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center space-x-2 text-xs">
+                                  <Terminal className="h-3.5 w-3.5 text-sky-500 dark:text-sky-400" />
+                                  <span className="font-semibold text-sky-700 dark:text-sky-300">
+                                    Stdout / Debug Output:
+                                  </span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-500 border border-sky-500/20 font-mono">
+                                    System.out / print
+                                  </span>
+                                </div>
+                                <div className="p-3 rounded-lg bg-slate-950 dark:bg-black border border-slate-800 text-emerald-400 dark:text-emerald-300 font-mono text-xs whitespace-pre-wrap shadow-inner overflow-x-auto max-h-56 overflow-y-auto">
                                   {executionResult.testCases[selectedResultCaseIdx].stdout}
                                 </div>
                               </div>
