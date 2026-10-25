@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
+import { CodeEditor } from "@/components/editor/CodeEditor";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -691,7 +692,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           <div className="flex-1 flex flex-col p-3 pb-1 min-h-0 overflow-hidden">
             <div className="flex items-center justify-between pb-2 text-xs font-mono text-slate-400">
               <span className="flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5" />
+                <Code2 className="h-3.5 w-3.5 text-brand-500" />
                 Solution.
                 {selectedLanguage === "PYTHON"
                   ? "py"
@@ -701,13 +702,15 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
                   ? "cpp"
                   : "js"}
               </span>
-              <span>Monaco / Editor Canvas</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                Monaco Editor &bull; Auto-indent &bull; Bracket Pairing
+              </span>
             </div>
-            <textarea
+            <CodeEditor
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="flex-1 w-full p-4 rounded-xl bg-surface border border-surface-border font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none overflow-auto shadow-sm leading-relaxed"
-              spellCheck={false}
+              onChange={setCode}
+              language={selectedLanguage}
+              className="flex-1 w-full"
             />
           </div>
 
