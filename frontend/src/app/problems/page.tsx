@@ -19,6 +19,7 @@ import {
   Crown,
   Target,
   Globe,
+  Flame,
 } from "lucide-react";
 
 import {
@@ -168,7 +169,8 @@ export default function ProblemsPage() {
     (t) =>
       !COMPANY_SLUGS.includes(t.slug.toLowerCase()) &&
       !PLATFORM_SLUGS.includes(t.slug.toLowerCase()) &&
-      t.slug.toLowerCase() !== "sde-1"
+      t.slug.toLowerCase() !== "sde-1" &&
+      t.slug.toLowerCase() !== "blind-75"
   );
 
   return (
@@ -264,8 +266,28 @@ export default function ProblemsPage() {
               />
             </div>
 
-            {/* Quick Filter: SDE-1 Sheet & Difficulty */}
+            {/* Quick Filter: SDE-1 Sheet, Blind 75 & Difficulty */}
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  setSelectedTag(selectedTag === "blind-75" ? "" : "blind-75");
+                  setPage(0);
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                  selectedTag === "blind-75"
+                    ? "bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm ring-2 ring-rose-500/40"
+                    : "bg-surface-subtle hover:bg-surface-muted text-slate-700 dark:text-slate-200 border border-surface-border"
+                }`}
+              >
+                <Flame className="h-3.5 w-3.5 text-rose-500" />
+                <span>🔥 Blind 75</span>
+                {selectedTag === "blind-75" && (
+                  <span className="ml-1 text-[10px] bg-white/25 px-1.5 py-0.2 rounded-full uppercase">
+                    Active
+                  </span>
+                )}
+              </button>
+
               <button
                 onClick={() => {
                   setSelectedTag(selectedTag === "sde-1" ? "" : "sde-1");
@@ -496,13 +518,16 @@ export default function ProblemsPage() {
                     {problem.tags.map((t) => {
                       const isCompany = COMPANY_SLUGS.includes(t.slug.toLowerCase());
                       const isSde1 = t.slug.toLowerCase() === "sde-1";
+                      const isBlind75 = t.slug.toLowerCase() === "blind-75";
                       const isLeetcode = t.slug.toLowerCase() === "leetcode";
                       const isGfg = t.slug.toLowerCase() === "geeksforgeeks";
                       return (
                         <span
                           key={t.id}
                           className={`text-[11px] px-2 py-0.5 rounded border font-mono ${
-                            isSde1
+                            isBlind75
+                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-semibold"
+                              : isSde1
                               ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 font-semibold"
                               : isLeetcode
                               ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 font-medium"

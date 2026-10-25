@@ -4,7 +4,7 @@
     "title": "Two Sum",
     "difficulty": "EASY",
     "description": "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.",
-    "constraintsText": "\u2022 2 <= nums.length <= 10^4\n\u2022 -10^9 <= nums[i] <= 10^9\n\u2022 -10^9 <= target <= 10^9\n\u2022 Only one valid answer exists.",
+    "constraintsText": "• 2 <= nums.length <= 10^4\n• -10^9 <= nums[i] <= 10^9\n• -10^9 <= target <= 10^9\n• Only one valid answer exists.",
     "tags": [
       "Amazon",
       "Apple",
@@ -14,7 +14,8 @@
       "Hash Table",
       "LeetCode",
       "Meta",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def twoSum(nums: list[int], target: int) -> list[int]:\n    # Write your solution here\n    pass",
@@ -42,7 +43,7 @@
     "title": "Best Time to Buy and Sell Stock",
     "difficulty": "EASY",
     "description": "You are given an array `prices` where `prices[i]` is the price of a given stock on the `i-th` day.\n\nYou want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.\n\nReturn the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.",
-    "constraintsText": "\u2022 1 <= prices.length <= 10^5\n\u2022 0 <= prices[i] <= 10^4",
+    "constraintsText": "• 1 <= prices.length <= 10^5\n• 0 <= prices[i] <= 10^4",
     "tags": [
       "Amazon",
       "Array",
@@ -52,7 +53,8 @@
       "LeetCode",
       "Meta",
       "Microsoft",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def maxProfit(prices: list[int]) -> int:\n    # Write your solution here\n    pass",
@@ -80,7 +82,7 @@
     "title": "Valid Parentheses",
     "difficulty": "EASY",
     "description": "Given a string `s` containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.\n\nAn input string is valid if:\n1. Open brackets must be closed by the same type of brackets.\n2. Open brackets must be closed in the correct order.\n3. Every close bracket has a corresponding open bracket of the same type.",
-    "constraintsText": "\u2022 1 <= s.length <= 10^4\n\u2022 s consists of parentheses only `()[]{}`.",
+    "constraintsText": "• 1 <= s.length <= 10^4\n• s consists of parentheses only `()[]{}`.",
     "tags": [
       "Amazon",
       "Bloomberg",
@@ -90,7 +92,8 @@
       "Microsoft",
       "SDE 1",
       "Stack",
-      "String"
+      "String",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def isValid(s: str) -> bool:\n    # Write your solution here\n    pass",
@@ -124,7 +127,7 @@
     "title": "Valid Palindrome",
     "difficulty": "EASY",
     "description": "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.\n\nGiven a string `s`, return `true` if it is a palindrome, or `false` otherwise.",
-    "constraintsText": "\u2022 1 <= s.length <= 2 * 10^5\n\u2022 s consists only of printable ASCII characters.",
+    "constraintsText": "• 1 <= s.length <= 2 * 10^5\n• s consists only of printable ASCII characters.",
     "tags": [
       "Apple",
       "GeeksforGeeks",
@@ -133,7 +136,8 @@
       "Microsoft",
       "SDE 1",
       "String",
-      "Two Pointers"
+      "Two Pointers",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def isPalindrome(s: str) -> bool:\n    # Write your solution here\n    pass",
@@ -161,7 +165,7 @@
     "title": "Longest Substring Without Repeating Characters",
     "difficulty": "MEDIUM",
     "description": "Given a string `s`, find the length of the longest substring without repeating characters.",
-    "constraintsText": "\u2022 0 <= s.length <= 5 * 10^4\n\u2022 s consists of English letters, digits, symbols and spaces.",
+    "constraintsText": "• 0 <= s.length <= 5 * 10^4\n• s consists of English letters, digits, symbols and spaces.",
     "tags": [
       "Amazon",
       "Bloomberg",
@@ -171,7 +175,8 @@
       "LeetCode",
       "SDE 1",
       "Sliding Window",
-      "String"
+      "String",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def lengthOfLongestSubstring(s: str) -> int:\n    # Write your solution here\n    pass",
@@ -199,7 +204,7 @@
     "title": "Container With Most Water",
     "difficulty": "MEDIUM",
     "description": "You are given an integer array `height` of length `n`. There are `n` vertical lines drawn such that the two endpoints of the `i-th` line are `(i, 0)` and `(i, height[i])`.\n\nFind two lines that together with the x-axis form a container, such that the container contains the most water.\n\nReturn the maximum amount of water a container can store.\n\nNotice that you may not slant the container.",
-    "constraintsText": "\u2022 n == height.length\n\u2022 2 <= n <= 10^5\n\u2022 0 <= height[i] <= 10^4",
+    "constraintsText": "• n == height.length\n• 2 <= n <= 10^5\n• 0 <= height[i] <= 10^4",
     "tags": [
       "Amazon",
       "Array",
@@ -209,7 +214,8 @@
       "LeetCode",
       "Meta",
       "SDE 1",
-      "Two Pointers"
+      "Two Pointers",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def maxArea(height: list[int]) -> int:\n    # Write your solution here\n    pass",
@@ -237,7 +243,7 @@
     "title": "Maximum Subarray",
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums`, find the subarray with the largest sum, and return its sum.",
-    "constraintsText": "\u2022 1 <= nums.length <= 10^5\n\u2022 -10^4 <= nums[i] <= 10^4",
+    "constraintsText": "• 1 <= nums.length <= 10^5\n• -10^4 <= nums[i] <= 10^4",
     "tags": [
       "Amazon",
       "Apple",
@@ -248,7 +254,8 @@
       "Google",
       "LeetCode",
       "Microsoft",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def maxSubArray(nums: list[int]) -> int:\n    # Write your solution here (Kadane's algorithm)\n    pass",
@@ -276,7 +283,7 @@
     "title": "Climbing Stairs",
     "difficulty": "EASY",
     "description": "You are climbing a staircase. It takes `n` steps to reach the top.\n\nEach time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
-    "constraintsText": "\u2022 1 <= n <= 45",
+    "constraintsText": "• 1 <= n <= 45",
     "tags": [
       "Amazon",
       "Apple",
@@ -286,7 +293,8 @@
       "LeetCode",
       "Math",
       "Memoization",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def climbStairs(n: int) -> int:\n    # Write your solution here\n    pass",
@@ -314,7 +322,7 @@
     "title": "3Sum",
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums`, return all the triplets `[nums[i], nums[j], nums[k]]` such that `i != j`, `i != k`, and `j != k`, and `nums[i] + nums[j] + nums[k] == 0`.\n\nNotice that the solution set must not contain duplicate triplets.",
-    "constraintsText": "\u2022 3 <= nums.length <= 3000\n\u2022 -10^5 <= nums[i] <= 10^5",
+    "constraintsText": "• 3 <= nums.length <= 3000\n• -10^5 <= nums[i] <= 10^5",
     "tags": [
       "Amazon",
       "Array",
@@ -325,7 +333,8 @@
       "Microsoft",
       "SDE 1",
       "Sorting",
-      "Two Pointers"
+      "Two Pointers",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def threeSum(nums: list[int]) -> list[list[int]]:\n    # Write your solution here\n    pass",
@@ -347,7 +356,7 @@
     "title": "Reverse Linked List",
     "difficulty": "EASY",
     "description": "Given the `head` of a singly linked list, reverse the list, and return the reversed list.\n\nCould you implement both iteratively and recursively?",
-    "constraintsText": "\u2022 The number of nodes in the list is the range [0, 5000].\n\u2022 -5000 <= Node.val <= 5000",
+    "constraintsText": "• The number of nodes in the list is the range [0, 5000].\n• -5000 <= Node.val <= 5000",
     "tags": [
       "Amazon",
       "Apple",
@@ -358,7 +367,8 @@
       "Microsoft",
       "Recursion",
       "SDE 1",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\ndef reverseList(head):\n    # Write your solution here\n    pass",
@@ -386,7 +396,7 @@
     "title": "Merge Two Sorted Lists",
     "difficulty": "EASY",
     "description": "You are given the heads of two sorted linked lists `list1` and `list2`.\n\nMerge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.\n\nReturn the head of the merged linked list.",
-    "constraintsText": "\u2022 The number of nodes in both lists is in the range [0, 50].\n\u2022 -100 <= Node.val <= 100\n\u2022 Both list1 and list2 are sorted in non-decreasing order.",
+    "constraintsText": "• The number of nodes in both lists is in the range [0, 50].\n• -100 <= Node.val <= 100\n• Both list1 and list2 are sorted in non-decreasing order.",
     "tags": [
       "Amazon",
       "Apple",
@@ -396,7 +406,8 @@
       "Meta",
       "Microsoft",
       "SDE 1",
-      "Two Pointers"
+      "Two Pointers",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def mergeTwoLists(list1, list2):\n    # Write your solution here\n    pass",
@@ -418,7 +429,7 @@
     "title": "Invert Binary Tree",
     "difficulty": "EASY",
     "description": "Given the `root` of a binary tree, invert the tree, and return its root.\n\nEvery left child becomes the right child, and every right child becomes the left child.",
-    "constraintsText": "\u2022 The number of nodes in the tree is in the range [0, 100].\n\u2022 -100 <= Node.val <= 100",
+    "constraintsText": "• The number of nodes in the tree is in the range [0, 100].\n• -100 <= Node.val <= 100",
     "tags": [
       "Amazon",
       "Binary Tree",
@@ -429,7 +440,8 @@
       "Microsoft",
       "SDE 1",
       "Tree",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def invertTree(root):\n    # Write your solution here\n    pass",
@@ -451,7 +463,7 @@
     "title": "Binary Tree Level Order Traversal",
     "difficulty": "MEDIUM",
     "description": "Given the `root` of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).",
-    "constraintsText": "\u2022 The number of nodes in the tree is in the range [0, 2000].\n\u2022 -1000 <= Node.val <= 1000",
+    "constraintsText": "• The number of nodes in the tree is in the range [0, 2000].\n• -1000 <= Node.val <= 1000",
     "tags": [
       "Amazon",
       "Binary Tree",
@@ -462,7 +474,8 @@
       "Meta",
       "Microsoft",
       "SDE 1",
-      "Tree"
+      "Tree",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def levelOrder(root: TreeNode) -> list[list[int]]:\n    # Write your solution here\n    pass",
@@ -484,7 +497,7 @@
     "title": "Kth Largest Element in an Array",
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums` and an integer `k`, return the `k-th` largest element in the array.\n\nNote that it is the `k-th` largest element in the sorted order, not the `k-th` distinct element.\n\nCan you solve it in O(n) time complexity?",
-    "constraintsText": "\u2022 1 <= k <= nums.length <= 10^5\n\u2022 -10^4 <= nums[i] <= 10^4",
+    "constraintsText": "• 1 <= k <= nums.length <= 10^5\n• -10^4 <= nums[i] <= 10^4",
     "tags": [
       "Amazon",
       "Array",
@@ -497,7 +510,8 @@
       "Quickselect",
       "SDE 1",
       "Sorting",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def findKthLargest(nums: list[int], k: int) -> int:\n    # Write your solution here\n    pass",
@@ -519,7 +533,7 @@
     "title": "Product of Array Except Self",
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all the elements of `nums` except `nums[i]`.\n\nThe product of any prefix or suffix of `nums` is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in O(n) time and without using the division operation.",
-    "constraintsText": "\u2022 2 <= nums.length <= 10^5\n\u2022 -30 <= nums[i] <= 30",
+    "constraintsText": "• 2 <= nums.length <= 10^5\n• -30 <= nums[i] <= 30",
     "tags": [
       "Amazon",
       "Apple",
@@ -529,7 +543,8 @@
       "Meta",
       "Microsoft",
       "Prefix Sum",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def productExceptSelf(nums: list[int]) -> list[int]:\n    # Write your solution here\n    pass",
@@ -551,7 +566,7 @@
     "title": "Group Anagrams",
     "difficulty": "MEDIUM",
     "description": "Given an array of strings `strs`, group the anagrams together. You can return the answer in any order.\n\nAn Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
-    "constraintsText": "\u2022 1 <= strs.length <= 10^4\n\u2022 0 <= strs[i].length <= 100\n\u2022 strs[i] consists of lowercase English letters.",
+    "constraintsText": "• 1 <= strs.length <= 10^4\n• 0 <= strs[i].length <= 100\n• strs[i] consists of lowercase English letters.",
     "tags": [
       "Amazon",
       "Apple",
@@ -563,7 +578,8 @@
       "Meta",
       "SDE 1",
       "Sorting",
-      "String"
+      "String",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def groupAnagrams(strs: list[str]) -> list[list[str]]:\n    # Write your solution here\n    pass",
@@ -585,7 +601,7 @@
     "title": "Search in Rotated Sorted Array",
     "difficulty": "MEDIUM",
     "description": "There is an integer array `nums` sorted in ascending order (with distinct values).\n\nPrior to being passed to your function, `nums` is possibly rotated at an unknown pivot index `k`.\n\nGiven the array `nums` after the possible rotation and an integer `target`, return the index of `target` if it is in `nums`, or `-1` if it is not in `nums`.\n\nYou must write an algorithm with O(log n) runtime complexity.",
-    "constraintsText": "\u2022 1 <= nums.length <= 5000\n\u2022 -10^4 <= nums[i] <= 10^4\n\u2022 All values of nums are unique.\n\u2022 nums is an ascending array that is possibly rotated.\n\u2022 -10^4 <= target <= 10^4",
+    "constraintsText": "• 1 <= nums.length <= 5000\n• -10^4 <= nums[i] <= 10^4\n• All values of nums are unique.\n• nums is an ascending array that is possibly rotated.\n• -10^4 <= target <= 10^4",
     "tags": [
       "Amazon",
       "Array",
@@ -595,7 +611,8 @@
       "LeetCode",
       "Meta",
       "Microsoft",
-      "SDE 1"
+      "SDE 1",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def search(nums: list[int], target: int) -> int:\n    # Write your solution here\n    pass",
@@ -623,7 +640,7 @@
     "title": "Trapping Rain Water",
     "difficulty": "HARD",
     "description": "Given `n` non-negative integers representing an elevation map where the width of each bar is `1`, compute how much water it can trap after raining.\n\n*Featured extensively in Amazon, Google, and Meta technical rounds.*",
-    "constraintsText": "\u2022 n == height.length\n\u2022 1 <= n <= 2 * 10^4\n\u2022 0 <= height[i] <= 10^5",
+    "constraintsText": "• n == height.length\n• 1 <= n <= 2 * 10^4\n• 0 <= height[i] <= 10^5",
     "tags": [
       "Array",
       "Two Pointers",
@@ -635,7 +652,8 @@
       "Amazon",
       "Google",
       "Meta",
-      "Microsoft"
+      "Microsoft",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def trap(height: list[int]) -> int:\n    # Write your solution here\n    pass",
@@ -663,7 +681,7 @@
     "title": "Longest Palindromic Substring",
     "difficulty": "MEDIUM",
     "description": "Given a string `s`, return the longest palindromic substring in `s`.\n\nA string is palindromic if it reads the same forward and backward.",
-    "constraintsText": "\u2022 1 <= s.length <= 1000\n\u2022 s consist of only digits and English letters.",
+    "constraintsText": "• 1 <= s.length <= 1000\n• s consist of only digits and English letters.",
     "tags": [
       "Two Pointers",
       "String",
@@ -673,7 +691,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Microsoft",
-      "Google"
+      "Google",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def longestPalindrome(s: str) -> str:\n    # Write your solution here\n    pass",
@@ -701,7 +720,7 @@
     "title": "Subarray Sum Equals K",
     "difficulty": "MEDIUM",
     "description": "Given an array of integers `nums` and an integer `k`, return the total number of subarrays whose sum equals to `k`.\n\nA subarray is a contiguous non-empty sequence of elements within an array.",
-    "constraintsText": "\u2022 1 <= nums.length <= 2 * 10^4\n\u2022 -1000 <= nums[i] <= 1000\n\u2022 -10^7 <= k <= 10^7",
+    "constraintsText": "• 1 <= nums.length <= 2 * 10^4\n• -1000 <= nums[i] <= 1000\n• -10^7 <= k <= 10^7",
     "tags": [
       "Array",
       "Hash Table",
@@ -711,7 +730,8 @@
       "GeeksforGeeks",
       "Meta",
       "Google",
-      "Amazon"
+      "Amazon",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def subarraySum(nums: list[int], k: int) -> int:\n    # Write your solution here\n    pass",
@@ -739,7 +759,7 @@
     "title": "Merge Intervals",
     "difficulty": "MEDIUM",
     "description": "Given an array of `intervals` where `intervals[i] = [start_i, end_i]`, merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
-    "constraintsText": "\u2022 1 <= intervals.length <= 10^4\n\u2022 intervals[i].length == 2\n\u2022 0 <= start_i <= end_i <= 10^4",
+    "constraintsText": "• 1 <= intervals.length <= 10^4\n• intervals[i].length == 2\n• 0 <= start_i <= end_i <= 10^4",
     "tags": [
       "Array",
       "Sorting",
@@ -751,7 +771,8 @@
       "Meta",
       "Amazon",
       "Microsoft",
-      "Bloomberg"
+      "Bloomberg",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def merge(intervals: list[list[int]]) -> list[list[int]]:\n    # Write your solution here\n    pass",
@@ -779,7 +800,7 @@
     "title": "Coin Change",
     "difficulty": "MEDIUM",
     "description": "You are given an integer array `coins` representing coins of different denominations and an integer `amount` representing a total amount of money.\n\nReturn the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return `-1`.\n\nYou may assume that you have an infinite number of each kind of coin.",
-    "constraintsText": "\u2022 1 <= coins.length <= 12\n\u2022 1 <= coins[i] <= 2^31 - 1\n\u2022 0 <= amount <= 10^4",
+    "constraintsText": "• 1 <= coins.length <= 12\n• 1 <= coins[i] <= 2^31 - 1\n• 0 <= amount <= 10^4",
     "tags": [
       "Dynamic Programming",
       "Breadth-First Search",
@@ -788,7 +809,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Microsoft",
-      "Apple"
+      "Apple",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def coinChange(coins: list[int], amount: int) -> int:\n    # Write your solution here\n    pass",
@@ -816,7 +838,7 @@
     "title": "Word Break",
     "difficulty": "MEDIUM",
     "description": "Given a string `s` and a dictionary of strings `wordDict`, return `true` if `s` can be segmented into a space-separated sequence of one or more dictionary words.\n\nNote that the same word in the dictionary may be reused multiple times in the segmentation.",
-    "constraintsText": "\u2022 1 <= s.length <= 300\n\u2022 1 <= wordDict.length <= 1000\n\u2022 1 <= wordDict[i].length <= 20\n\u2022 s and wordDict[i] consist of only lowercase English letters.\n\u2022 All strings of wordDict are unique.",
+    "constraintsText": "• 1 <= s.length <= 300\n• 1 <= wordDict.length <= 1000\n• 1 <= wordDict[i].length <= 20\n• s and wordDict[i] consist of only lowercase English letters.\n• All strings of wordDict are unique.",
     "tags": [
       "Hash Table",
       "String",
@@ -828,7 +850,8 @@
       "Amazon",
       "Meta",
       "Google",
-      "Bloomberg"
+      "Bloomberg",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def wordBreak(s: str, wordDict: list[str]) -> bool:\n    # Write your solution here\n    pass",
@@ -856,7 +879,7 @@
     "title": "Number of Islands",
     "difficulty": "MEDIUM",
     "description": "Given an `m x n` 2D binary grid `grid` which represents a map of `'1'`s (land) and `'0'`s (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.",
-    "constraintsText": "\u2022 m == grid.length\n\u2022 n == grid[i].length\n\u2022 1 <= m, n <= 300\n\u2022 grid[i][j] is '0' or '1'.",
+    "constraintsText": "• m == grid.length\n• n == grid[i].length\n• 1 <= m, n <= 300\n• grid[i][j] is '0' or '1'.",
     "tags": [
       "Array",
       "Depth-First Search",
@@ -870,7 +893,8 @@
       "Google",
       "Microsoft",
       "Bloomberg",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def numIslands(grid: list[list[str]]) -> int:\n    # Write your solution here\n    pass",
@@ -898,7 +922,7 @@
     "title": "Course Schedule",
     "difficulty": "MEDIUM",
     "description": "There are a total of `numCourses` courses you have to take, labeled from `0` to `numCourses - 1`. You are given an array `prerequisites` where `prerequisites[i] = [a_i, b_i]` indicates that you must take course `b_i` first if you want to take course `a_i`.\n\nReturn `true` if you can finish all courses. Otherwise, return `false`.",
-    "constraintsText": "\u2022 1 <= numCourses <= 2000\n\u2022 0 <= prerequisites.length <= 5000\n\u2022 prerequisites[i].length == 2\n\u2022 0 <= a_i, b_i < numCourses\n\u2022 All the pairs prerequisites[i] are unique.",
+    "constraintsText": "• 1 <= numCourses <= 2000\n• 0 <= prerequisites.length <= 5000\n• prerequisites[i].length == 2\n• 0 <= a_i, b_i < numCourses\n• All the pairs prerequisites[i] are unique.",
     "tags": [
       "Depth-First Search",
       "Breadth-First Search",
@@ -910,7 +934,8 @@
       "Google",
       "Amazon",
       "Meta",
-      "Microsoft"
+      "Microsoft",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:\n    # Write your solution here\n    pass",
@@ -937,8 +962,8 @@
     "slug": "lowest-common-ancestor-of-a-binary-tree",
     "title": "Lowest Common Ancestor of a Binary Tree",
     "difficulty": "MEDIUM",
-    "description": "Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.\n\nAccording to the definition of LCA on Wikipedia: \u201cThe lowest common ancestor is defined between two nodes `p` and `q` as the lowest node in `T` that has both `p` and `q` as descendants (where we allow a node to be a descendant of itself).\u201d",
-    "constraintsText": "\u2022 The number of nodes in the tree is in the range [2, 10^5].\n\u2022 -10^9 <= Node.val <= 10^9\n\u2022 All Node.val are unique.\n\u2022 p != q\n\u2022 p and q will exist in the tree.",
+    "description": "Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.\n\nAccording to the definition of LCA on Wikipedia: “The lowest common ancestor is defined between two nodes `p` and `q` as the lowest node in `T` that has both `p` and `q` as descendants (where we allow a node to be a descendant of itself).”",
+    "constraintsText": "• The number of nodes in the tree is in the range [2, 10^5].\n• -10^9 <= Node.val <= 10^9\n• All Node.val are unique.\n• p != q\n• p and q will exist in the tree.",
     "tags": [
       "Tree",
       "Depth-First Search",
@@ -949,7 +974,8 @@
       "Meta",
       "Amazon",
       "Microsoft",
-      "Apple"
+      "Apple",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\ndef lowestCommonAncestor(root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':\n    # Write your solution here\n    pass",
@@ -977,7 +1003,7 @@
     "title": "Median of Two Sorted Arrays",
     "difficulty": "HARD",
     "description": "Given two sorted arrays `nums1` and `nums2` of size `m` and `n` respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be `O(log (m+n))`.",
-    "constraintsText": "\u2022 nums1.length == m\n\u2022 nums2.length == n\n\u2022 0 <= m <= 1000\n\u2022 0 <= n <= 1000\n\u2022 1 <= m + n <= 2000\n\u2022 -10^6 <= nums1[i], nums2[i] <= 10^6",
+    "constraintsText": "• nums1.length == m\n• nums2.length == n\n• 0 <= m <= 1000\n• 0 <= n <= 1000\n• 1 <= m + n <= 2000\n• -10^6 <= nums1[i], nums2[i] <= 10^6",
     "tags": [
       "Array",
       "Binary Search",
@@ -988,7 +1014,8 @@
       "Google",
       "Amazon",
       "Microsoft",
-      "Apple"
+      "Apple",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def findMedianSortedArrays(nums1: list[int], nums2: list[int]) -> float:\n    # Write your solution here\n    pass",
@@ -1015,8 +1042,8 @@
     "slug": "lru-cache",
     "title": "LRU Cache",
     "difficulty": "MEDIUM",
-    "description": "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the `LRUCache` class:\n\u2022 `LRUCache(int capacity)` Initialize the LRU cache with positive size `capacity`.\n\u2022 `int get(int key)` Return the value of the `key` if the key exists, otherwise return `-1`.\n\u2022 `void put(int key, int value)` Update the value of the `key` if the `key` exists. Otherwise, add the `key-value` pair to the cache. If the number of keys exceeds the `capacity` from this operation, evict the least recently used key.\n\nThe functions `get` and `put` must each run in `O(1)` average time complexity.",
-    "constraintsText": "\u2022 1 <= capacity <= 3000\n\u2022 0 <= key <= 10^4\n\u2022 0 <= value <= 10^5\n\u2022 At most 2 * 10^5 calls will be made to get and put.",
+    "description": "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the `LRUCache` class:\n• `LRUCache(int capacity)` Initialize the LRU cache with positive size `capacity`.\n• `int get(int key)` Return the value of the `key` if the key exists, otherwise return `-1`.\n• `void put(int key, int value)` Update the value of the `key` if the `key` exists. Otherwise, add the `key-value` pair to the cache. If the number of keys exceeds the `capacity` from this operation, evict the least recently used key.\n\nThe functions `get` and `put` must each run in `O(1)` average time complexity.",
+    "constraintsText": "• 1 <= capacity <= 3000\n• 0 <= key <= 10^4\n• 0 <= value <= 10^5\n• At most 2 * 10^5 calls will be made to get and put.",
     "tags": [
       "Hash Table",
       "Linked List",
@@ -1030,7 +1057,8 @@
       "Google",
       "Meta",
       "Bloomberg",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "class LRUCache:\n    def __init__(self, capacity: int):\n        # Initialize LRU Cache\n        pass\n\n    def get(self, key: int) -> int:\n        return -1\n\n    def put(self, key: int, value: int) -> None:\n        pass",
@@ -1052,7 +1080,7 @@
     "title": "Find Minimum in Rotated Sorted Array",
     "difficulty": "MEDIUM",
     "description": "Suppose an array of length `n` sorted in ascending order is rotated between `1` and `n` times. Given the sorted rotated array `nums` of unique elements, return the minimum element of this array.\n\nYou must write an algorithm that runs in `O(log n)` time.",
-    "constraintsText": "\u2022 n == nums.length\n\u2022 1 <= n <= 5000\n\u2022 -5000 <= nums[i] <= 5000\n\u2022 All the integers of nums are unique.\n\u2022 nums is sorted and rotated between 1 and n times.",
+    "constraintsText": "• n == nums.length\n• 1 <= n <= 5000\n• -5000 <= nums[i] <= 5000\n• All the integers of nums are unique.\n• nums is sorted and rotated between 1 and n times.",
     "tags": [
       "Array",
       "Binary Search",
@@ -1061,7 +1089,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Microsoft",
-      "Meta"
+      "Meta",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def findMin(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
@@ -1089,7 +1118,7 @@
     "title": "Binary Tree Maximum Path Sum",
     "difficulty": "HARD",
     "description": "A path in a binary tree is a sequence of nodes where each pair of adjacent nodes in the sequence has an edge connecting them. A node can only appear in the sequence at most once. Note that the path does not need to pass through the root.\n\nThe path sum of a path is the sum of the node's values in the path.\n\nGiven the `root` of a binary tree, return the maximum path sum of any non-empty path.",
-    "constraintsText": "\u2022 The number of nodes in the tree is in the range [1, 3 * 10^4].\n\u2022 -1000 <= Node.val <= 1000",
+    "constraintsText": "• The number of nodes in the tree is in the range [1, 3 * 10^4].\n• -1000 <= Node.val <= 1000",
     "tags": [
       "Dynamic Programming",
       "Tree",
@@ -1100,7 +1129,8 @@
       "GeeksforGeeks",
       "Meta",
       "Google",
-      "Amazon"
+      "Amazon",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\ndef maxPathSum(root: Optional['TreeNode']) -> int:\n    # Write your solution here\n    pass",
@@ -1128,7 +1158,7 @@
     "title": "Rotate Image",
     "difficulty": "MEDIUM",
     "description": "You are given an `n x n` 2D matrix representing an image, rotate the image by 90 degrees (clockwise).\n\nYou have to rotate the image in-place, which means you have to modify the input 2D matrix directly. DO NOT allocate another 2D matrix and do the rotation.",
-    "constraintsText": "\u2022 n == matrix.length == matrix[i].length\n\u2022 1 <= n <= 20\n\u2022 -1000 <= matrix[i][j] <= 1000",
+    "constraintsText": "• n == matrix.length == matrix[i].length\n• 1 <= n <= 20\n• -1000 <= matrix[i][j] <= 1000",
     "tags": [
       "Array",
       "Math",
@@ -1139,7 +1169,8 @@
       "Amazon",
       "Microsoft",
       "Google",
-      "Apple"
+      "Apple",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def rotate(matrix: list[list[int]]) -> None:\n    \"\"\"\n    Do not return anything, modify matrix in-place instead.\n    \"\"\"\n    pass",
@@ -1167,7 +1198,7 @@
     "title": "Merge k Sorted Lists",
     "difficulty": "HARD",
     "description": "You are given an array of `k` linked-lists `lists`, each linked-list is sorted in ascending order.\n\nMerge all the linked-lists into one sorted linked-list and return it.",
-    "constraintsText": "\u2022 k == lists.length\n\u2022 0 <= k <= 10^4\n\u2022 0 <= lists[i].length <= 500\n\u2022 -10^4 <= lists[i][j] <= 10^4\n\u2022 lists[i] is sorted in ascending order.\n\u2022 The sum of lists[i].length will not exceed 10^4.",
+    "constraintsText": "• k == lists.length\n• 0 <= k <= 10^4\n• 0 <= lists[i].length <= 500\n• -10^4 <= lists[i][j] <= 10^4\n• lists[i] is sorted in ascending order.\n• The sum of lists[i].length will not exceed 10^4.",
     "tags": [
       "Linked List",
       "Divide and Conquer",
@@ -1180,7 +1211,8 @@
       "Google",
       "Meta",
       "Microsoft",
-      "Uber"
+      "Uber",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeKLists(lists: list[Optional['ListNode']]) -> Optional['ListNode']:\n    # Write your solution here\n    pass",
@@ -1202,7 +1234,7 @@
     "title": "Valid Anagram",
     "difficulty": "EASY",
     "description": "Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.\n\nAn Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
-    "constraintsText": "\u2022 1 <= s.length, t.length <= 5 * 10^4\n\u2022 s and t consist of lowercase English letters.",
+    "constraintsText": "• 1 <= s.length, t.length <= 5 * 10^4\n• s and t consist of lowercase English letters.",
     "tags": [
       "Hash Table",
       "String",
@@ -1212,7 +1244,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Google",
-      "Meta"
+      "Meta",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def isAnagram(s: str, t: str) -> bool:\n    # Write your solution here\n    pass",
@@ -1240,7 +1273,7 @@
     "title": "Top K Frequent Elements",
     "difficulty": "MEDIUM",
     "description": "Given an integer array `nums` and an integer `k`, return the `k` most frequent elements. You may return the answer in any order.\n\nYour algorithm's time complexity must be better than `O(n log n)`, where n is the array's size.",
-    "constraintsText": "\u2022 1 <= nums.length <= 10^5\n\u2022 -10^4 <= nums[i] <= 10^4\n\u2022 k is in the range [1, the number of unique elements in the array].\n\u2022 It is guaranteed that the answer is unique.",
+    "constraintsText": "• 1 <= nums.length <= 10^5\n• -10^4 <= nums[i] <= 10^4\n• k is in the range [1, the number of unique elements in the array].\n• It is guaranteed that the answer is unique.",
     "tags": [
       "Array",
       "Hash Table",
@@ -1254,7 +1287,8 @@
       "Amazon",
       "Meta",
       "Google",
-      "Microsoft"
+      "Microsoft",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def topKFrequent(nums: list[int], k: int) -> list[int]:\n    # Write your solution here\n    pass",
@@ -1282,7 +1316,7 @@
     "title": "Jump Game",
     "difficulty": "MEDIUM",
     "description": "You are given an integer array `nums`. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position.\n\nReturn `true` if you can reach the last index, or `false` otherwise.",
-    "constraintsText": "\u2022 1 <= nums.length <= 10^4\n\u2022 0 <= nums[i] <= 10^5",
+    "constraintsText": "• 1 <= nums.length <= 10^4\n• 0 <= nums[i] <= 10^5",
     "tags": [
       "Array",
       "Dynamic Programming",
@@ -1292,7 +1326,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Google",
-      "Microsoft"
+      "Microsoft",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def canJump(nums: list[int]) -> bool:\n    # Write your solution here\n    pass",
@@ -1320,7 +1355,7 @@
     "title": "Kth Smallest Element in a BST",
     "difficulty": "MEDIUM",
     "description": "Given the `root` of a binary search tree, and an integer `k`, return the `k-th` smallest value (1-indexed) of all the values of the nodes in the tree.",
-    "constraintsText": "\u2022 The number of nodes in the tree is n.\n\u2022 1 <= k <= n <= 10^4\n\u2022 0 <= Node.val <= 10^4",
+    "constraintsText": "• The number of nodes in the tree is n.\n• 1 <= k <= n <= 10^4\n• 0 <= Node.val <= 10^4",
     "tags": [
       "Tree",
       "Depth-First Search",
@@ -1331,7 +1366,8 @@
       "GeeksforGeeks",
       "Amazon",
       "Uber",
-      "Meta"
+      "Meta",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\ndef kthSmallest(root: Optional['TreeNode'], k: int) -> int:\n    # Write your solution here\n    pass",
@@ -1359,7 +1395,7 @@
     "title": "Decode Ways",
     "difficulty": "MEDIUM",
     "description": "A message containing letters from A-Z can be encoded into numbers using the mapping:\n'A' -> \"1\", 'B' -> \"2\", ... 'Z' -> \"26\".\n\nGiven a string `s` containing only digits, return the number of ways to decode it.\n\nThe test cases are generated so that the answer fits in a 32-bit integer.",
-    "constraintsText": "\u2022 1 <= s.length <= 100\n\u2022 s contains only digits and may contain leading zero(s).",
+    "constraintsText": "• 1 <= s.length <= 100\n• s contains only digits and may contain leading zero(s).",
     "tags": [
       "String",
       "Dynamic Programming",
@@ -1369,7 +1405,8 @@
       "Google",
       "Meta",
       "Amazon",
-      "Microsoft"
+      "Microsoft",
+      "Blind 75"
     ],
     "starterCode": {
       "PYTHON": "def numDecodings(s: str) -> int:\n    # Write your solution here\n    pass",
@@ -1395,6 +1432,1479 @@
         "input": "s = \"06\"",
         "expectedOutput": "0",
         "explanation": "\"06\" cannot be mapped to 'F' because of the leading zero."
+      }
+    ]
+  },
+  {
+    "slug": "contains-duplicate",
+    "title": "Contains Duplicate",
+    "difficulty": "EASY",
+    "description": "Given an integer array `nums`, return `true` if any value appears at least twice in the array, and return `false` if every element is distinct.",
+    "constraintsText": "• 1 <= nums.length <= 10^5\n• -10^9 <= nums[i] <= 10^9",
+    "tags": [
+      "Array",
+      "Hash Table",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Apple"
+    ],
+    "starterCode": {
+      "PYTHON": "def containsDuplicate(nums: list[int]) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function containsDuplicate(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [1,2,3,1]",
+        "expectedOutput": "true",
+        "explanation": "1 appears twice at index 0 and 3."
+      },
+      {
+        "position": 2,
+        "input": "nums = [1,2,3,4]",
+        "expectedOutput": "false",
+        "explanation": "All elements are distinct."
+      }
+    ]
+  },
+  {
+    "slug": "maximum-product-subarray",
+    "title": "Maximum Product Subarray",
+    "difficulty": "MEDIUM",
+    "description": "Given an integer array `nums`, find a subarray that has the largest product, and return the product.\n\nThe test cases are generated so that the answer will fit in a 32-bit integer.",
+    "constraintsText": "• 1 <= nums.length <= 2 * 10^4\n• -10 <= nums[i] <= 10\n• The product of any prefix or suffix of nums fits in a 32-bit integer.",
+    "tags": [
+      "Array",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def maxProduct(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int maxProduct(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxProduct(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function maxProduct(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [2,3,-2,4]",
+        "expectedOutput": "6",
+        "explanation": "[2,3] has the largest product 6."
+      },
+      {
+        "position": 2,
+        "input": "nums = [-2,0,-1]",
+        "expectedOutput": "0",
+        "explanation": "The result cannot be 2, because [-2,-1] is not a subarray."
+      }
+    ]
+  },
+  {
+    "slug": "longest-consecutive-sequence",
+    "title": "Longest Consecutive Sequence",
+    "difficulty": "MEDIUM",
+    "description": "Given an unsorted array of integers `nums`, return the length of the longest consecutive elements sequence.\n\nYou must write an algorithm that runs in O(n) time.",
+    "constraintsText": "• 0 <= nums.length <= 10^5\n• -10^9 <= nums[i] <= 10^9",
+    "tags": [
+      "Array",
+      "Hash Table",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Meta",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def longestConsecutive(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int longestConsecutive(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int longestConsecutive(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function longestConsecutive(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [100,4,200,1,3,2]",
+        "expectedOutput": "4",
+        "explanation": "The longest consecutive elements sequence is [1, 2, 3, 4]. Its length is 4."
+      },
+      {
+        "position": 2,
+        "input": "nums = [0,3,7,2,5,8,4,6,0,1]",
+        "expectedOutput": "9",
+        "explanation": "The longest consecutive sequence is [0, 1, 2, 3, 4, 5, 6, 7, 8], length is 9."
+      }
+    ]
+  },
+  {
+    "slug": "sum-of-two-integers",
+    "title": "Sum of Two Integers",
+    "difficulty": "MEDIUM",
+    "description": "Given two integers `a` and `b`, return the sum of the two integers without using the operators `+` and `-`.",
+    "constraintsText": "• -1000 <= a, b <= 1000",
+    "tags": [
+      "Bit Manipulation",
+      "Math",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def getSum(a: int, b: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int getSum(int a, int b) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    int getSum(int a, int b) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function getSum(a, b) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "a = 1, b = 2",
+        "expectedOutput": "3",
+        "explanation": "1 + 2 = 3 without using + operator."
+      },
+      {
+        "position": 2,
+        "input": "a = 2, b = 3",
+        "expectedOutput": "5",
+        "explanation": "2 + 3 = 5."
+      }
+    ]
+  },
+  {
+    "slug": "number-of-1-bits",
+    "title": "Number of 1 Bits",
+    "difficulty": "EASY",
+    "description": "Write a function that takes the binary representation of a positive integer and returns the number of set bits it has (also known as the Hamming weight).",
+    "constraintsText": "• 1 <= n <= 2^31 - 1",
+    "tags": [
+      "Bit Manipulation",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Apple",
+      "Microsoft"
+    ],
+    "starterCode": {
+      "PYTHON": "def hammingWeight(n: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int hammingWeight(int n) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    int hammingWeight(int n) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function hammingWeight(n) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "n = 11",
+        "expectedOutput": "3",
+        "explanation": "11 in binary is 1011, which has three '1' bits."
+      },
+      {
+        "position": 2,
+        "input": "n = 128",
+        "expectedOutput": "1",
+        "explanation": "128 in binary is 10000000, which has one '1' bit."
+      }
+    ]
+  },
+  {
+    "slug": "counting-bits",
+    "title": "Counting Bits",
+    "difficulty": "EASY",
+    "description": "Given an integer `n`, return an array `ans` of length `n + 1` such that for each `i` (0 <= i <= n), `ans[i]` is the number of 1's in the binary representation of `i`.",
+    "constraintsText": "• 0 <= n <= 10^5",
+    "tags": [
+      "Dynamic Programming",
+      "Bit Manipulation",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def countBits(n: int) -> list[int]:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int[] countBits(int n) {\n        // Write your solution here\n        return new int[]{};\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> countBits(int n) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function countBits(n) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "n = 2",
+        "expectedOutput": "[0,1,1]",
+        "explanation": "0 -> 0 (0), 1 -> 1 (1), 2 -> 10 (1)."
+      },
+      {
+        "position": 2,
+        "input": "n = 5",
+        "expectedOutput": "[0,1,1,2,1,2]",
+        "explanation": "0:0, 1:1, 2:1, 3:2, 4:1, 5:2."
+      }
+    ]
+  },
+  {
+    "slug": "missing-number",
+    "title": "Missing Number",
+    "difficulty": "EASY",
+    "description": "Given an array `nums` containing `n` distinct numbers in the range `[0, n]`, return the only number in the range that is missing from the array.",
+    "constraintsText": "• n == nums.length\n• 1 <= n <= 10^4\n• 0 <= nums[i] <= n\n• All the numbers of nums are unique.",
+    "tags": [
+      "Array",
+      "Hash Table",
+      "Math",
+      "Bit Manipulation",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft"
+    ],
+    "starterCode": {
+      "PYTHON": "def missingNumber(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int missingNumber(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function missingNumber(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [3,0,1]",
+        "expectedOutput": "2",
+        "explanation": "n = 3 since there are 3 numbers, so all numbers are in [0,3]. 2 is the missing number."
+      },
+      {
+        "position": 2,
+        "input": "nums = [0,1]",
+        "expectedOutput": "2",
+        "explanation": "n = 2 since there are 2 numbers. 2 is missing."
+      }
+    ]
+  },
+  {
+    "slug": "reverse-bits",
+    "title": "Reverse Bits",
+    "difficulty": "EASY",
+    "description": "Reverse bits of a given 32 bits unsigned integer.",
+    "constraintsText": "• The input must be a binary string of length 32 or a 32-bit integer.",
+    "tags": [
+      "Bit Manipulation",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def reverseBits(n: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int reverseBits(int n) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    uint32_t reverseBits(uint32_t n) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function reverseBits(n) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "n = 43261596",
+        "expectedOutput": "964176192",
+        "explanation": "The input binary string is 00000010100101000001111010011100, reversed is 00111001011110000010100101000000 (964176192)."
+      }
+    ]
+  },
+  {
+    "slug": "longest-increasing-subsequence",
+    "title": "Longest Increasing Subsequence",
+    "difficulty": "MEDIUM",
+    "description": "Given an integer array `nums`, return the length of the longest strictly increasing subsequence.",
+    "constraintsText": "• 1 <= nums.length <= 2500\n• -10^4 <= nums[i] <= 10^4",
+    "tags": [
+      "Array",
+      "Binary Search",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def lengthOfLIS(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function lengthOfLIS(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [10,9,2,5,3,7,101,18]",
+        "expectedOutput": "4",
+        "explanation": "The longest increasing subsequence is [2, 3, 7, 101], therefore the length is 4."
+      },
+      {
+        "position": 2,
+        "input": "nums = [0,1,0,3,2,3]",
+        "expectedOutput": "4",
+        "explanation": "The longest increasing subsequence is [0, 1, 2, 3]."
+      }
+    ]
+  },
+  {
+    "slug": "longest-common-subsequence",
+    "title": "Longest Common Subsequence",
+    "difficulty": "MEDIUM",
+    "description": "Given two strings `text1` and `text2`, return the length of their longest common subsequence. If there is no common subsequence, return `0`.\n\nA subsequence of a string is a new string generated from the original string with some characters (can be none) deleted without changing the relative order of the remaining characters.",
+    "constraintsText": "• 1 <= text1.length, text2.length <= 1000\n• text1 and text2 consist of only lowercase English characters.",
+    "tags": [
+      "String",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def longestCommonSubsequence(text1: str, text2: str) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int longestCommonSubsequence(String text1, String text2) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    int longestCommonSubsequence(string text1, string text2) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function longestCommonSubsequence(text1, text2) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "text1 = \"abcde\", text2 = \"ace\"",
+        "expectedOutput": "3",
+        "explanation": "The longest common subsequence is \"ace\" and its length is 3."
+      },
+      {
+        "position": 2,
+        "input": "text1 = \"abc\", text2 = \"def\"",
+        "expectedOutput": "0",
+        "explanation": "There is no such common subsequence, so the result is 0."
+      }
+    ]
+  },
+  {
+    "slug": "combination-sum",
+    "title": "Combination Sum",
+    "difficulty": "MEDIUM",
+    "description": "Given an array of distinct integers `candidates` and a target integer `target`, return a list of all unique combinations of `candidates` where the chosen numbers sum to `target`. You may return the combinations in any order.\n\nThe same number may be chosen from `candidates` an unlimited number of times.",
+    "constraintsText": "• 1 <= candidates.length <= 30\n• 2 <= candidates[i] <= 40\n• All elements of candidates are distinct.\n• 1 <= target <= 40",
+    "tags": [
+      "Array",
+      "Backtracking",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def combinationSum(candidates: list[int], target: int) -> list[list[int]]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Solution {\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function combinationSum(candidates, target) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "candidates = [2,3,6,7], target = 7",
+        "expectedOutput": "[[2,2,3],[7]]",
+        "explanation": "2 and 3 are candidates, and 2 + 2 + 3 = 7. Note that 2 can be used multiple times. 7 is a candidate, and 7 = 7."
+      }
+    ]
+  },
+  {
+    "slug": "house-robber",
+    "title": "House Robber",
+    "difficulty": "MEDIUM",
+    "description": "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and it will automatically contact the police if two adjacent houses were broken into on the same night.\n\nGiven an integer array `nums` representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.",
+    "constraintsText": "• 1 <= nums.length <= 100\n• 0 <= nums[i] <= 400",
+    "tags": [
+      "Array",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft"
+    ],
+    "starterCode": {
+      "PYTHON": "def rob(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int rob(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int rob(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function rob(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [1,2,3,1]",
+        "expectedOutput": "4",
+        "explanation": "Rob house 1 (money = 1) and then rob house 3 (money = 3). Total amount = 1 + 3 = 4."
+      },
+      {
+        "position": 2,
+        "input": "nums = [2,7,9,3,1]",
+        "expectedOutput": "12",
+        "explanation": "Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1). Total amount = 2 + 9 + 1 = 12."
+      }
+    ]
+  },
+  {
+    "slug": "house-robber-ii",
+    "title": "House Robber II",
+    "difficulty": "MEDIUM",
+    "description": "You are a professional robber planning to rob houses along a street. All houses at this place are arranged in a circle. That means the first house is the neighbor of the last one. Meanwhile, adjacent houses have a security system connected, and that will automatically contact the police if two adjacent houses were broken into on the same night.\n\nGiven an integer array `nums` representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.",
+    "constraintsText": "• 1 <= nums.length <= 100\n• 0 <= nums[i] <= 1000",
+    "tags": [
+      "Array",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def rob(nums: list[int]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int rob(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int rob(vector<int>& nums) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function rob(nums) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "nums = [2,3,2]",
+        "expectedOutput": "3",
+        "explanation": "You cannot rob house 1 (money = 2) and then rob house 3 (money = 2), because they are adjacent houses."
+      },
+      {
+        "position": 2,
+        "input": "nums = [1,2,3,1]",
+        "expectedOutput": "4",
+        "explanation": "Rob house 1 (1) and house 3 (3) gives 4."
+      }
+    ]
+  },
+  {
+    "slug": "unique-paths",
+    "title": "Unique Paths",
+    "difficulty": "MEDIUM",
+    "description": "There is a robot on an `m x n` grid. The robot is initially located at the top-left corner (i.e., `grid[0][0]`). The robot tries to move to the bottom-right corner (i.e., `grid[m - 1][n - 1]`). The robot can only move either down or right at any point in time.\n\nGiven the two integers `m` and `n`, return the number of possible unique paths that the robot can take to reach the bottom-right corner.",
+    "constraintsText": "• 1 <= m, n <= 100",
+    "tags": [
+      "Math",
+      "Dynamic Programming",
+      "Combinatorics",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "def uniquePaths(m: int, n: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int uniquePaths(int m, int n) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function uniquePaths(m, n) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "m = 3, n = 7",
+        "expectedOutput": "28",
+        "explanation": "From the top-left corner, there are a total of 28 unique paths to the bottom-right corner."
+      },
+      {
+        "position": 2,
+        "input": "m = 3, n = 2",
+        "expectedOutput": "3",
+        "explanation": "From top-left to bottom-right, 3 paths: Right -> Down -> Down, Down -> Down -> Right, Down -> Right -> Down."
+      }
+    ]
+  },
+  {
+    "slug": "clone-graph",
+    "title": "Clone Graph",
+    "difficulty": "MEDIUM",
+    "description": "Given a reference of a node in a connected undirected graph, return a deep copy (clone) of the graph.\n\nEach node in the graph contains a value (`int`) and a list (`List[Node]`) of its neighbors.",
+    "constraintsText": "• The number of nodes in the graph is in the range [0, 100].\n• 1 <= Node.val <= 100\n• Node.val is unique for each node.",
+    "tags": [
+      "Hash Table",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "class Node:\n    def __init__(self, val = 0, neighbors = None):\n        self.val = val\n        self.neighbors = neighbors if neighbors is not None else []\n\ndef cloneGraph(node: 'Node') -> 'Node':\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Node {\n    public int val;\n    public List<Node> neighbors;\n    public Node() { val = 0; neighbors = new ArrayList<Node>(); }\n    public Node(int _val) { val = _val; neighbors = new ArrayList<Node>(); }\n    public Node(int _val, ArrayList<Node> _neighbors) { val = _val; neighbors = _neighbors; }\n}\n\nclass Solution {\n    public Node cloneGraph(Node node) {\n        // Write your solution here\n        return null;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Node {\npublic:\n    int val;\n    vector<Node*> neighbors;\n    Node() { val = 0; }\n    Node(int _val) { val = _val; }\n    Node(int _val, vector<Node*> _neighbors) { val = _val; neighbors = _neighbors; }\n};\n\nclass Solution {\npublic:\n    Node* cloneGraph(Node* node) {\n        // Write your solution here\n        return nullptr;\n    }\n};",
+      "JAVASCRIPT": "function cloneGraph(node) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "adjList = [[2,4],[1,3],[2,4],[1,3]]",
+        "expectedOutput": "[[2,4],[1,3],[2,4],[1,3]]",
+        "explanation": "4 nodes in graph. Node 1 connected to 2 & 4, Node 2 to 1 & 3, etc."
+      }
+    ]
+  },
+  {
+    "slug": "pacific-atlantic-water-flow",
+    "title": "Pacific Atlantic Water Flow",
+    "difficulty": "MEDIUM",
+    "description": "There is an `m x n` rectangular island that borders both the Pacific Ocean and Atlantic Ocean. The Pacific Ocean touches the island's left and top edges, and the Atlantic Ocean touches the island's right and bottom edges.\n\nThe island is partitioned into a grid of square cells. You are given an `m x n` integer matrix `heights` where `heights[r][c]` represents the height above sea level of the cell at coordinate `(r, c)`.\n\nWater can only flow to adjacent cells with an equal or lower height. Return a 2D list of grid coordinates `result` where `result[i] = [ri, ci]` denotes that rain water can flow from cell `(ri, ci)` to both the Pacific and Atlantic oceans.",
+    "constraintsText": "• m == heights.length\n• n == heights[r].length\n• 1 <= m, n <= 200\n• 0 <= heights[r][c] <= 10^5",
+    "tags": [
+      "Array",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Matrix",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def pacificAtlantic(heights: list[list[int]]) -> list[list[int]]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Solution {\n    public List<List<Integer>> pacificAtlantic(int[][] heights) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function pacificAtlantic(heights) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "heights = [[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]",
+        "expectedOutput": "[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]",
+        "explanation": "The specified coordinates can flow to both Pacific and Atlantic."
+      }
+    ]
+  },
+  {
+    "slug": "alien-dictionary",
+    "title": "Alien Dictionary",
+    "difficulty": "HARD",
+    "description": "There is a new alien language that uses the English alphabet. However, the order of the letters is unknown to you.\n\nYou are given a list of strings `words` from the alien language's dictionary, where the strings in `words` are sorted lexicographically by the rules of this new language.\n\nReturn a string of the unique letters in the new alien language sorted in lexicographically increasing order by the new language's rules. If there is no solution, return `\"\"`.",
+    "constraintsText": "• 1 <= words.length <= 100\n• 1 <= words[i].length <= 100\n• words[i] consists of only lowercase English letters.",
+    "tags": [
+      "Array",
+      "String",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph",
+      "Topological Sort",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta",
+      "Google",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def alienOrder(words: list[str]) -> str:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public String alienOrder(String[] words) {\n        // Write your solution here\n        return \"\";\n    }\n}",
+      "CPP": "#include <vector>\n#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    string alienOrder(vector<string>& words) {\n        // Write your solution here\n        return \"\";\n    }\n};",
+      "JAVASCRIPT": "function alienOrder(words) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "words = [\"wrt\",\"wrf\",\"er\",\"ett\",\"rftt\"]",
+        "expectedOutput": "\"wertf\"",
+        "explanation": "Lexicographical order inferred from words: w < e, r < t, t < f."
+      },
+      {
+        "position": 2,
+        "input": "words = [\"z\",\"x\"]",
+        "expectedOutput": "\"zx\"",
+        "explanation": "z comes before x."
+      }
+    ]
+  },
+  {
+    "slug": "graph-valid-tree",
+    "title": "Graph Valid Tree",
+    "difficulty": "MEDIUM",
+    "description": "You have a graph of `n` nodes labeled from `0` to `n - 1`. You are given an integer `n` and a list of `edges` where `edges[i] = [ai, bi]` indicates that there is an undirected edge between nodes `ai` and `bi` in the graph.\n\nReturn `true` if the edges of the given graph make up a valid tree, and `false` otherwise.",
+    "constraintsText": "• 1 <= n <= 2000\n• 0 <= edges.length <= 5000\n• edges[i].length == 2\n• 0 <= ai, bi < n\n• ai != bi\n• There are no self-loops or repeated edges.",
+    "tags": [
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Union Find",
+      "Graph",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def validTree(n: int, edges: list[list[int]]) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean validTree(int n, int[][] edges) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool validTree(int n, vector<vector<int>>& edges) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function validTree(n, edges) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "n = 5, edges = [[0,1],[0,2],[0,3],[1,4]]",
+        "expectedOutput": "true",
+        "explanation": "Connected and has no cycles, forming a valid tree."
+      },
+      {
+        "position": 2,
+        "input": "n = 5, edges = [[0,1],[1,2],[2,3],[1,3],[1,4]]",
+        "expectedOutput": "false",
+        "explanation": "Contains a cycle [1,2,3], thus not a valid tree."
+      }
+    ]
+  },
+  {
+    "slug": "number-of-connected-components-in-an-undirected-graph",
+    "title": "Number of Connected Components in an Undirected Graph",
+    "difficulty": "MEDIUM",
+    "description": "You have a graph of `n` nodes. You are given an integer `n` and an array `edges` where `edges[i] = [ai, bi]` indicates that there is an edge between `ai` and `bi` in the graph.\n\nReturn the number of connected components in the graph.",
+    "constraintsText": "• 1 <= n <= 2000\n• 1 <= edges.length <= 5000\n• edges[i].length == 2\n• 0 <= ai <= bi < n\n• ai != bi\n• There are no repeated edges.",
+    "tags": [
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Union Find",
+      "Graph",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def countComponents(n: int, edges: list[list[int]]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int countComponents(int n, int[][] edges) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int countComponents(int n, vector<vector<int>>& edges) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function countComponents(n, edges) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "n = 5, edges = [[0,1],[1,2],[3,4]]",
+        "expectedOutput": "2",
+        "explanation": "Components are {0,1,2} and {3,4}."
+      },
+      {
+        "position": 2,
+        "input": "n = 5, edges = [[0,1],[1,2],[2,3],[3,4]]",
+        "expectedOutput": "1",
+        "explanation": "All nodes connected in one component."
+      }
+    ]
+  },
+  {
+    "slug": "insert-interval",
+    "title": "Insert Interval",
+    "difficulty": "MEDIUM",
+    "description": "You are given an array of non-overlapping intervals `intervals` where `intervals[i] = [starti, endi]` represent the start and the end of the `i-th` interval and `intervals` is sorted in ascending order by `starti`.\n\nYou are also given an interval `newInterval = [start, end]` that represents the start and end of another interval.\n\nInsert `newInterval` into `intervals` such that `intervals` is still sorted in ascending order by `starti` and `intervals` still does not have any overlapping intervals (merge overlapping intervals if necessary).",
+    "constraintsText": "• 0 <= intervals.length <= 10^4\n• intervals[i].length == 2\n• 0 <= starti <= endi <= 10^5\n• intervals is sorted by starti in ascending order.\n• newInterval.length == 2\n• 0 <= start <= end <= 10^5",
+    "tags": [
+      "Array",
+      "Intervals",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "def insert(intervals: list[list[int]], newInterval: list[int]) -> list[list[int]]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Solution {\n    public int[][] insert(int[][] intervals, int[] newInterval) {\n        // Write your solution here\n        return new int[][]{};\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function insert(intervals, newInterval) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "intervals = [[1,3],[6,9]], newInterval = [2,5]",
+        "expectedOutput": "[[1,5],[6,9]]",
+        "explanation": "Intervals [1,3] and [2,5] overlap into [1,5]."
+      }
+    ]
+  },
+  {
+    "slug": "non-overlapping-intervals",
+    "title": "Non-overlapping Intervals",
+    "difficulty": "MEDIUM",
+    "description": "Given an array of intervals `intervals` where `intervals[i] = [starti, endi]`, return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.",
+    "constraintsText": "• 1 <= intervals.length <= 10^5\n• intervals[i].length == 2\n• -5 * 10^4 <= starti < endi <= 5 * 10^4",
+    "tags": [
+      "Array",
+      "Dynamic Programming",
+      "Greedy",
+      "Sorting",
+      "Intervals",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def eraseOverlapIntervals(intervals: list[list[int]]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int eraseOverlapIntervals(int[][] intervals) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int eraseOverlapIntervals(vector<vector<int>>& intervals) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function eraseOverlapIntervals(intervals) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "intervals = [[1,2],[2,3],[3,4],[1,3]]",
+        "expectedOutput": "1",
+        "explanation": "[1,3] can be removed and the rest of the intervals are non-overlapping."
+      },
+      {
+        "position": 2,
+        "input": "intervals = [[1,2],[1,2],[1,2]]",
+        "expectedOutput": "2",
+        "explanation": "You need to remove two [1,2] to make the rest non-overlapping."
+      }
+    ]
+  },
+  {
+    "slug": "meeting-rooms",
+    "title": "Meeting Rooms",
+    "difficulty": "EASY",
+    "description": "Given an array of meeting time intervals where `intervals[i] = [starti, endi]`, determine if a person could attend all meetings.",
+    "constraintsText": "• 0 <= intervals.length <= 10^4\n• intervals[i].length == 2\n• 0 <= starti < endi <= 10^6",
+    "tags": [
+      "Array",
+      "Sorting",
+      "Intervals",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "def canAttendMeetings(intervals: list[list[int]]) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean canAttendMeetings(int[][] intervals) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool canAttendMeetings(vector<vector<int>>& intervals) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function canAttendMeetings(intervals) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "intervals = [[0,30],[5,10],[15,20]]",
+        "expectedOutput": "false",
+        "explanation": "Person cannot attend both [0,30] and [5,10] since they overlap."
+      },
+      {
+        "position": 2,
+        "input": "intervals = [[7,10],[2,4]]",
+        "expectedOutput": "true",
+        "explanation": "No overlap, person can attend both."
+      }
+    ]
+  },
+  {
+    "slug": "meeting-rooms-ii",
+    "title": "Meeting Rooms II",
+    "difficulty": "MEDIUM",
+    "description": "Given an array of meeting time intervals `intervals` where `intervals[i] = [starti, endi]`, return the minimum number of conference rooms required.",
+    "constraintsText": "• 1 <= intervals.length <= 10^4\n• 0 <= starti < endi <= 10^6",
+    "tags": [
+      "Array",
+      "Two Pointers",
+      "Greedy",
+      "Sorting",
+      "Heap",
+      "Intervals",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Amazon",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "def minMeetingRooms(intervals: list[list[int]]) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int minMeetingRooms(int[][] intervals) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int minMeetingRooms(vector<vector<int>>& intervals) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function minMeetingRooms(intervals) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "intervals = [[0,30],[5,10],[15,20]]",
+        "expectedOutput": "2",
+        "explanation": "Room 1 handles [0,30], Room 2 handles [5,10] and [15,20]."
+      },
+      {
+        "position": 2,
+        "input": "intervals = [[7,10],[2,4]]",
+        "expectedOutput": "1",
+        "explanation": "One room is enough."
+      }
+    ]
+  },
+  {
+    "slug": "linked-list-cycle",
+    "title": "Linked List Cycle",
+    "difficulty": "EASY",
+    "description": "Given `head`, the head of a linked list, determine if the linked list has a cycle in it.\n\nThere is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the `next` pointer.",
+    "constraintsText": "• The number of the nodes in the list is in the range [0, 10^4].\n• -10^5 <= Node.val <= 10^5\n• pos is -1 or a valid index in the linked-list.",
+    "tags": [
+      "Hash Table",
+      "Linked List",
+      "Two Pointers",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft",
+      "Apple"
+    ],
+    "starterCode": {
+      "PYTHON": "class ListNode:\n    def __init__(self, x):\n        self.val = x\n        self.next = None\n\ndef hasCycle(head: ListNode) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class ListNode {\n    int val;\n    ListNode next;\n    ListNode(int x) {\n        val = x;\n        next = null;\n    }\n}\n\nclass Solution {\n    public boolean hasCycle(ListNode head) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "struct ListNode {\n    int val;\n    ListNode *next;\n    ListNode(int x) : val(x), next(nullptr) {}\n};\n\nclass Solution {\npublic:\n    bool hasCycle(ListNode *head) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function hasCycle(head) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "head = [3,2,0,-4], pos = 1",
+        "expectedOutput": "true",
+        "explanation": "There is a cycle in the linked list, where the tail connects to the 1st node (0-indexed)."
+      }
+    ]
+  },
+  {
+    "slug": "remove-nth-node-from-end-of-list",
+    "title": "Remove Nth Node From End of List",
+    "difficulty": "MEDIUM",
+    "description": "Given the `head` of a linked list, remove the `nth` node from the end of the list and return its head.",
+    "constraintsText": "• The number of nodes in the list is sz.\n• 1 <= sz <= 30\n• 0 <= Node.val <= 100\n• 1 <= n <= sz",
+    "tags": [
+      "Linked List",
+      "Two Pointers",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef removeNthFromEnd(head: ListNode, n: int) -> ListNode:\n    # Write your solution here\n    pass",
+      "JAVA": "class ListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n\nclass Solution {\n    public ListNode removeNthFromEnd(ListNode head, int n) {\n        // Write your solution here\n        return head;\n    }\n}",
+      "CPP": "struct ListNode {\n    int val;\n    ListNode *next;\n    ListNode() : val(0), next(nullptr) {}\n    ListNode(int x) : val(x), next(nullptr) {}\n    ListNode(int x, ListNode *next) : val(x), next(next) {}\n};\n\nclass Solution {\npublic:\n    ListNode* removeNthFromEnd(ListNode* head, int n) {\n        // Write your solution here\n        return head;\n    }\n};",
+      "JAVASCRIPT": "function removeNthFromEnd(head, n) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "head = [1,2,3,4,5], n = 2",
+        "expectedOutput": "[1,2,3,5]",
+        "explanation": "Removing the 2nd node from end (4) results in [1,2,3,5]."
+      }
+    ]
+  },
+  {
+    "slug": "reorder-list",
+    "title": "Reorder List",
+    "difficulty": "MEDIUM",
+    "description": "You are given the head of a singly linked-list: L0 -> L1 -> … -> Ln-1 -> Ln. Reorder the list to be: L0 -> Ln -> L1 -> Ln-1 -> L2 -> Ln-2 -> …\n\nYou may not modify the values in the list's nodes. Only nodes themselves may be changed.",
+    "constraintsText": "• The number of nodes in the list is in the range [1, 5 * 10^4].\n• 1 <= Node.val <= 1000",
+    "tags": [
+      "Linked List",
+      "Two Pointers",
+      "Stack",
+      "Recursion",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def reorderList(head: ListNode) -> None:\n    # Do not return anything, modify head in-place instead.\n    pass",
+      "JAVA": "class Solution {\n    public void reorderList(ListNode head) {\n        // Do not return anything, modify head in-place instead.\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    void reorderList(ListNode* head) {\n        // Modify head in-place instead.\n    }\n};",
+      "JAVASCRIPT": "function reorderList(head) {\n    // Modify head in-place instead.\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "head = [1,2,3,4]",
+        "expectedOutput": "[1,4,2,3]",
+        "explanation": "Reordered alternating from start and end."
+      }
+    ]
+  },
+  {
+    "slug": "set-matrix-zeroes",
+    "title": "Set Matrix Zeroes",
+    "difficulty": "MEDIUM",
+    "description": "Given an `m x n` integer matrix `matrix`, if an element is 0, set its entire row and column to 0's. You must do it in place.",
+    "constraintsText": "• m == matrix.length\n• n == matrix[0].length\n• 1 <= m, n <= 200\n• -2^31 <= matrix[i][j] <= 2^31 - 1",
+    "tags": [
+      "Array",
+      "Hash Table",
+      "Matrix",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Microsoft",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def setZeroes(matrix: list[list[int]]) -> None:\n    # Modify matrix in-place instead.\n    pass",
+      "JAVA": "class Solution {\n    public void setZeroes(int[][] matrix) {\n        // Modify matrix in-place instead.\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    void setZeroes(vector<vector<int>>& matrix) {\n        // Modify matrix in-place instead.\n    }\n};",
+      "JAVASCRIPT": "function setZeroes(matrix) {\n    // Modify matrix in-place instead.\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "matrix = [[1,1,1],[1,0,1],[1,1,1]]",
+        "expectedOutput": "[[1,0,1],[0,0,0],[1,0,1]]",
+        "explanation": "Row 1 and column 1 set to 0."
+      }
+    ]
+  },
+  {
+    "slug": "spiral-matrix",
+    "title": "Spiral Matrix",
+    "difficulty": "MEDIUM",
+    "description": "Given an `m x n` matrix, return all elements of the matrix in spiral order.",
+    "constraintsText": "• m == matrix.length\n• n == matrix[i].length\n• 1 <= m, n <= 10\n• -100 <= matrix[i][j] <= 100",
+    "tags": [
+      "Array",
+      "Matrix",
+      "Simulation",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft",
+      "Apple"
+    ],
+    "starterCode": {
+      "PYTHON": "def spiralOrder(matrix: list[list[int]]) -> list[int]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Solution {\n    public List<Integer> spiralOrder(int[][] matrix) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> spiralOrder(vector<vector<int>>& matrix) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function spiralOrder(matrix) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "matrix = [[1,2,3],[4,5,6],[7,8,9]]",
+        "expectedOutput": "[1,2,3,6,9,8,7,4,5]",
+        "explanation": "Elements traversed in clockwise spiral order."
+      }
+    ]
+  },
+  {
+    "slug": "word-search",
+    "title": "Word Search",
+    "difficulty": "MEDIUM",
+    "description": "Given an `m x n` grid of characters `board` and a string `word`, return `true` if `word` exists in the grid.\n\nThe word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.",
+    "constraintsText": "• m == board.length\n• n = board[i].length\n• 1 <= m, n <= 6\n• 1 <= word.length <= 15\n• board and word consist of only lowercase and uppercase English letters.",
+    "tags": [
+      "Array",
+      "String",
+      "Backtracking",
+      "Matrix",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Meta",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def exist(board: list[list[str]], word: str) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean exist(char[][] board, String word) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "#include <vector>\n#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool exist(vector<vector<char>>& board, string word) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function exist(board, word) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"ABCCED\"",
+        "expectedOutput": "true",
+        "explanation": "Word ABCCED is traced through the grid."
+      }
+    ]
+  },
+  {
+    "slug": "longest-repeating-character-replacement",
+    "title": "Longest Repeating Character Replacement",
+    "difficulty": "MEDIUM",
+    "description": "You are given a string `s` and an integer `k`. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most `k` times.\n\nReturn the length of the longest substring containing the same letter you can get after performing the above operations.",
+    "constraintsText": "• 1 <= s.length <= 10^5\n• s consists of only uppercase English letters.\n• 0 <= k <= s.length",
+    "tags": [
+      "Hash Table",
+      "String",
+      "Sliding Window",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def characterReplacement(s: str, k: int) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int characterReplacement(String s, int k) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    int characterReplacement(string s, int k) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function characterReplacement(s, k) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"ABAB\", k = 2",
+        "expectedOutput": "4",
+        "explanation": "Replace the two 'A's with two 'B's or vice versa to get \"BBBB\" or \"AAAA\"."
+      }
+    ]
+  },
+  {
+    "slug": "minimum-window-substring",
+    "title": "Minimum Window Substring",
+    "difficulty": "HARD",
+    "description": "Given two strings `s` and `t` of lengths `m` and `n` respectively, return the minimum window substring of `s` such that every character in `t` (including duplicates) is included in the window. If there is no such substring, return the empty string `\"\"`.",
+    "constraintsText": "• m == s.length, n == t.length\n• 1 <= m, n <= 10^5\n• s and t consist of uppercase and lowercase English letters.",
+    "tags": [
+      "Hash Table",
+      "String",
+      "Sliding Window",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta",
+      "Google",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def minWindow(s: str, t: str) -> str:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public String minWindow(String s, String t) {\n        // Write your solution here\n        return \"\";\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    string minWindow(string s, string t) {\n        // Write your solution here\n        return \"\";\n    }\n};",
+      "JAVASCRIPT": "function minWindow(s, t) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"ADOBECODEBANC\", t = \"ABC\"",
+        "expectedOutput": "\"BANC\"",
+        "explanation": "The minimum window substring \"BANC\" includes A, B, and C from string t."
+      }
+    ]
+  },
+  {
+    "slug": "palindromic-substrings",
+    "title": "Palindromic Substrings",
+    "difficulty": "MEDIUM",
+    "description": "Given a string `s`, return the number of palindromic substrings in it.\n\nA string is a palindrome when it reads the same backward as forward. A substring is a contiguous sequence of characters within the string.",
+    "constraintsText": "• 1 <= s.length <= 1000\n• s consists of lowercase English letters.",
+    "tags": [
+      "Two Pointers",
+      "String",
+      "Dynamic Programming",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "def countSubstrings(s: str) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int countSubstrings(String s) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    int countSubstrings(string s) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function countSubstrings(s) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "s = \"abc\"",
+        "expectedOutput": "3",
+        "explanation": "Three palindromic substrings: \"a\", \"b\", \"c\"."
+      },
+      {
+        "position": 2,
+        "input": "s = \"aaa\"",
+        "expectedOutput": "6",
+        "explanation": "Six palindromic substrings: \"a\", \"a\", \"a\", \"aa\", \"aa\", \"aaa\"."
+      }
+    ]
+  },
+  {
+    "slug": "encode-and-decode-strings",
+    "title": "Encode and Decode Strings",
+    "difficulty": "MEDIUM",
+    "description": "Design an algorithm to encode a list of strings to a string. The encoded string is then sent over the network and is decoded back to the original list of strings.",
+    "constraintsText": "• 1 <= strs.length <= 200\n• 0 <= strs[i].length <= 200\n• strs[i] contains any possible characters out of 256 valid ASCII characters.",
+    "tags": [
+      "Array",
+      "String",
+      "Design",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "class Codec:\n    def encode(self, strs: list[str]) -> str:\n        # Encodes a list of strings to a single string.\n        pass\n\n    def decode(self, s: str) -> list[str]:\n        # Decodes a single string to a list of strings.\n        pass",
+      "JAVA": "import java.util.*;\n\npublic class Codec {\n    public String encode(List<String> strs) {\n        // Encodes a list of strings to a single string.\n        return \"\";\n    }\n    public List<String> decode(String s) {\n        // Decodes a single string to a list of strings.\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\n#include <string>\nusing namespace std;\n\nclass Codec {\npublic:\n    string encode(vector<string>& strs) {\n        return \"\";\n    }\n    vector<string> decode(string s) {\n        return {};\n    }\n};",
+      "JAVASCRIPT": "const Codec = {\n    encode: function(strs) { return \"\"; },\n    decode: function(s) { return []; }\n};"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "strs = [\"Hello\",\"World\"]",
+        "expectedOutput": "[\"Hello\",\"World\"]",
+        "explanation": "Encoded into unified stream and decoded back identically."
+      }
+    ]
+  },
+  {
+    "slug": "maximum-depth-of-binary-tree",
+    "title": "Maximum Depth of Binary Tree",
+    "difficulty": "EASY",
+    "description": "Given the `root` of a binary tree, return its maximum depth.\n\nA binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.",
+    "constraintsText": "• The number of nodes in the tree is in the range [0, 10^4].\n• -100 <= Node.val <= 100",
+    "tags": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Apple",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def maxDepth(root: TreeNode) -> int:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public int maxDepth(TreeNode root) {\n        // Write your solution here\n        return 0;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    int maxDepth(TreeNode* root) {\n        // Write your solution here\n        return 0;\n    }\n};",
+      "JAVASCRIPT": "function maxDepth(root) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "root = [3,9,20,null,null,15,7]",
+        "expectedOutput": "3",
+        "explanation": "Longest branch length from 3 down to 15 or 7 is 3."
+      }
+    ]
+  },
+  {
+    "slug": "same-tree",
+    "title": "Same Tree",
+    "difficulty": "EASY",
+    "description": "Given the roots of two binary trees `p` and `q`, write a function to check if they are the same or not.\n\nTwo binary trees are considered the same if they are structurally identical, and the nodes have the same value.",
+    "constraintsText": "• The number of nodes in both trees is in the range [0, 100].\n• -10^4 <= Node.val <= 10^4",
+    "tags": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1"
+    ],
+    "starterCode": {
+      "PYTHON": "def isSameTree(p: TreeNode, q: TreeNode) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean isSameTree(TreeNode p, TreeNode q) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    bool isSameTree(TreeNode* p, TreeNode* q) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function isSameTree(p, q) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "p = [1,2,3], q = [1,2,3]",
+        "expectedOutput": "true",
+        "explanation": "Both trees have identical values and topology."
+      },
+      {
+        "position": 2,
+        "input": "p = [1,2], q = [1,null,2]",
+        "expectedOutput": "false",
+        "explanation": "Structural difference: 2 is left child in p and right child in q."
+      }
+    ]
+  },
+  {
+    "slug": "subtree-of-another-tree",
+    "title": "Subtree of Another Tree",
+    "difficulty": "EASY",
+    "description": "Given the roots of two binary trees `root` and `subRoot`, return `true` if there is a subtree of `root` with the same structure and node values of `subRoot` and `false` otherwise.",
+    "constraintsText": "• The number of nodes in the root tree is in the range [1, 2000].\n• The number of nodes in the subRoot tree is in the range [1, 1000].\n• -10^4 <= root.val <= 10^4\n• -10^4 <= subRoot.val <= 10^4",
+    "tags": [
+      "Tree",
+      "Depth-First Search",
+      "String Matching",
+      "Binary Tree",
+      "Hash Function",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "def isSubtree(root: TreeNode, subRoot: TreeNode) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean isSubtree(TreeNode root, TreeNode subRoot) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    bool isSubtree(TreeNode* root, TreeNode* subRoot) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function isSubtree(root, subRoot) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "root = [3,4,5,1,2], subRoot = [4,1,2]",
+        "expectedOutput": "true",
+        "explanation": "subRoot matches the left subtree of root."
+      }
+    ]
+  },
+  {
+    "slug": "validate-binary-search-tree",
+    "title": "Validate Binary Search Tree",
+    "difficulty": "MEDIUM",
+    "description": "Given the `root` of a binary tree, determine if it is a valid binary search tree (BST).\n\nA valid BST is defined as follows:\n• The left subtree of a node contains only nodes with keys less than the node's key.\n• The right subtree of a node contains only nodes with keys greater than the node's key.\n• Both the left and right subtrees must also be binary search trees.",
+    "constraintsText": "• The number of nodes in the tree is in the range [1, 10^4].\n• -2^31 <= Node.val <= 2^31 - 1",
+    "tags": [
+      "Tree",
+      "Depth-First Search",
+      "Binary Search Tree",
+      "Binary Tree",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Meta",
+      "Google"
+    ],
+    "starterCode": {
+      "PYTHON": "def isValidBST(root: TreeNode) -> bool:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public boolean isValidBST(TreeNode root) {\n        // Write your solution here\n        return false;\n    }\n}",
+      "CPP": "class Solution {\npublic:\n    bool isValidBST(TreeNode* root) {\n        // Write your solution here\n        return false;\n    }\n};",
+      "JAVASCRIPT": "function isValidBST(root) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "root = [2,1,3]",
+        "expectedOutput": "true",
+        "explanation": "Left child 1 < 2, Right child 3 > 2."
+      },
+      {
+        "position": 2,
+        "input": "root = [5,1,4,null,null,3,6]",
+        "expectedOutput": "false",
+        "explanation": "The root node's value is 5 but its right child's value is 4."
+      }
+    ]
+  },
+  {
+    "slug": "construct-binary-tree-from-preorder-and-inorder-traversal",
+    "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+    "difficulty": "MEDIUM",
+    "description": "Given two integer arrays `preorder` and `inorder` where `preorder` is the preorder traversal of a binary tree and `inorder` is the inorder traversal of the same tree, construct and return the binary tree.",
+    "constraintsText": "• 1 <= preorder.length <= 3000\n• inorder.length == preorder.length\n• -3000 <= preorder[i], inorder[i] <= 3000\n• preorder and inorder consist of unique values.",
+    "tags": [
+      "Array",
+      "Hash Table",
+      "Divide and Conquer",
+      "Tree",
+      "Binary Tree",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft"
+    ],
+    "starterCode": {
+      "PYTHON": "def buildTree(preorder: list[int], inorder: list[int]) -> TreeNode:\n    # Write your solution here\n    pass",
+      "JAVA": "class Solution {\n    public TreeNode buildTree(int[] preorder, int[] inorder) {\n        // Write your solution here\n        return null;\n    }\n}",
+      "CPP": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        // Write your solution here\n        return nullptr;\n    }\n};",
+      "JAVASCRIPT": "function buildTree(preorder, inorder) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]",
+        "expectedOutput": "[3,9,20,null,null,15,7]",
+        "explanation": "Tree reconstructed with 3 as root, 9 as left, 20 as right."
+      }
+    ]
+  },
+  {
+    "slug": "implement-trie-prefix-tree",
+    "title": "Implement Trie (Prefix Tree)",
+    "difficulty": "MEDIUM",
+    "description": "A trie (pronounced as \"try\") or prefix tree is a tree data structure used to efficiently store and retrieve keys in a dataset of strings. There are various applications of this data structure, such as autocomplete and spellchecker.\n\nImplement the `Trie` class:\n• `Trie()` Initializes the trie object.\n• `void insert(String word)` Inserts the string `word` into the trie.\n• `boolean search(String word)` Returns `true` if the string `word` is in the trie, and `false` otherwise.\n• `boolean startsWith(String prefix)` Returns `true` if there is a previously inserted string `word` that has the prefix `prefix`, and `false` otherwise.",
+    "constraintsText": "• 1 <= word.length, prefix.length <= 2000\n• word and prefix consist only of lowercase English letters.\n• At most 3 * 10^4 calls in total will be made to insert, search, and startsWith.",
+    "tags": [
+      "Hash Table",
+      "String",
+      "Design",
+      "Trie",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Google",
+      "Microsoft"
+    ],
+    "starterCode": {
+      "PYTHON": "class Trie:\n    def __init__(self):\n        pass\n    def insert(self, word: str) -> None:\n        pass\n    def search(self, word: str) -> bool:\n        pass\n    def startsWith(self, prefix: str) -> bool:\n        pass",
+      "JAVA": "class Trie {\n    public Trie() {}\n    public void insert(String word) {}\n    public boolean search(String word) { return false; }\n    public boolean startsWith(String prefix) { return false; }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass Trie {\npublic:\n    Trie() {}\n    void insert(string word) {}\n    bool search(string word) { return false; }\n    bool startsWith(string prefix) { return false; }\n};",
+      "JAVASCRIPT": "var Trie = function() {};\nTrie.prototype.insert = function(word) {};\nTrie.prototype.search = function(word) { return false; };\nTrie.prototype.startsWith = function(prefix) { return false; };"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "[\"Trie\",\"insert\",\"search\",\"startsWith\"], [[],[\"apple\"],[\"apple\"],[\"app\"]]",
+        "expectedOutput": "[null,null,true,true]",
+        "explanation": "apple inserted, apple found, prefix app found."
+      }
+    ]
+  },
+  {
+    "slug": "design-add-and-search-words-data-structure",
+    "title": "Design Add and Search Words Data Structure",
+    "difficulty": "MEDIUM",
+    "description": "Design a data structure that supports adding new words and finding if a string matches any previously added string.\n\nImplement the `WordDictionary` class:\n• `WordDictionary()` Initializes the object.\n• `void addWord(word)` Adds `word` to the data structure, it can be matched later.\n• `bool search(word)` Returns `true` if there is any string in the data structure that matches `word` or `false` otherwise. `word` may contain dots `'.'` where dots can be matched with any letter.",
+    "constraintsText": "• 1 <= word.length <= 25\n• word in addWord consists of lowercase English letters.\n• word in search consist of '.' or lowercase English letters.\n• At most 25 dots in word.",
+    "tags": [
+      "String",
+      "Depth-First Search",
+      "Design",
+      "Trie",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Meta"
+    ],
+    "starterCode": {
+      "PYTHON": "class WordDictionary:\n    def __init__(self):\n        pass\n    def addWord(self, word: str) -> None:\n        pass\n    def search(self, word: str) -> bool:\n        pass",
+      "JAVA": "class WordDictionary {\n    public WordDictionary() {}\n    public void addWord(String word) {}\n    public boolean search(String word) { return false; }\n}",
+      "CPP": "#include <string>\nusing namespace std;\n\nclass WordDictionary {\npublic:\n    WordDictionary() {}\n    void addWord(string word) {}\n    bool search(string word) { return false; }\n};",
+      "JAVASCRIPT": "var WordDictionary = function() {};\nWordDictionary.prototype.addWord = function(word) {};\nWordDictionary.prototype.search = function(word) { return false; };"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "[\"WordDictionary\",\"addWord\",\"search\",\"search\"], [[],[\"bad\"],[\".ad\"],[\"b..\"]]",
+        "expectedOutput": "[null,null,true,true]",
+        "explanation": ".ad and b.. match \"bad\"."
+      }
+    ]
+  },
+  {
+    "slug": "word-search-ii",
+    "title": "Word Search II",
+    "difficulty": "HARD",
+    "description": "Given an `m x n` `board` of characters and a list of strings `words`, return all words on the board.\n\nEach word must be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once in a word.",
+    "constraintsText": "• m == board.length\n• n == board[i].length\n• 1 <= m, n <= 12\n• 1 <= words.length <= 3 * 10^4\n• 1 <= words[i].length <= 10\n• All strings in words are unique.",
+    "tags": [
+      "Array",
+      "String",
+      "Backtracking",
+      "Trie",
+      "Matrix",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "starterCode": {
+      "PYTHON": "def findWords(board: list[list[str]], words: list[str]) -> list[str]:\n    # Write your solution here\n    pass",
+      "JAVA": "import java.util.*;\n\nclass Solution {\n    public List<String> findWords(char[][] board, String[] words) {\n        // Write your solution here\n        return new ArrayList<>();\n    }\n}",
+      "CPP": "#include <vector>\n#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<string> findWords(vector<vector<char>>& board, vector<string>& words) {\n        // Write your solution here\n        return {};\n    }\n};",
+      "JAVASCRIPT": "function findWords(board, words) {\n    // Write your solution here\n}"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "board = [[\"o\",\"a\",\"a\",\"n\"],[\"e\",\"t\",\"a\",\"e\"],[\"i\",\"h\",\"k\",\"r\"],[\"i\",\"f\",\"l\",\"v\"]], words = [\"oath\",\"pea\",\"eat\",\"rain\"]",
+        "expectedOutput": "[\"eat\",\"oath\"]",
+        "explanation": "Words 'eat' and 'oath' found on the board."
+      }
+    ]
+  },
+  {
+    "slug": "find-median-from-data-stream",
+    "title": "Find Median from Data Stream",
+    "difficulty": "HARD",
+    "description": "The median is the middle value in an ordered integer list. If the size of the list is even, there is no middle value, and the median is the mean of the two middle values.\n\nImplement the `MedianFinder` class:\n• `MedianFinder()` initializes the `MedianFinder` object.\n• `void addNum(int num)` adds the integer `num` from the data stream to the data structure.\n• `double findMedian()` returns the median of all elements so far.",
+    "constraintsText": "• -10^5 <= num <= 10^5\n• There will be at least one element in the data structure before calling findMedian.\n• At most 5 * 10^4 calls will be made to addNum and findMedian.",
+    "tags": [
+      "Two Pointers",
+      "Design",
+      "Sorting",
+      "Heap",
+      "Data Stream",
+      "Blind 75",
+      "LeetCode",
+      "GeeksforGeeks",
+      "SDE 1",
+      "Google",
+      "Amazon"
+    ],
+    "starterCode": {
+      "PYTHON": "class MedianFinder:\n    def __init__(self):\n        pass\n    def addNum(self, num: int) -> None:\n        pass\n    def findMedian(self) -> float:\n        pass",
+      "JAVA": "class MedianFinder {\n    public MedianFinder() {}\n    public void addNum(int num) {}\n    public double findMedian() { return 0.0; }\n}",
+      "CPP": "class MedianFinder {\npublic:\n    MedianFinder() {}\n    void addNum(int num) {}\n    double findMedian() { return 0.0; }\n};",
+      "JAVASCRIPT": "var MedianFinder = function() {};\nMedianFinder.prototype.addNum = function(num) {};\nMedianFinder.prototype.findMedian = function() { return 0.0; };"
+    },
+    "examples": [
+      {
+        "position": 1,
+        "input": "[\"MedianFinder\",\"addNum\",\"addNum\",\"findMedian\",\"addNum\",\"findMedian\"], [[],[1],[2],[],[3],[]]",
+        "expectedOutput": "[null,null,null,1.5,null,2.0]",
+        "explanation": "1 & 2 -> 1.5. Adding 3 -> [1,2,3] -> median is 2."
       }
     ]
   }
