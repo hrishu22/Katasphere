@@ -1,6 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
-import { ProblemWorkspace, ProblemDetail } from "./ProblemWorkspace";
+import { ProblemWorkspace } from "./ProblemWorkspace";
+import {
+  getLocalProblemDetail,
+  getAllProblemSlugs,
+  type ProblemDetail,
+} from "@/lib/problem-catalog-data";
 
 interface PageProps {
   params: {
@@ -10,6 +15,13 @@ interface PageProps {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://katasphere.com";
 
+// Statically pre-generate all 79 problems at build time for instant Edge CDN delivery
+export async function generateStaticParams() {
+  return getAllProblemSlugs().map((slug) => ({ slug }));
+}
+
+export const dynamicParams = true;
+
 function formatSlugToTitle(slug: string): string {
   return slug
     .split("-")
@@ -18,6 +30,13 @@ function formatSlugToTitle(slug: string): string {
 }
 
 async function getProblem(slug: string): Promise<ProblemDetail | null> {
+  // 1. Instant 0ms retrieval from bundled catalog (eliminates cold starts & slow network hops)
+  const local = getLocalProblemDetail(slug);
+  if (local) {
+    return local;
+  }
+
+  // 2. Fallback to API if dynamic slug not in bundled catalog
   const apiUrl =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -27,7 +46,7 @@ async function getProblem(slug: string): Promise<ProblemDetail | null> {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
 
     const res = await fetch(`${apiUrl}/api/v1/problems/${slug}`, {
       signal: controller.signal,

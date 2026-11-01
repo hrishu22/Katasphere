@@ -257,6 +257,7 @@ export default function LandingPage() {
                   </div>
                   <Link
                     href={`/problems/${prob.slug}`}
+                    prefetch={true}
                     aria-label={`Solve ${prob.title} challenge`}
                     className="px-4 py-2 text-xs font-semibold rounded-lg bg-surface-subtle hover:bg-brand-600 text-slate-700 dark:text-slate-200 hover:text-white border border-surface-border hover:border-brand-500 transition shadow-sm"
                   >

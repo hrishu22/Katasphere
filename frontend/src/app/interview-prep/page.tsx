@@ -581,6 +581,7 @@ export default function InterviewPrepPage() {
                               <div className="flex items-center space-x-2 min-w-0">
                                 <Link
                                   href={`/problems/${prob.slug}`}
+                                  prefetch={true}
                                   className="text-sm font-semibold text-foreground hover:text-brand-500 transition truncate"
                                 >
                                   {prob.title}
@@ -609,6 +610,7 @@ export default function InterviewPrepPage() {
                               </span>
                               <Link
                                 href={`/problems/${prob.slug}`}
+                                prefetch={true}
                                 className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm flex items-center space-x-1 transition"
                               >
                                 <span>Solve</span>

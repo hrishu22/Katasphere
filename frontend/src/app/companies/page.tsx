@@ -482,6 +482,7 @@ function CompaniesContent() {
                           ) : (
                             <Link
                               href={`/problems/${problem.slug}`}
+                              prefetch={true}
                               className="font-bold text-foreground hover:text-brand-500 text-base transition"
                             >
                               {problem.title}
@@ -540,6 +541,7 @@ function CompaniesContent() {
                         ) : (
                           <Link
                             href={`/problems/${problem.slug}`}
+                            prefetch={true}
                             className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
                           >
                             <span>Solve Challenge</span>

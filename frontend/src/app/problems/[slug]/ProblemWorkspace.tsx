@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { CodeEditor } from "@/components/editor/CodeEditor";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getLocalProblemDetail } from "@/lib/problem-catalog-data";
 import {
   ArrowLeft,
   Play,
@@ -49,11 +50,12 @@ export interface ProblemDetail {
   description: string;
   difficulty: "EASY" | "MEDIUM" | "HARD";
   constraintsText: string;
-  starterCode: string; // JSON string
+  starterCode: string | Record<string, string>;
   inputFormat?: string;
   outputFormat?: string;
   tags: TagDto[];
   examples: ExampleDto[];
+  acceptanceRate?: string;
 }
 
 interface ApiResponse<T> {
@@ -109,14 +111,17 @@ interface ProblemWorkspaceProps {
 }
 
 export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps) {
+  // Resolve initial data: prefer server initialProblem, otherwise instant local catalog
+  const resolvedProblem = initialProblem || getLocalProblemDetail(slug);
+
   // Parse initial starter code
   let initialStarters: Record<string, string> = {};
-  if (initialProblem?.starterCode) {
+  if (resolvedProblem?.starterCode) {
     try {
       initialStarters =
-        typeof initialProblem.starterCode === "string"
-          ? JSON.parse(initialProblem.starterCode)
-          : initialProblem.starterCode;
+        typeof resolvedProblem.starterCode === "string"
+          ? JSON.parse(resolvedProblem.starterCode)
+          : resolvedProblem.starterCode;
     } catch {
       initialStarters = {};
     }
@@ -126,8 +131,8 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState<"run" | "submit">("run");
 
-  const [problem, setProblem] = useState<ProblemDetail | null>(initialProblem || null);
-  const [loading, setLoading] = useState(!initialProblem);
+  const [problem, setProblem] = useState<ProblemDetail | null>(resolvedProblem || null);
+  const [loading, setLoading] = useState(!resolvedProblem);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("PYTHON");
@@ -248,8 +253,26 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   useEffect(() => {
     async function fetchProblem() {
       if (!slug) return;
-      // If we already have the matching problem from initialProblem, skip fetching
+      // If we already have the matching problem from resolvedProblem, skip fetching
       if (problem && problem.slug === slug) return;
+
+      const local = getLocalProblemDetail(slug);
+      if (local) {
+        setProblem(local);
+        let parsedStarters: Record<string, string> = {};
+        try {
+          parsedStarters =
+            typeof local.starterCode === "string"
+              ? JSON.parse(local.starterCode)
+              : local.starterCode;
+        } catch {
+          parsedStarters = {};
+        }
+        setStarterCodes(parsedStarters);
+        setCode(parsedStarters["PYTHON"] || "// Write your code here");
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       setError(null);

@@ -453,6 +453,7 @@ export default function ProblemsPage() {
                     <Circle className="h-4 w-4 text-slate-400 shrink-0" />
                     <Link
                       href={`/problems/${problem.slug}`}
+                      prefetch={true}
                       className="font-bold text-foreground hover:text-brand-500 text-base transition"
                     >
                       {problem.title}
@@ -503,6 +504,7 @@ export default function ProblemsPage() {
                   </div>
                   <Link
                     href={`/problems/${problem.slug}`}
+                    prefetch={true}
                     className="px-4 py-2 text-xs font-semibold rounded-lg bg-brand-600 hover:bg-brand-500 text-white transition shadow-sm flex items-center space-x-1.5"
                   >
                     <span>Solve</span>
