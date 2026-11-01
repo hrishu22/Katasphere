@@ -45,9 +45,22 @@ export async function apiClient<T>(
     ? endpoint
     : `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 
+  let authHeader: Record<string, string> = {};
+  if (typeof window !== "undefined") {
+    try {
+      const token = localStorage.getItem("katasphere_token");
+      if (token) {
+        authHeader["Authorization"] = `Bearer ${token}`;
+      }
+    } catch {
+      // Ignore localStorage access restrictions
+    }
+  }
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",
+    ...authHeader,
     ...options.headers,
   };
 

@@ -22,10 +22,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthRateLimiter rateLimiter;
+    private final TokenProvider tokenProvider;
 
-    public AuthController(AuthService authService, AuthRateLimiter rateLimiter) {
+    public AuthController(AuthService authService, AuthRateLimiter rateLimiter, TokenProvider tokenProvider) {
         this.authService = authService;
         this.rateLimiter = rateLimiter;
+        this.tokenProvider = tokenProvider;
     }
 
     @PostMapping("/register")
@@ -42,9 +44,10 @@ public class AuthController {
 
         UserDto user = authService.register(request);
         establishSession(httpRequest, user);
+        String token = tokenProvider.createToken(user.id(), user.email(), user.role());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.ok("Registration successful", new AuthResponse(user, "Account created successfully")));
+            .body(ApiResponse.ok("Registration successful", new AuthResponse(user, "Account created successfully", token)));
     }
 
     @PostMapping("/login")
@@ -61,9 +64,10 @@ public class AuthController {
 
         UserDto user = authService.authenticate(request);
         establishSession(httpRequest, user);
+        String token = tokenProvider.createToken(user.id(), user.email(), user.role());
 
         return ResponseEntity.ok(
-            ApiResponse.ok("Login successful", new AuthResponse(user, "Authenticated successfully"))
+            ApiResponse.ok("Login successful", new AuthResponse(user, "Authenticated successfully", token))
         );
     }
 
@@ -79,17 +83,29 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDto>> getCurrentUser(HttpServletRequest httpRequest) {
-        HttpSession session = httpRequest.getSession(false);
-        if (session == null || session.getAttribute("USER_ID") == null) {
+        UUID userId = null;
+        Object attrUserId = httpRequest.getAttribute("USER_ID");
+        if (attrUserId instanceof UUID uuid) {
+            userId = uuid;
+        } else {
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null && session.getAttribute("USER_ID") != null) {
+                userId = (UUID) session.getAttribute("USER_ID");
+            }
+        }
+
+        if (userId == null) {
             return ResponseEntity.ok(ApiResponse.ok("No active session", null));
         }
 
-        UUID userId = (UUID) session.getAttribute("USER_ID");
         try {
             UserDto user = authService.getUserById(userId);
             return ResponseEntity.ok(ApiResponse.ok("User retrieved", user));
         } catch (IllegalArgumentException e) {
-            session.invalidate();
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
             return ResponseEntity.ok(ApiResponse.ok("User session expired", null));
         }
     }

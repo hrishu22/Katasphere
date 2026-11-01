@@ -16,6 +16,7 @@ export interface User {
 interface AuthResponse {
   user: User;
   message: string;
+  token?: string;
 }
 
 interface ApiResponse<T> {
@@ -58,6 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("katasphere_token") : null;
+    const cachedUser = typeof window !== "undefined" ? localStorage.getItem("katasphere_user") : null;
+
     try {
       // 4000ms max timeout so auth check never hangs the page
       const response = await apiClient<ApiResponse<User>>("/api/v1/auth/me", { timeoutMs: 4000 });
@@ -67,10 +71,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("katasphere_user", JSON.stringify(response.data));
         } catch {}
       } else {
-        setUser(null);
-        try {
-          localStorage.removeItem("katasphere_user");
-        } catch {}
+        // If server returned data: null, only clear if there is no token/user cached in localStorage
+        if (!token && !cachedUser) {
+          setUser(null);
+          try {
+            localStorage.removeItem("katasphere_user");
+          } catch {}
+        }
       }
     } catch (err: any) {
       // Only clear user on explicit 401 Unauthorized
@@ -78,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         try {
           localStorage.removeItem("katasphere_user");
+          localStorage.removeItem("katasphere_token");
         } catch {}
       }
     } finally {
@@ -96,8 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const loggedInUser = response.data.user;
+    const token = response.data.token;
     setUser(loggedInUser);
     try {
+      if (token) {
+        localStorage.setItem("katasphere_token", token);
+      }
       localStorage.setItem("katasphere_user", JSON.stringify(loggedInUser));
     } catch {}
     return loggedInUser;
@@ -110,8 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const registeredUser = response.data.user;
+    const token = response.data.token;
     setUser(registeredUser);
     try {
+      if (token) {
+        localStorage.setItem("katasphere_token", token);
+      }
       localStorage.setItem("katasphere_user", JSON.stringify(registeredUser));
     } catch {}
     return registeredUser;
@@ -125,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       try {
+        localStorage.removeItem("katasphere_token");
         localStorage.removeItem("katasphere_user");
       } catch {}
     }

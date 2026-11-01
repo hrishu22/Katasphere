@@ -100,6 +100,10 @@ public class SubmissionController {
     }
 
     private User resolveCurrentUser(HttpServletRequest request) {
+        Object attrUserId = request.getAttribute("USER_ID");
+        if (attrUserId instanceof UUID uuid) {
+            return userRepository.findById(uuid).orElse(null);
+        }
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("USER_ID") != null) {
             UUID userId = (UUID) session.getAttribute("USER_ID");

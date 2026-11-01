@@ -40,6 +40,10 @@ public class CompanyController {
     }
 
     private User resolveCurrentUser(HttpServletRequest request) {
+        Object attr = request.getAttribute("USER_ID");
+        if (attr instanceof UUID uuid) {
+            return userRepository.findById(uuid).orElse(null);
+        }
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("USER_ID") != null) {
             UUID userId = (UUID) session.getAttribute("USER_ID");

@@ -27,13 +27,12 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDto>> getProfile(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("USER_ID") == null) {
+        UUID userId = resolveUserId(request);
+        if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
         }
 
-        UUID userId = (UUID) session.getAttribute("USER_ID");
         try {
             UserDto user = authService.getUserById(userId);
             return ResponseEntity.ok(ApiResponse.ok("Profile retrieved", user));
@@ -45,13 +44,12 @@ public class UserController {
 
     @PostMapping("/upgrade-premium")
     public ResponseEntity<ApiResponse<UserDto>> upgradeToPremium(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("USER_ID") == null) {
+        UUID userId = resolveUserId(request);
+        if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required to upgrade to Premium"));
         }
 
-        UUID userId = (UUID) session.getAttribute("USER_ID");
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -63,13 +61,12 @@ public class UserController {
 
     @PostMapping("/toggle-premium")
     public ResponseEntity<ApiResponse<UserDto>> togglePremium(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("USER_ID") == null) {
+        UUID userId = resolveUserId(request);
+        if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
         }
 
-        UUID userId = (UUID) session.getAttribute("USER_ID");
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -81,5 +78,17 @@ public class UserController {
         user = userRepository.save(user);
 
         return ResponseEntity.ok(ApiResponse.ok("Subscription status toggled", UserDto.fromEntity(user)));
+    }
+
+    private UUID resolveUserId(HttpServletRequest request) {
+        Object attr = request.getAttribute("USER_ID");
+        if (attr instanceof UUID uuid) {
+            return uuid;
+        }
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("USER_ID") != null) {
+            return (UUID) session.getAttribute("USER_ID");
+        }
+        return null;
     }
 }
