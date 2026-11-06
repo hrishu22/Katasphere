@@ -5,6 +5,9 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CodeEditor } from "@/components/editor/CodeEditor";
 import { AlgorithmVisualizer } from "@/components/visualizer/AlgorithmVisualizer";
+import { ProblemHintsModal } from "@/components/hints/ProblemHintsModal";
+import { SubmissionSuccessModal } from "@/components/submission/SubmissionSuccessModal";
+import { SubmissionVisualizerModal } from "@/components/submission/SubmissionVisualizerModal";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getLocalProblemDetail } from "@/lib/problem-catalog-data";
@@ -29,6 +32,7 @@ import {
   LogIn,
   UserPlus,
   Sparkles,
+  Lightbulb,
 } from "lucide-react";
 
 export interface TagDto {
@@ -256,6 +260,13 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   const [editorVisualizerSplit, setEditorVisualizerSplit] = useState<number>(50); // percentage 25% to 75%
   const [isDraggingEditorSplit, setIsDraggingEditorSplit] = useState<boolean>(false);
 
+  // Progressive Hints Modal state (3 steps + 4th visualization step)
+  const [showHintsModal, setShowHintsModal] = useState<boolean>(false);
+
+  // Post-Submission Success Dialog & Visualization Modal state
+  const [showSubmissionSuccessModal, setShowSubmissionSuccessModal] = useState<boolean>(false);
+  const [showSubmissionVisualizerModal, setShowSubmissionVisualizerModal] = useState<boolean>(false);
+
   // Dragging event listeners for editor vs visualizer split
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -437,6 +448,13 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
 
       if (res && res.data) {
         setSubmissionResult(res.data);
+        // When all test cases pass, trigger celebration success dialog
+        if (
+          res.data.verdict === "ACCEPTED" ||
+          (res.data.passedTestCases > 0 && res.data.passedTestCases === res.data.totalTestCases)
+        ) {
+          setShowSubmissionSuccessModal(true);
+        }
       }
     } catch (err: any) {
       if (err?.status === 401) {
@@ -572,6 +590,17 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             <option value="JAVASCRIPT">JavaScript</option>
           </select>
 
+          {/* Progressive Hint Button */}
+          <button
+            type="button"
+            onClick={() => setShowHintsModal(true)}
+            className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs"
+            title="Open 4-step progressive hints: Little hint -> More -> Blueprint -> Visualization"
+          >
+            <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+            <span className="hidden sm:inline">Hints</span>
+          </button>
+
           <button
             onClick={handleReset}
             className="p-1.5 rounded-lg text-slate-400 hover:text-foreground hover:bg-surface-subtle transition"
@@ -640,9 +669,21 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           style={{ "--left-width": `${leftWidth}%` } as React.CSSProperties}
         >
           <div className="space-y-2">
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-              {problem.title}
-            </h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+                {problem.title}
+              </h1>
+              {/* Progressive Hints Button */}
+              <button
+                type="button"
+                onClick={() => setShowHintsModal(true)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition shadow-xs text-xs font-semibold"
+                title="Get 4 progressive hints: Little hint -> More -> Blueprint -> Visual intuition"
+              >
+                <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                <span>Hints (4 Steps)</span>
+              </button>
+            </div>
             <div className="flex flex-wrap items-center gap-1.5">
               {problem.tags.map((t) => (
                 <span
@@ -1359,6 +1400,46 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           </div>
         </div>
       )}
+
+      {/* 4-Step Progressive Hints Modal (Little Hint -> More -> Blueprint -> Visualization) */}
+      <ProblemHintsModal
+        problemSlug={problem.slug}
+        problemTitle={problem.title}
+        tags={problem.tags?.map((t) => t.name) || []}
+        isOpen={showHintsModal}
+        onClose={() => setShowHintsModal(false)}
+        onOpenVisualizer={() => {
+          setShowHintsModal(false);
+          setShowVisualizer(true);
+        }}
+      />
+
+      {/* Post-Submission Success Dialog (with Cancel & Visualize Buttons) */}
+      <SubmissionSuccessModal
+        isOpen={showSubmissionSuccessModal}
+        problemTitle={problem.title}
+        passedTestCases={submissionResult?.passedTestCases || 0}
+        totalTestCases={submissionResult?.totalTestCases || 0}
+        runtimeMs={submissionResult?.executionTimeMs}
+        memoryKb={submissionResult?.memoryKb}
+        language={selectedLanguage}
+        onCancel={() => setShowSubmissionSuccessModal(false)}
+        onVisualize={() => {
+          setShowSubmissionSuccessModal(false);
+          setShowSubmissionVisualizerModal(true);
+        }}
+      />
+
+      {/* Post-Submission Code & Algorithm Visualizer Modal Dialog */}
+      <SubmissionVisualizerModal
+        isOpen={showSubmissionVisualizerModal}
+        problemSlug={problem.slug}
+        problemTitle={problem.title}
+        code={code}
+        language={selectedLanguage}
+        examples={problem.examples || []}
+        onClose={() => setShowSubmissionVisualizerModal(false)}
+      />
     </div>
   );
 }
