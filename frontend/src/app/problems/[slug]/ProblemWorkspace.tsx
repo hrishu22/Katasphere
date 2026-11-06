@@ -134,7 +134,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
 
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authAction, setAuthAction] = useState<"run" | "submit">("run");
+  const [authAction, setAuthAction] = useState<"run" | "submit" | "hint" | "visualize">("run");
 
   const [problem, setProblem] = useState<ProblemDetail | null>(resolvedProblem || null);
   const [loading, setLoading] = useState(!resolvedProblem);
@@ -593,11 +593,22 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           {/* Progressive Hint Button */}
           <button
             type="button"
-            onClick={() => setShowHintsModal(true)}
+            onClick={() => {
+              if (!user) {
+                setAuthAction("hint");
+                setShowAuthModal(true);
+                return;
+              }
+              setShowHintsModal(true);
+            }}
             className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs"
-            title="Open 4-step progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visualization"
+            title={!user ? "Sign in required to view hints" : "Open 4-step progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visualization"}
           >
-            <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+            {!user ? (
+              <Lock className="h-3 w-3 text-amber-500" />
+            ) : (
+              <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+            )}
             <span className="hidden sm:inline">Hints</span>
           </button>
 
@@ -612,15 +623,26 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           {/* Execution Visualizer Toggle Button */}
           <button
             type="button"
-            onClick={() => setShowVisualizer(!showVisualizer)}
+            onClick={() => {
+              if (!user) {
+                setAuthAction("visualize");
+                setShowAuthModal(true);
+                return;
+              }
+              setShowVisualizer(!showVisualizer);
+            }}
             className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center space-x-1.5 ${
               showVisualizer
                 ? "bg-gradient-to-r from-amber-500 to-brand-600 text-white border-transparent shadow-sm shadow-amber-500/20 font-bold"
                 : "bg-surface-subtle hover:bg-surface-muted border-surface-border text-foreground hover:text-amber-500"
             }`}
-            title="Toggle interactive step-by-step code and algorithm visualizer beside editor"
+            title={!user ? "Sign in required to use visualizer" : "Toggle interactive step-by-step code and algorithm visualizer beside editor"}
           >
-            <Sparkles className={`h-3.5 w-3.5 ${showVisualizer ? "text-white" : "text-amber-400 fill-amber-400"}`} />
+            {!user ? (
+              <Lock className="h-3 w-3 text-amber-500" />
+            ) : (
+              <Sparkles className={`h-3.5 w-3.5 ${showVisualizer ? "text-white" : "text-amber-400 fill-amber-400"}`} />
+            )}
             <span>{showVisualizer ? "Visualizer On" : "Visualize"}</span>
           </button>
 
@@ -676,11 +698,22 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
               {/* Progressive Hints Button */}
               <button
                 type="button"
-                onClick={() => setShowHintsModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    setAuthAction("hint");
+                    setShowAuthModal(true);
+                    return;
+                  }
+                  setShowHintsModal(true);
+                }}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition shadow-xs text-xs font-semibold"
-                title="Get 4 progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visual intuition"
+                title={!user ? "Sign in required to view hints" : "Get 4 progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visual intuition"}
               >
-                <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                {!user ? (
+                  <Lock className="h-3.5 w-3.5 text-amber-500" />
+                ) : (
+                  <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                )}
                 <span>Hints (4 Steps)</span>
               </button>
             </div>
@@ -839,23 +872,36 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
               {/* Quick Visualizer Toggle Button in Editor Bar */}
               <button
                 type="button"
-                onClick={() => setShowVisualizer(!showVisualizer)}
+                onClick={() => {
+                  if (!user) {
+                    setAuthAction("visualize");
+                    setShowAuthModal(true);
+                    return;
+                  }
+                  setShowVisualizer(!showVisualizer);
+                }}
                 className={`text-xs px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition ${
                   showVisualizer
                     ? "bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400 font-bold shadow-xs"
                     : "hover:bg-surface border-surface-border text-slate-500 dark:text-slate-400 hover:text-foreground"
                 }`}
                 title={
-                  showVisualizer
+                  !user
+                    ? "Sign in required to use visualizer"
+                    : showVisualizer
                     ? "Close visualizer pane"
                     : "Open interactive step-by-step visualizer beside editor"
                 }
               >
-                <Sparkles
-                  className={`h-3 w-3 ${
-                    showVisualizer ? "text-amber-500 fill-amber-500" : "text-amber-500"
-                  }`}
-                />
+                {!user ? (
+                  <Lock className="h-3 w-3 text-amber-500" />
+                ) : (
+                  <Sparkles
+                    className={`h-3 w-3 ${
+                      showVisualizer ? "text-amber-500 fill-amber-500" : "text-amber-500"
+                    }`}
+                  />
+                )}
                 <span>{showVisualizer ? "Close Visualizer" : "Visualize Execution"}</span>
               </button>
             </div>
@@ -1346,28 +1392,72 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">
-                  {authAction === "run" ? "Sign in to Run Code" : "Sign in to Submit Solution"}
+                  {authAction === "run"
+                    ? "Sign in to Run Code"
+                    : authAction === "submit"
+                    ? "Sign in to Submit Solution"
+                    : authAction === "hint"
+                    ? "Sign in to View Hints"
+                    : "Sign in to Use Visualizer"}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  An active account is required to execute code in isolated runtime environments.
+                  {authAction === "hint"
+                    ? "An active account is required to unlock progressive step-by-step problem hints."
+                    : authAction === "visualize"
+                    ? "An active account is required to access the interactive algorithm execution visualizer."
+                    : "An active account is required to execute code in isolated runtime environments."}
                 </p>
               </div>
             </div>
 
             {/* Perks */}
             <div className="p-3.5 rounded-xl bg-surface-subtle border border-surface-border space-y-2 text-xs">
-              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Multi-language sandboxes (Python, Java, C++, JS)</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Runtime & memory consumption benchmarking</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Track Blind 75 and SDE-1 roadmap progress</span>
-              </div>
+              {authAction === "hint" ? (
+                <>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>4-step progressive hints (Hint 1, Key Insight, Blueprint, Visuals)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Multi-language code solutions (Java 21, Python 3, C++, JS)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Track Blind 75 and SDE-1 roadmap progress</span>
+                  </div>
+                </>
+              ) : authAction === "visualize" ? (
+                <>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Step-by-step memory, array, hash map & pointer visualizer</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Automatic Big-O Time and Space complexity breakdown</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Interactive speed controls & custom input animations</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Multi-language sandboxes (Java 21, Python 3, C++, JS)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Runtime & memory consumption benchmarking</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Track Blind 75 and SDE-1 roadmap progress</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Action buttons */}
@@ -1410,6 +1500,11 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
         onClose={() => setShowHintsModal(false)}
         onOpenVisualizer={() => {
           setShowHintsModal(false);
+          if (!user) {
+            setAuthAction("visualize");
+            setShowAuthModal(true);
+            return;
+          }
           setShowVisualizer(true);
         }}
       />
