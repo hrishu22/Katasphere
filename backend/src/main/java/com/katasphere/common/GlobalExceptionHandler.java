@@ -61,6 +61,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        // If the client aborted the connection (e.g. browser refresh, tab close, network abort, broken pipe),
+        // do not attempt to write to the closed socket, and do not log a noisy error stack trace.
+        if (isClientAbortException(ex)) {
+            log.debug("Client aborted HTTP connection: {}", ex.getMessage());
+            return null;
+        }
+
         String requestId = UUID.randomUUID().toString();
         log.error("Unhandled error [req={}]: {}", requestId, ex.getMessage(), ex);
         ErrorResponse response = ErrorResponse.of(
@@ -69,5 +76,20 @@ public class GlobalExceptionHandler {
             requestId
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    private boolean isClientAbortException(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String className = current.getClass().getName();
+            String message = current.getMessage();
+            if (className.contains("ClientAbortException") ||
+                (current instanceof java.io.IOException && message != null &&
+                 (message.contains("Broken pipe") || message.contains("Connection reset") || message.contains("connection was aborted")))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

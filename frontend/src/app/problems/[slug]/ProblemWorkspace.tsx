@@ -391,6 +391,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
     try {
       const res = await apiClient<ApiResponse<ExecutionResult>>("/api/v1/submissions/run", {
         method: "POST",
+        timeoutMs: 60000,
         body: JSON.stringify({
           problemSlug: slug,
           language: selectedLanguage,
@@ -439,6 +440,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
     try {
       const res = await apiClient<ApiResponse<SubmissionResult>>("/api/v1/submissions", {
         method: "POST",
+        timeoutMs: 90000,
         body: JSON.stringify({
           problemSlug: slug,
           language: selectedLanguage,

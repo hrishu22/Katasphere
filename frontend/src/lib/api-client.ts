@@ -64,7 +64,7 @@ export async function apiClient<T>(
     ...options.headers,
   };
 
-  const timeoutMs = options.timeoutMs ?? 15000;
+  const timeoutMs = options.timeoutMs ?? 30000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
