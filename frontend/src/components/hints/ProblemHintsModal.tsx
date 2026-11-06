@@ -56,10 +56,10 @@ export function ProblemHintsModal({
   };
 
   const stepLabels = [
-    { num: 1, title: "Little Hint", desc: "Gentle Nudge" },
-    { num: 2, title: "More Hint", desc: "Key Insight" },
-    { num: 3, title: "Blueprint", desc: "Algorithm Logic" },
-    { num: 4, title: "Visualization", desc: "Mental Model" },
+    { num: 1, title: "Hint 1", desc: "Initial Direction" },
+    { num: 2, title: "Hint 2", desc: "Key Insight" },
+    { num: 3, title: "Hint 3", desc: "Algorithm Logic" },
+    { num: 4, title: "Hint 4", desc: "Visual Intuition" },
   ];
 
   return (

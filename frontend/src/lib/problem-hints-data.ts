@@ -1,8 +1,8 @@
 /**
  * Progressive Hints Data Provider
  * Provides 4-step progressive hints for coding problems:
- * Step 1: Gentle Nudge (Little Hint)
- * Step 2: Key Observation & Data Structure (More Hint)
+ * Step 1: Initial Direction (Hint 1)
+ * Step 2: Key Observation & Data Structure (Hint 2)
  * Step 3: Algorithm Recipe / Blueprint (Detailed Logic)
  * Step 4: Visual Intuition ("How you can think of the solution")
  */
@@ -30,8 +30,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 1,
         type: "little",
-        title: "A Little Nudge: Avoid Redundant Scans",
-        badge: "Hint 1 • Little Hint",
+        title: "Hint 1: Avoid Redundant Scans",
+        badge: "Hint 1 • Initial Direction",
         content:
           "A brute force solution would check every pair of numbers using nested loops, which takes O(n²) time. Can you avoid searching the entire array for the second number if you remember what you have already inspected?",
         bullets: [
@@ -43,8 +43,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 2,
         type: "more",
-        title: "More Hint: The Power of Complements",
-        badge: "Hint 2 • More Hint",
+        title: "Hint 2: The Power of Complements",
+        badge: "Hint 2 • Key Insight",
         content:
           "For any current number `num`, the exact complement you need to reach the target is `diff = target - num`.",
         bullets: [
@@ -92,8 +92,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 1,
         type: "little",
-        title: "A Little Nudge: Chronological Ordering",
-        badge: "Hint 1 • Little Hint",
+        title: "Hint 1: Chronological Ordering",
+        badge: "Hint 1 • Initial Direction",
         content:
           "You must buy before you can sell! That means the buy day must strictly precede the sell day. Can you track the lowest price seen before the current day?",
         bullets: [
@@ -105,8 +105,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 2,
         type: "more",
-        title: "More Hint: Maintain Two Running Variables",
-        badge: "Hint 2 • More Hint",
+        title: "Hint 2: Maintain Running Min & Max",
+        badge: "Hint 2 • Key Insight",
         content:
           "You only need two scalar numbers as you scan through the prices from left to right:",
         bullets: [
@@ -119,8 +119,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 3,
         type: "blueprint",
-        title: "Algorithm Blueprint: Single-Pass Greedy",
-        badge: "Hint 3 • Deep Blueprint",
+        title: "Hint 3: Single-Pass Greedy Blueprint",
+        badge: "Hint 3 • Solution Blueprint",
         content:
           "Initialize `min_price = prices[0]` and `max_profit = 0`. For each price in `prices`:",
         bullets: [
@@ -134,7 +134,7 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 4,
         type: "visual",
-        title: "Visualization Hint: How to Think of the Solution",
+        title: "Hint 4: Mental Model & Visual Simulation",
         badge: "Hint 4 • Visual Intuition",
         content:
           "Visualize the stock price curve as rolling hills and valleys. Imagine holding a marker at the lowest valley seen so far. Every time the curve climbs higher than the valley, measure the vertical height difference (profit). If the curve dips below your valley marker, slide your marker down to the new lowest valley.",
@@ -153,8 +153,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 1,
         type: "little",
-        title: "A Little Nudge: Last In, First Out",
-        badge: "Hint 1 • Little Hint",
+        title: "Hint 1: Last In, First Out (LIFO)",
+        badge: "Hint 1 • Initial Direction",
         content:
           "Notice the nesting structure of brackets: the bracket that was opened most recently must be closed before any earlier brackets can be closed (e.g. in `([{}])`, `{}` closes first, then `[]`, then `()`).",
         bullets: [
@@ -166,8 +166,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 2,
         type: "more",
-        title: "More Hint: Matching Pairs with a Map",
-        badge: "Hint 2 • More Hint",
+        title: "Hint 2: Matching Pairs with a Map",
+        badge: "Hint 2 • Key Insight",
         content:
           "Store the matching pairs in a hash map: `')': '(', '}': '{', ']': '['`.",
         bullets: [
@@ -179,8 +179,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 3,
         type: "blueprint",
-        title: "Algorithm Blueprint: Stack Processing",
-        badge: "Hint 3 • Deep Blueprint",
+        title: "Hint 3: Stack Processing Blueprint",
+        badge: "Hint 3 • Solution Blueprint",
         content:
           "Initialize an empty list/stack `stack = []`. Iterate through each character `c` in `s`:",
         bullets: [
@@ -195,7 +195,7 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 4,
         type: "visual",
-        title: "Visualization Hint: How to Think of the Solution",
+        title: "Hint 4: Mental Model & Visual Simulation",
         badge: "Hint 4 • Visual Intuition",
         content:
           "Think of a cafeteria plate dispenser. Every open bracket is a plate stacked on top. A matching closing bracket lifts the top plate off. If an incoming closing bracket does not match the top plate, the tower topples (invalid!). If all plates are cleanly cleared at the end, the string is valid.",
@@ -214,8 +214,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 1,
         type: "little",
-        title: "A Little Nudge: Discarding Toxic Prefixes",
-        badge: "Hint 1 • Little Hint",
+        title: "Hint 1: Discarding Toxic Prefixes",
+        badge: "Hint 1 • Initial Direction",
         content:
           "If the running sum of a contiguous subarray drops below 0, can adding it to any future number ever help increase the sum?",
         bullets: [
@@ -227,8 +227,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 2,
         type: "more",
-        title: "More Hint: Kadane's Local vs Global Maximum",
-        badge: "Hint 2 • More Hint",
+        title: "Hint 2: Kadane's Local vs Global Maximum",
+        badge: "Hint 2 • Key Insight",
         content:
           "At each index `i`, you have two choices for `current_sum`:",
         bullets: [
@@ -241,8 +241,8 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 3,
         type: "blueprint",
-        title: "Algorithm Blueprint: Kadane's Algorithm",
-        badge: "Hint 3 • Deep Blueprint",
+        title: "Hint 3: Kadane's Algorithm Blueprint",
+        badge: "Hint 3 • Solution Blueprint",
         content:
           "Initialize `max_sum = current_sum = nums[0]`. Iterate through `nums` starting from index 1:",
         bullets: [
@@ -257,7 +257,7 @@ const curatedHints: Record<string, ProblemHints> = {
       {
         step: 4,
         type: "visual",
-        title: "Visualization Hint: How to Think of the Solution",
+        title: "Hint 4: Mental Model & Visual Simulation",
         badge: "Hint 4 • Visual Intuition",
         content:
           "Imagine walking along an elevation trail. If your elevation dips beneath sea level (negative sum), you are carrying dead weight — drop it and reset to zero. Keep a photo of the highest altitude you ever reached.",
@@ -286,8 +286,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
         {
           step: 1,
           type: "little",
-          title: "A Little Nudge: Exploit Monotonicity / Sorting",
-          badge: "Hint 1 • Little Hint",
+          title: "Hint 1: Exploit Monotonicity / Sorting",
+          badge: "Hint 1 • Initial Direction",
           content:
             "Is the input sorted or can it be partitioned into monotonic halves? If an array is sorted, scanning every element one-by-one (O(n)) is doing unnecessary work.",
           bullets: ["Can you eliminate half of the remaining elements at each step?"],
@@ -296,8 +296,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
         {
           step: 2,
           type: "more",
-          title: "More Hint: Binary Search Boundaries",
-          badge: "Hint 2 • More Hint",
+          title: "Hint 2: Binary Search Boundaries",
+          badge: "Hint 2 • Key Insight",
           content:
             "Maintain two pointers `left` and `right`. In each step, calculate the midpoint `mid = left + (right - left) // 2` to safely avoid integer overflow.",
           bullets: [
@@ -310,8 +310,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
         {
           step: 3,
           type: "blueprint",
-          title: "Algorithm Blueprint: Binary Search Loop",
-          badge: "Hint 3 • Deep Blueprint",
+          title: "Hint 3: Binary Search Blueprint",
+          badge: "Hint 3 • Solution Blueprint",
           content:
             "Set `left = 0, right = len(nums) - 1`. While `left <= right`:",
           bullets: [
@@ -326,7 +326,7 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
         {
           step: 4,
           type: "visual",
-          title: "Visualization Hint: How to Think of the Solution",
+          title: "Hint 4: Mental Model & Visual Simulation",
           badge: "Hint 4 • Visual Intuition",
           content:
             "Visualize a phone book or dictionary. You open directly to the middle page. If the word you want comes alphabetically later, you tear away the entire left half of the book and repeat on the remaining pages.",
@@ -344,8 +344,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
       {
         step: 1,
         type: "little",
-        title: `A Little Nudge: Analyze the Core Constraints of ${title}`,
-        badge: "Hint 1 • Little Hint",
+        title: `Hint 1: Analyze Core Constraints of ${title}`,
+        badge: "Hint 1 • Initial Direction",
         content:
           "Start by considering what a straightforward naive approach would look like. What repeated calculations or comparisons are making it slow?",
         bullets: [
@@ -357,8 +357,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
       {
         step: 2,
         type: "more",
-        title: "More Hint: Optimal Data Structure Selection",
-        badge: "Hint 2 • More Hint",
+        title: "Hint 2: Optimal Data Structure Selection",
+        badge: "Hint 2 • Key Insight",
         content:
           "Consider which data structure unlocks the fastest lookups or state transitions for this pattern:",
         bullets: [
@@ -372,8 +372,8 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
       {
         step: 3,
         type: "blueprint",
-        title: "Algorithm Blueprint: Step-by-Step Logic",
-        badge: "Hint 3 • Deep Blueprint",
+        title: "Hint 3: Step-by-Step Logic Blueprint",
+        badge: "Hint 3 • Solution Blueprint",
         content:
           "Structure your solution into three clean phases:",
         bullets: [
@@ -387,7 +387,7 @@ function generateGenericHints(problemSlug: string, title: string, tags: string[]
       {
         step: 4,
         type: "visual",
-        title: "Visualization Hint: How to Think of the Solution",
+        title: "Hint 4: Mental Model & Visual Simulation",
         badge: "Hint 4 • Visual Intuition",
         content:
           "Imagine drawing each state on paper: elements as cells, pointers pointing to active items, and auxiliary memory as a scratchpad ledger. Watch how values shift from step to step.",

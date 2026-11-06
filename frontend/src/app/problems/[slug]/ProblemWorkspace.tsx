@@ -140,9 +140,9 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
   const [loading, setLoading] = useState(!resolvedProblem);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>("PYTHON");
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("JAVA");
   const [code, setCode] = useState<string>(
-    initialStarters["PYTHON"] || "// Write your code here"
+    initialStarters["JAVA"] || initialStarters["PYTHON"] || "// Write your code here"
   );
   const [starterCodes, setStarterCodes] =
     useState<Record<string, string>>(initialStarters);
@@ -328,7 +328,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           parsedStarters = {};
         }
         setStarterCodes(parsedStarters);
-        setCode(parsedStarters["PYTHON"] || "// Write your code here");
+        setCode(parsedStarters["JAVA"] || parsedStarters["PYTHON"] || "// Write your code here");
         setLoading(false);
         return;
       }
@@ -351,7 +351,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             parsedStarters = {};
           }
           setStarterCodes(parsedStarters);
-          setCode(parsedStarters["PYTHON"] || "// Write your code here");
+          setCode(parsedStarters["JAVA"] || parsedStarters["PYTHON"] || "// Write your code here");
         }
       } catch (err: any) {
         setError("Problem not found or could not be loaded.");
@@ -578,14 +578,14 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             </button>
           </div>
 
-          {/* Language Selector */}
+          {/* Language Selector (Default: Java) */}
           <select
             value={selectedLanguage}
             onChange={(e) => handleLanguageChange(e.target.value as Language)}
             className="px-3 py-1.5 rounded-lg bg-surface-subtle border border-surface-border text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
-            <option value="PYTHON">Python 3</option>
             <option value="JAVA">Java 21</option>
+            <option value="PYTHON">Python 3</option>
             <option value="CPP">C++ 20</option>
             <option value="JAVASCRIPT">JavaScript</option>
           </select>
@@ -595,7 +595,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             type="button"
             onClick={() => setShowHintsModal(true)}
             className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs"
-            title="Open 4-step progressive hints: Little hint -> More -> Blueprint -> Visualization"
+            title="Open 4-step progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visualization"
           >
             <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
             <span className="hidden sm:inline">Hints</span>
@@ -678,7 +678,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
                 type="button"
                 onClick={() => setShowHintsModal(true)}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition shadow-xs text-xs font-semibold"
-                title="Get 4 progressive hints: Little hint -> More -> Blueprint -> Visual intuition"
+                title="Get 4 progressive hints: Hint 1 -> Hint 2 -> Blueprint -> Visual intuition"
               >
                 <Lightbulb className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                 <span>Hints (4 Steps)</span>

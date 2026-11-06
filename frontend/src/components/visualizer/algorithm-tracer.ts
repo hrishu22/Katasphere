@@ -1328,7 +1328,7 @@ export function generateExecutionTrace(
   problemSlug: string,
   code: string,
   rawInput: string,
-  language: string = "PYTHON"
+  language: string = "JAVA"
 ): TraceResult {
   const analysis = analyzeComplexity(code, problemSlug);
 
