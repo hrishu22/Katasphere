@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { CodeEditor } from "@/components/editor/CodeEditor";
+import { AlgorithmVisualizer } from "@/components/visualizer/AlgorithmVisualizer";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getLocalProblemDetail } from "@/lib/problem-catalog-data";
@@ -248,6 +249,53 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
       document.body.style.userSelect = "";
     };
   }, [isDraggingVertical, isBottomCollapsed]);
+
+  // Code Execution Visualizer pane state
+  const [showVisualizer, setShowVisualizer] = useState<boolean>(false);
+  const [isVisualizerMaximized, setIsVisualizerMaximized] = useState<boolean>(false);
+  const [editorVisualizerSplit, setEditorVisualizerSplit] = useState<number>(50); // percentage 25% to 75%
+  const [isDraggingEditorSplit, setIsDraggingEditorSplit] = useState<boolean>(false);
+
+  // Dragging event listeners for editor vs visualizer split
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingEditorSplit || !rightPaneRef.current) return;
+      const rect = rightPaneRef.current.getBoundingClientRect();
+      const rawPercent = ((e.clientX - rect.left) / rect.width) * 100;
+      const clamped = Math.min(Math.max(rawPercent, 25), 75);
+      setEditorVisualizerSplit(clamped);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingEditorSplit(false);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDraggingEditorSplit || !rightPaneRef.current || e.touches.length === 0) return;
+      const rect = rightPaneRef.current.getBoundingClientRect();
+      const rawPercent = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+      const clamped = Math.min(Math.max(rawPercent, 25), 75);
+      setEditorVisualizerSplit(clamped);
+    };
+
+    if (isDraggingEditorSplit) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDraggingEditorSplit]);
 
   // Fetch Problem Details if not provided via initialProblem or if slug changes
   useEffect(() => {
@@ -532,6 +580,21 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
             <RotateCcw className="h-4 w-4" />
           </button>
 
+          {/* Execution Visualizer Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowVisualizer(!showVisualizer)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center space-x-1.5 ${
+              showVisualizer
+                ? "bg-gradient-to-r from-amber-500 to-brand-600 text-white border-transparent shadow-sm shadow-amber-500/20 font-bold"
+                : "bg-surface-subtle hover:bg-surface-muted border-surface-border text-foreground hover:text-amber-500"
+            }`}
+            title="Toggle interactive step-by-step code and algorithm visualizer beside editor"
+          >
+            <Sparkles className={`h-3.5 w-3.5 ${showVisualizer ? "text-white" : "text-amber-400 fill-amber-400"}`} />
+            <span>{showVisualizer ? "Visualizer On" : "Visualize"}</span>
+          </button>
+
           <button
             onClick={handleRunCode}
             disabled={isRunning || isSubmitting}
@@ -711,30 +774,117 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
           ref={rightPaneRef}
           className="flex flex-col h-full bg-surface-subtle overflow-hidden w-full lg:flex-1 min-w-0"
         >
-          {/* Code Area (Expanded to occupy majority of height) */}
+          {/* Code Area & Execution Visualizer Section */}
           <div className="flex-1 flex flex-col p-3 pb-1 min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between pb-2 text-xs font-mono text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5 text-brand-500" />
-                Solution.
-                {selectedLanguage === "PYTHON"
-                  ? "py"
-                  : selectedLanguage === "JAVA"
-                  ? "java"
-                  : selectedLanguage === "CPP"
-                  ? "cpp"
-                  : "js"}
-              </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Monaco Editor &bull; Auto-indent &bull; Bracket Pairing
-              </span>
+            {/* Editor Sub-Header Toolbar */}
+            <div className="flex items-center justify-between pb-2 text-xs font-mono text-slate-400 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                  <Code2 className="h-3.5 w-3.5 text-brand-500" />
+                  Solution.
+                  {selectedLanguage === "PYTHON"
+                    ? "py"
+                    : selectedLanguage === "JAVA"
+                    ? "java"
+                    : selectedLanguage === "CPP"
+                    ? "cpp"
+                    : "js"}
+                </span>
+                <span className="hidden sm:inline text-[11px] text-slate-500 dark:text-slate-400">
+                  Monaco Editor &bull; Auto-indent &bull; Bracket Pairing
+                </span>
+              </div>
+
+              {/* Quick Visualizer Toggle Button in Editor Bar */}
+              <button
+                type="button"
+                onClick={() => setShowVisualizer(!showVisualizer)}
+                className={`text-xs px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition ${
+                  showVisualizer
+                    ? "bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400 font-bold shadow-xs"
+                    : "hover:bg-surface border-surface-border text-slate-500 dark:text-slate-400 hover:text-foreground"
+                }`}
+                title={
+                  showVisualizer
+                    ? "Close visualizer pane"
+                    : "Open interactive step-by-step visualizer beside editor"
+                }
+              >
+                <Sparkles
+                  className={`h-3 w-3 ${
+                    showVisualizer ? "text-amber-500 fill-amber-500" : "text-amber-500"
+                  }`}
+                />
+                <span>{showVisualizer ? "Close Visualizer" : "Visualize Execution"}</span>
+              </button>
             </div>
-            <CodeEditor
-              value={code}
-              onChange={setCode}
-              language={selectedLanguage}
-              className="flex-1 w-full"
-            />
+
+            {/* Split View: Code Editor on Left, Execution Visualizer on Right */}
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden gap-2 relative">
+              {/* Code Editor Pane (hidden only if visualizer is in full maximize mode) */}
+              {(!showVisualizer || !isVisualizerMaximized) && (
+                <div
+                  className="flex flex-col min-h-0 min-w-0 h-full overflow-hidden"
+                  style={{
+                    width: showVisualizer ? `${editorVisualizerSplit}%` : "100%",
+                    flex: showVisualizer ? "none" : "1",
+                  }}
+                >
+                  <CodeEditor
+                    value={code}
+                    onChange={setCode}
+                    language={selectedLanguage}
+                    className="flex-1 w-full"
+                  />
+                </div>
+              )}
+
+              {/* Resizable Divider between Code Editor and Visualizer */}
+              {showVisualizer && !isVisualizerMaximized && (
+                <div
+                  onMouseDown={() => setIsDraggingEditorSplit(true)}
+                  onTouchStart={() => setIsDraggingEditorSplit(true)}
+                  onDoubleClick={() => setEditorVisualizerSplit(50)}
+                  className={`hidden md:flex items-center justify-center relative z-20 select-none shrink-0 w-2.5 -mx-1 cursor-col-resize group transition-colors ${
+                    isDraggingEditorSplit ? "bg-amber-500/20" : "hover:bg-amber-500/10"
+                  }`}
+                  title="Drag to resize editor & visualizer | Double-click to reset (50/50)"
+                >
+                  <div
+                    className={`w-[2px] h-full transition-colors ${
+                      isDraggingEditorSplit
+                        ? "bg-amber-500"
+                        : "bg-surface-border group-hover:bg-amber-500/60"
+                    }`}
+                  />
+                  <div className="absolute top-1/2 -translate-y-1/2 p-0.5 rounded bg-surface border border-surface-border text-slate-400 group-hover:text-amber-500 shadow-xs">
+                    <GripVertical className="h-3 w-3" />
+                  </div>
+                </div>
+              )}
+
+              {/* Execution Visualizer Pane beside Code Editor */}
+              {showVisualizer && (
+                <div
+                  className="flex flex-col min-h-0 min-w-0 h-full overflow-hidden"
+                  style={{
+                    width: isVisualizerMaximized ? "100%" : `${100 - editorVisualizerSplit}%`,
+                    flex: isVisualizerMaximized ? "1" : "none",
+                  }}
+                >
+                  <AlgorithmVisualizer
+                    problemSlug={problem.slug}
+                    problemTitle={problem.title}
+                    code={code}
+                    language={selectedLanguage}
+                    examples={problem.examples || []}
+                    onClose={() => setShowVisualizer(false)}
+                    isMaximized={isVisualizerMaximized}
+                    onToggleMaximize={() => setIsVisualizerMaximized(!isVisualizerMaximized)}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Vertical Draggable Gutter / Scrollable Split Button */}
