@@ -39,7 +39,7 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 - **Editor**: Monaco Editor (`@monaco-editor/react`) with dynamic fallback textarea.
 - **Routing & Rendering**:
   - Problem Workspace: `/problems/[slug]` pre-rendered via SSG Edge (`problem-catalog-data.ts`) with zero-latency instant loading.
-  - Problems Catalog: `/problems` with tag/difficulty/status filters (platform filters like LeetCode/GFG removed).
+  - Problems Catalog: `/problems` with algorithmic topic & difficulty filters (company-specific filters and company badges are restricted to the Pro Company Hub at `/companies` to protect the Pro conversion funnel).
   - Auth: `/login`, `/register`, Supabase Auth context + Bearer JWT synchronization.
 
 ### Backend (`/backend`)

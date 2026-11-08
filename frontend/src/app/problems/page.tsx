@@ -43,6 +43,26 @@ interface ApiResponse<T> {
   data: T;
 }
 
+const COMPANY_SLUGS = [
+  "amazon",
+  "google",
+  "meta",
+  "microsoft",
+  "apple",
+  "uber",
+  "bloomberg",
+  "netflix",
+];
+
+function isPublicTopicTag(slugOrName: string): boolean {
+  const s = slugOrName.toLowerCase();
+  return (
+    !COMPANY_SLUGS.includes(s) &&
+    s !== "leetcode" &&
+    s !== "geeksforgeeks"
+  );
+}
+
 function filterFallbackProblems(
   catalog: ProblemSummary[],
   search: string,
@@ -54,7 +74,11 @@ function filterFallbackProblems(
     const matchesSearch =
       !query ||
       p.title.toLowerCase().includes(query) ||
-      p.tags.some((t) => t.name.toLowerCase().includes(query) || t.slug.toLowerCase().includes(query));
+      p.tags.some(
+        (t) =>
+          isPublicTopicTag(t.slug) &&
+          (t.name.toLowerCase().includes(query) || t.slug.toLowerCase().includes(query))
+      );
 
     const matchesDiff =
       difficulty === "ALL" || p.difficulty.toUpperCase() === difficulty.toUpperCase();
@@ -63,8 +87,9 @@ function filterFallbackProblems(
       !tag ||
       p.tags.some(
         (t) =>
-          t.slug.toLowerCase() === tag.toLowerCase() ||
-          t.name.toLowerCase() === tag.toLowerCase()
+          isPublicTopicTag(t.slug) &&
+          (t.slug.toLowerCase() === tag.toLowerCase() ||
+            t.name.toLowerCase() === tag.toLowerCase())
       );
 
     return matchesSearch && matchesDiff && matchesTag;
@@ -185,8 +210,6 @@ export default function ProblemsPage() {
     HARD: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30",
   };
 
-  const COMPANY_SLUGS = ["amazon", "google", "meta", "microsoft", "apple", "uber", "bloomberg", "netflix"];
-  const companyTags = tags.filter((t) => COMPANY_SLUGS.includes(t.slug.toLowerCase()));
   const topicTags = tags.filter(
     (t) =>
       !COMPANY_SLUGS.includes(t.slug.toLowerCase()) &&
@@ -355,47 +378,6 @@ export default function ProblemsPage() {
             </div>
           </div>
 
-          {/* Company Filter Chips */}
-          {companyTags.length > 0 && (
-            <div className="flex items-center space-x-2 overflow-x-auto pt-3 border-t border-surface-border pb-1 text-xs">
-              <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 text-brand-500" /> Companies:
-              </span>
-              <button
-                onClick={() => {
-                  if (COMPANY_SLUGS.includes(selectedTag.toLowerCase())) setSelectedTag("");
-                  setPage(0);
-                }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition ${
-                  !COMPANY_SLUGS.includes(selectedTag.toLowerCase())
-                    ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
-                    : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted"
-                }`}
-              >
-                All
-              </button>
-              {companyTags.map((t) => {
-                const isSelected = selectedTag.toLowerCase() === t.slug.toLowerCase();
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setSelectedTag(isSelected ? "" : t.slug);
-                      setPage(0);
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
-                      isSelected
-                        ? "bg-brand-600 text-white font-semibold shadow-xs"
-                        : "bg-surface-subtle text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-surface-muted border border-surface-border"
-                    }`}
-                  >
-                    <span>{t.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
           {/* Topic Filter Pills */}
           {topicTags.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pt-2 border-t border-surface-border pb-1">
@@ -404,9 +386,7 @@ export default function ProblemsPage() {
               </span>
               <button
                 onClick={() => {
-                  if (!COMPANY_SLUGS.includes(selectedTag.toLowerCase()) && selectedTag !== "sde-1") {
-                    setSelectedTag("");
-                  }
+                  setSelectedTag("");
                   setPage(0);
                 }}
                 className={`px-2.5 py-1 rounded-full text-xs font-mono shrink-0 transition ${
@@ -500,13 +480,8 @@ export default function ProblemsPage() {
 
                   <div className="flex flex-wrap items-center gap-1.5 pl-7">
                     {problem.tags
-                      .filter(
-                        (t) =>
-                          t.slug.toLowerCase() !== "leetcode" &&
-                          t.slug.toLowerCase() !== "geeksforgeeks"
-                      )
+                      .filter((t) => isPublicTopicTag(t.slug))
                       .map((t) => {
-                        const isCompany = COMPANY_SLUGS.includes(t.slug.toLowerCase());
                         const isSde1 = t.slug.toLowerCase() === "sde-1";
                         const isBlind75 = t.slug.toLowerCase() === "blind-75";
                         return (
@@ -517,8 +492,6 @@ export default function ProblemsPage() {
                                 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-semibold"
                                 : isSde1
                                 ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 font-semibold"
-                                : isCompany
-                                ? "bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/30 font-semibold"
                                 : "bg-surface-subtle text-slate-600 dark:text-slate-400 border-surface-border"
                             }`}
                           >
