@@ -112,6 +112,7 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 |---|---|
 | `docs/ENTERPRISE_ARCHITECTURE.md` | Master enterprise architecture, capacity planning, security cage, and AWS Option C deployment topology. |
 | `docs/CAPACITY_PLANNING.md` | Mathematical back-of-the-envelope calculations (100k DAU, Little's Law, compute/RAM sizing, 5-year storage). |
+| `docs/SCALABILITY_ANALYSIS.md` | Scalability stress-test across 5 tiers (10k to 10M DAU), breaking points, and contest surge simulations. |
 | `frontend/src/app/problems/[slug]/ProblemWorkspace.tsx` | Main split workspace (problem, Monaco editor, visualizer split, testcases, modals). |
 | `frontend/src/components/visualizer/AlgorithmVisualizer.tsx` | Interactive step-by-step code and memory visualizer component. |
 | `frontend/src/components/visualizer/algorithm-tracer.ts` | Execution simulation engine, pointer tracking, Big-O complexity analyzer. |
