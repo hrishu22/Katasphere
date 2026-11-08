@@ -110,6 +110,8 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 
 | Path | Purpose |
 |---|---|
+| `docs/ENTERPRISE_ARCHITECTURE.md` | Master enterprise architecture, capacity planning, security cage, and AWS Option C deployment topology. |
+| `docs/CAPACITY_PLANNING.md` | Mathematical back-of-the-envelope calculations (100k DAU, Little's Law, compute/RAM sizing, 5-year storage). |
 | `frontend/src/app/problems/[slug]/ProblemWorkspace.tsx` | Main split workspace (problem, Monaco editor, visualizer split, testcases, modals). |
 | `frontend/src/components/visualizer/AlgorithmVisualizer.tsx` | Interactive step-by-step code and memory visualizer component. |
 | `frontend/src/components/visualizer/algorithm-tracer.ts` | Execution simulation engine, pointer tracking, Big-O complexity analyzer. |
@@ -125,6 +127,9 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 ---
 
 ## 5. Summary of Recent Commits (Git Log)
+- `77aceec`: Add capacity planning and back-of-the-envelope calculations.
+- `0258785`: Add enterprise architecture, security, and scalability blueprint.
+- `87ffb38`: Add master KATASPHERE_CONTEXT.md for cross-session continuity.
 - `20dd22b`: Handle ClientAbortException gracefully and extend client execution timeout.
 - `6b11f13`: Require authentication for hints and execution visualizer.
 - `689bbb1`: Default language set to Java 21; updated hint naming to clean 'Hint 1 (Initial Direction)'.
