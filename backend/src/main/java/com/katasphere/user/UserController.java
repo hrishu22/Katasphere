@@ -19,10 +19,16 @@ public class UserController {
 
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final UserDashboardService userDashboardService;
 
-    public UserController(AuthService authService, UserRepository userRepository) {
+    public UserController(
+        AuthService authService,
+        UserRepository userRepository,
+        UserDashboardService userDashboardService
+    ) {
         this.authService = authService;
         this.userRepository = userRepository;
+        this.userDashboardService = userDashboardService;
     }
 
     @GetMapping("/me")
@@ -40,6 +46,24 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Session expired"));
         }
+    }
+
+    @GetMapping("/me/dashboard")
+    public ResponseEntity<ApiResponse<UserDashboardDto>> getDashboard(HttpServletRequest request) {
+        UUID userId = resolveUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("User not found or session expired"));
+        }
+
+        UserDashboardDto dashboard = userDashboardService.getUserDashboard(user);
+        return ResponseEntity.ok(ApiResponse.ok("User dashboard retrieved", dashboard));
     }
 
     @PostMapping("/upgrade-premium")

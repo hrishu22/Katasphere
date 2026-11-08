@@ -5,11 +5,14 @@ import com.katasphere.execution.dto.ExecutionResultDto;
 import com.katasphere.execution.dto.RunCodeRequest;
 import com.katasphere.execution.dto.SubmissionDto;
 import com.katasphere.execution.dto.SubmitCodeRequest;
+import com.katasphere.submission.SubmissionRepository;
 import com.katasphere.user.User;
 import com.katasphere.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +26,18 @@ public class SubmissionController {
 
     private final ExecutionService executionService;
     private final UserRepository userRepository;
+    private final SubmissionRepository submissionRepository;
     private final ExecutionRateLimiter rateLimiter;
 
     public SubmissionController(
         ExecutionService executionService,
         UserRepository userRepository,
+        SubmissionRepository submissionRepository,
         ExecutionRateLimiter rateLimiter
     ) {
         this.executionService = executionService;
         this.userRepository = userRepository;
+        this.submissionRepository = submissionRepository;
         this.rateLimiter = rateLimiter;
     }
 
@@ -116,6 +122,28 @@ public class SubmissionController {
         }
 
         List<SubmissionDto> submissions = executionService.getProblemSubmissions(user, slug);
+        return ResponseEntity.ok(ApiResponse.ok("Submissions retrieved", submissions));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<SubmissionDto>>> getUserSubmissions(
+        @RequestParam(defaultValue = "20") int limit,
+        HttpServletRequest httpRequest
+    ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiResponse.error("Authentication required. Please sign in to view submissions.")
+            );
+        }
+
+        Pageable pageable = PageRequest.of(0, Math.min(Math.max(1, limit), 100));
+        List<SubmissionDto> submissions = submissionRepository
+            .findByUserWithProblemOrderByCreatedAtDesc(user, pageable)
+            .stream()
+            .map(SubmissionDto::fromEntity)
+            .toList();
+
         return ResponseEntity.ok(ApiResponse.ok("Submissions retrieved", submissions));
     }
 

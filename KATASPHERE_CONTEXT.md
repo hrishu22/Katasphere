@@ -133,6 +133,14 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 - In [`problem-hints-data.ts`](frontend/src/lib/problem-hints-data.ts) & [`ProblemHintsModal.tsx`](frontend/src/components/hints/ProblemHintsModal.tsx): Hints adapt dynamically to the currently selected language in the editor (Java 21, Python 3, C++ 20, JavaScript), with live interactive language-switching tabs in the modal.
 - Standardized Java return types across all problem templates and starter code to modern type-associated syntax (e.g. `int[]` instead of legacy `int`).
 
+### I. Real-Time Developer Dashboard & Live Submissions Tracking
+1. **User Dashboard Aggregator (`/api/v1/users/me/dashboard`)**:
+   - [`UserDashboardService.java`](backend/src/main/java/com/katasphere/user/UserDashboardService.java): Aggregates user problem-solving progress (total solved, easy/medium/hard breakdown with percentage bars, total submissions, acceptance rate), recent submissions history, and solved problem slugs.
+2. **Interactive Developer Dashboard**:
+   - [`frontend/src/app/dashboard/page.tsx`](frontend/src/app/dashboard/page.tsx): Replaced static placeholder values with live data. Displays real-time progress bars, acceptance rate metrics, and a full Recent Submissions table featuring verdict badges (Accepted, Wrong Answer, TLE, Compile Error), problem links, language badges, runtime (ms), memory (MB), and relative timestamp.
+3. **Problem Catalog Solved Indicators**:
+   - In [`frontend/src/app/problems/page.tsx`](frontend/src/app/problems/page.tsx): Solved problems dynamically render a green `CheckCircle2` icon instead of an empty circle for authenticated users.
+
 ---
 
 ## 4. Key File Map
@@ -142,6 +150,8 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 | `docs/ENTERPRISE_ARCHITECTURE.md` | Master enterprise architecture, capacity planning, security cage, and AWS Option C deployment topology. |
 | `docs/CAPACITY_PLANNING.md` | Mathematical back-of-the-envelope calculations (100k DAU, Little's Law, compute/RAM sizing, 5-year storage). |
 | `docs/SCALABILITY_ANALYSIS.md` | Scalability stress-test across 5 tiers (10k to 10M DAU), breaking points, and contest surge simulations. |
+| `frontend/src/app/dashboard/page.tsx` | Real-time developer dashboard with progress bars, acceptance rate, and recent submissions table. |
+| `frontend/src/app/problems/page.tsx` | Problem library with live solved status indicators and filters. |
 | `frontend/src/app/problems/[slug]/ProblemWorkspace.tsx` | Main split workspace (problem, Monaco editor, visualizer split, testcases, modals). |
 | `frontend/src/components/visualizer/AlgorithmVisualizer.tsx` | Interactive step-by-step code and memory visualizer component. |
 | `frontend/src/components/visualizer/algorithm-tracer.ts` | Execution simulation engine, pointer tracking, Big-O complexity analyzer. |
@@ -149,6 +159,7 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 | `frontend/src/lib/problem-hints-data.ts` | Multi-language hints generator (Java 21, Python 3, C++ 20, JS). |
 | `frontend/src/components/submission/SubmissionSuccessModal.tsx` | All-testcases-passed celebration modal. |
 | `frontend/src/components/submission/SubmissionVisualizerModal.tsx` | Post-submission visualizer & Big-O modal dialog. |
+| `backend/src/main/java/com/katasphere/user/UserDashboardService.java` | Aggregates user stats, solved counts by difficulty, and recent submissions. |
 | `backend/src/main/java/com/katasphere/problem/ProblemTestCaseInitializer.java` | Multi-tier test case seeder (public + hidden edge/scale cases). |
 | `backend/src/main/java/com/katasphere/problem/TestCaseRepository.java` | Spring Data repository for problem test cases. |
 | `backend/src/main/java/com/katasphere/execution/LocalExecutionEngine.java` | Java/Python/C++ execution engine with async stream drains and fast-fail grading. |
@@ -160,6 +171,7 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 ---
 
 ## 5. Summary of Recent Commits (Git Log)
+- `5362e05`: Implement multi-tier hidden test cases, LeetCode-style failing case reporting, and fast-fail submission evaluation.
 - `a44e276`: Add multi-language hints (Java, Python, C++, JS) with live language switcher and modern Java return types.
 - `f8f18db`: Implement sliding-window rate limiting, DTO input validation, and sandbox security cage.
 - `f5f02e7`: Add comprehensive scalability stress-test and breaking point analysis.

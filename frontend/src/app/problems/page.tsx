@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiClient } from "@/lib/api-client";
 import {
   Search,
@@ -71,12 +72,36 @@ function filterFallbackProblems(
 }
 
 export default function ProblemsPage() {
+  const { user } = useAuth();
   const [problems, setProblems] = useState<ProblemSummary[]>(INITIAL_PROBLEMS);
   const [tags, setTags] = useState<TagDto[]>(INITIAL_TAGS);
+  const [solvedSlugs, setSolvedSlugs] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(true);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch Solved Problem Slugs for current authenticated user
+  useEffect(() => {
+    if (!user) {
+      setSolvedSlugs(new Set());
+      return;
+    }
+    async function fetchSolved() {
+      try {
+        const res = await apiClient<ApiResponse<{ solvedProblemSlugs: string[] }>>(
+          "/api/v1/users/me/dashboard",
+          { timeoutMs: 5000 }
+        );
+        if (res && res.data && Array.isArray(res.data.solvedProblemSlugs)) {
+          setSolvedSlugs(new Set(res.data.solvedProblemSlugs.map((s) => s.toLowerCase())));
+        }
+      } catch (err) {
+        // Silently fail if unauthenticated or network failure
+      }
+    }
+    fetchSolved();
+  }, [user]);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -450,7 +475,13 @@ export default function ProblemsPage() {
               >
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
-                    <Circle className="h-4 w-4 text-slate-400 shrink-0" />
+                    {solvedSlugs.has(problem.slug.toLowerCase()) ? (
+                      <span title="Solved" className="shrink-0 flex items-center">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      </span>
+                    ) : (
+                      <Circle className="h-4 w-4 text-slate-400 shrink-0" />
+                    )}
                     <Link
                       href={`/problems/${problem.slug}`}
                       prefetch={true}
