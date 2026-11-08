@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface TestCaseRepository extends JpaRepository<TestCase, UUID> {
     List<TestCase> findByProblemOrderByPositionAsc(Problem problem);
     List<TestCase> findByProblemAndIsHiddenFalseOrderByPositionAsc(Problem problem);
+    long countByProblem(Problem problem);
+    void deleteByProblem(Problem problem);
 }

@@ -106,6 +106,18 @@ interface SubmissionResult {
   memoryKb?: number;
   errorMessage?: string;
   createdAt: string;
+  failedTestCase?: {
+    caseNumber: number;
+    passed: boolean;
+    input: string;
+    expectedOutput: string;
+    actualOutput: string;
+    error?: string;
+    executionTimeMs?: number;
+    memoryKb?: number;
+    status: string;
+    stdout?: string;
+  };
 }
 
 type Language = "PYTHON" | "JAVA" | "CPP" | "JAVASCRIPT";
@@ -1194,6 +1206,67 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
                     {submissionResult.errorMessage && (
                       <div className="p-3 rounded-lg bg-surface-subtle border border-surface-border text-rose-500 font-mono text-xs whitespace-pre-wrap">
                         {submissionResult.errorMessage}
+                      </div>
+                    )}
+
+                    {/* LeetCode & GFG Style Failing Test Case Output */}
+                    {submissionResult.failedTestCase && (
+                      <div className="space-y-3 pt-1 font-mono text-xs">
+                        <div className="flex items-center justify-between pb-1 border-b border-surface-border">
+                          <span className="font-bold text-rose-500 flex items-center gap-1.5">
+                            <XCircle className="h-4 w-4" />
+                            Failed Test Case (Case #{submissionResult.failedTestCase.caseNumber})
+                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-sans font-semibold">
+                            {submissionResult.failedTestCase.status || "Wrong Answer"}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500 dark:text-slate-400 font-sans font-medium">Input:</span>
+                          <div className="mt-1 p-2.5 rounded-lg bg-surface-subtle border border-surface-border text-foreground overflow-x-auto whitespace-pre-wrap">
+                            {submissionResult.failedTestCase.input}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 font-sans font-medium">Expected Output:</span>
+                            <div className="mt-1 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 overflow-x-auto whitespace-pre-wrap">
+                              {submissionResult.failedTestCase.expectedOutput}
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 font-sans font-medium">Your Output:</span>
+                            <div className="mt-1 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 overflow-x-auto whitespace-pre-wrap">
+                              {submissionResult.failedTestCase.actualOutput || "(empty output)"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {submissionResult.failedTestCase.stdout && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex items-center space-x-2 text-xs">
+                              <Terminal className="h-3.5 w-3.5 text-sky-500" />
+                              <span className="font-semibold text-sky-600 dark:text-sky-400 font-sans">
+                                Stdout:
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-lg bg-slate-950 text-emerald-400 font-mono text-xs whitespace-pre-wrap shadow-inner overflow-x-auto max-h-48 overflow-y-auto">
+                              {submissionResult.failedTestCase.stdout}
+                            </div>
+                          </div>
+                        )}
+
+                        {submissionResult.failedTestCase.error && (
+                          <div>
+                            <span className="text-rose-500 font-sans font-medium">Diagnostics / Error:</span>
+                            <div className="mt-1 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 whitespace-pre-wrap">
+                              {submissionResult.failedTestCase.error}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

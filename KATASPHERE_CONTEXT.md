@@ -117,6 +117,22 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 4. **Hardened HTTP Security Headers**:
    - In [`SecurityConfig.java`](backend/src/main/java/com/katasphere/config/SecurityConfig.java): Configured `nosniff`, `frameOptions(DENY)`, `strict-origin-when-cross-origin`, and `Permissions-Policy`.
 
+### G. LeetCode / GFG Multi-Tier Test Suite & Fast-Fail Grading
+1. **Public vs. Hidden Test Cases**:
+   - [`ProblemTestCaseInitializer.java`](backend/src/main/java/com/katasphere/problem/ProblemTestCaseInitializer.java): Seeds 201+ test cases in PostgreSQL. Curated problems have 10-test suites (3 public test cases, 7 hidden edge/scale cases including negatives, zeros, duplicates, boundary limits, and large-scale inputs).
+   - "Run Code" executes only the 2-3 public sample test cases.
+   - "Submit" executes the full suite (public + hidden).
+2. **Fast-Fail Execution**:
+   - In [`LocalExecutionEngine.java`](backend/src/main/java/com/katasphere/execution/LocalExecutionEngine.java): When running full suites (`testCases.size() > 3`), execution breaks immediately upon the first failure to conserve compute resources.
+3. **Failing Test Case Reporting**:
+   - In [`SubmissionDto.java`](backend/src/main/java/com/katasphere/execution/dto/SubmissionDto.java) & [`ProblemWorkspace.tsx`](frontend/src/app/problems/[slug]/ProblemWorkspace.tsx): When a submission fails (`WRONG_ANSWER`, `TIME_LIMIT_EXCEEDED`, etc.), the exact failing test case input, expected output, candidate actual output, and stdout are returned and displayed in an interactive card.
+4. **Celebration Success Flow**:
+   - When all test cases pass (`10/10`), the `SubmissionSuccessModal` is triggered with runtime and memory statistics, and direct launch into the Algorithm Visualizer.
+
+### H. Multi-Language Idiomatic Hints & Java Convention
+- In [`problem-hints-data.ts`](frontend/src/lib/problem-hints-data.ts) & [`ProblemHintsModal.tsx`](frontend/src/components/hints/ProblemHintsModal.tsx): Hints adapt dynamically to the currently selected language in the editor (Java 21, Python 3, C++ 20, JavaScript), with live interactive language-switching tabs in the modal.
+- Standardized Java return types across all problem templates and starter code to modern type-associated syntax (e.g. `int[]` instead of legacy `int`).
+
 ---
 
 ## 4. Key File Map
@@ -129,11 +145,14 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 | `frontend/src/app/problems/[slug]/ProblemWorkspace.tsx` | Main split workspace (problem, Monaco editor, visualizer split, testcases, modals). |
 | `frontend/src/components/visualizer/AlgorithmVisualizer.tsx` | Interactive step-by-step code and memory visualizer component. |
 | `frontend/src/components/visualizer/algorithm-tracer.ts` | Execution simulation engine, pointer tracking, Big-O complexity analyzer. |
-| `frontend/src/components/hints/ProblemHintsModal.tsx` | 4-step progressive hints modal. |
-| `frontend/src/lib/problem-hints-data.ts` | Problem-specific and generic 4-step hint generator. |
+| `frontend/src/components/hints/ProblemHintsModal.tsx` | 4-step progressive hints modal with multi-language switcher. |
+| `frontend/src/lib/problem-hints-data.ts` | Multi-language hints generator (Java 21, Python 3, C++ 20, JS). |
 | `frontend/src/components/submission/SubmissionSuccessModal.tsx` | All-testcases-passed celebration modal. |
 | `frontend/src/components/submission/SubmissionVisualizerModal.tsx` | Post-submission visualizer & Big-O modal dialog. |
-| `backend/src/main/java/com/katasphere/execution/LocalExecutionEngine.java` | Java/Python/C++ execution engine with async stream drains. |
+| `backend/src/main/java/com/katasphere/problem/ProblemTestCaseInitializer.java` | Multi-tier test case seeder (public + hidden edge/scale cases). |
+| `backend/src/main/java/com/katasphere/problem/TestCaseRepository.java` | Spring Data repository for problem test cases. |
+| `backend/src/main/java/com/katasphere/execution/LocalExecutionEngine.java` | Java/Python/C++ execution engine with async stream drains and fast-fail grading. |
+| `backend/src/main/java/com/katasphere/execution/ExecutionService.java` | Manages test case runs, submissions, and failing test case extraction. |
 | `backend/src/main/java/com/katasphere/common/GlobalExceptionHandler.java` | Exception handling with graceful `ClientAbortException` interception. |
 | `backend/src/main/java/com/katasphere/auth/TokenProvider.java` | JWT token generation and validation. |
 | `frontend/src/lib/api-client.ts` | Frontend API client with Bearer auth injection and timeouts. |
@@ -141,6 +160,7 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 ---
 
 ## 5. Summary of Recent Commits (Git Log)
+- `a44e276`: Add multi-language hints (Java, Python, C++, JS) with live language switcher and modern Java return types.
 - `f8f18db`: Implement sliding-window rate limiting, DTO input validation, and sandbox security cage.
 - `f5f02e7`: Add comprehensive scalability stress-test and breaking point analysis.
 - `77aceec`: Add capacity planning and back-of-the-envelope calculations.

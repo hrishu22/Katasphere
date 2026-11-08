@@ -4,6 +4,7 @@ import com.katasphere.execution.dto.ExecutionResultDto;
 import com.katasphere.execution.dto.RunCodeRequest;
 import com.katasphere.execution.dto.SubmissionDto;
 import com.katasphere.execution.dto.SubmitCodeRequest;
+import com.katasphere.execution.dto.TestCaseResultDto;
 import com.katasphere.problem.*;
 import com.katasphere.submission.Submission;
 import com.katasphere.submission.SubmissionRepository;
@@ -83,6 +84,14 @@ public class ExecutionService {
             problem.getSlug()
         );
 
+        TestCaseResultDto failedCase = null;
+        if (!"ACCEPTED".equals(execResult.verdict())) {
+            failedCase = execResult.testCases().stream()
+                .filter(tc -> !tc.passed())
+                .findFirst()
+                .orElse(null);
+        }
+
         Submission submission = new Submission(
             user,
             problem,
@@ -97,7 +106,7 @@ public class ExecutionService {
         );
 
         submission = submissionRepository.save(submission);
-        return SubmissionDto.fromEntity(submission);
+        return SubmissionDto.fromEntity(submission, failedCase);
     }
 
     @Transactional(readOnly = true)

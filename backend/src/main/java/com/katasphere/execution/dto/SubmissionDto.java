@@ -15,9 +15,10 @@ public record SubmissionDto(
     Long executionTimeMs,
     Long memoryKb,
     String errorMessage,
-    Instant createdAt
+    Instant createdAt,
+    TestCaseResultDto failedTestCase
 ) {
-    public static SubmissionDto fromEntity(Submission s) {
+    public static SubmissionDto fromEntity(Submission s, TestCaseResultDto failedTestCase) {
         return new SubmissionDto(
             s.getId(),
             s.getProblem().getSlug(),
@@ -29,7 +30,12 @@ public record SubmissionDto(
             s.getExecutionTimeMs(),
             s.getMemoryKb(),
             s.getErrorMessage(),
-            s.getCreatedAt()
+            s.getCreatedAt(),
+            failedTestCase
         );
+    }
+
+    public static SubmissionDto fromEntity(Submission s) {
+        return fromEntity(s, null);
     }
 }

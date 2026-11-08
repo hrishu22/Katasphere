@@ -20,15 +20,18 @@ public class ProblemDataInitializer {
     private static final Logger log = LoggerFactory.getLogger(ProblemDataInitializer.class);
 
     private final ProblemAdminService problemAdminService;
+    private final ProblemTestCaseInitializer testCaseInitializer;
     private final ResourceLoader resourceLoader;
     private final ObjectMapper objectMapper;
 
     public ProblemDataInitializer(
         ProblemAdminService problemAdminService,
+        ProblemTestCaseInitializer testCaseInitializer,
         ResourceLoader resourceLoader,
         ObjectMapper objectMapper
     ) {
         this.problemAdminService = problemAdminService;
+        this.testCaseInitializer = testCaseInitializer;
         this.resourceLoader = resourceLoader;
         this.objectMapper = objectMapper;
     }
@@ -37,24 +40,26 @@ public class ProblemDataInitializer {
     public void initializeCatalogProblems() {
         try {
             Resource resource = resourceLoader.getResource("classpath:problems/catalog.json");
-            if (!resource.exists()) {
-                log.info("No problems/catalog.json found; skipping auto-import.");
-                return;
-            }
+            if (resource.exists()) {
+                try (InputStream is = resource.getInputStream()) {
+                    List<CreateProblemRequest> problems = objectMapper.readValue(
+                        is,
+                        new TypeReference<List<CreateProblemRequest>>() {}
+                    );
 
-            try (InputStream is = resource.getInputStream()) {
-                List<CreateProblemRequest> problems = objectMapper.readValue(
-                    is,
-                    new TypeReference<List<CreateProblemRequest>>() {}
-                );
-
-                for (CreateProblemRequest req : problems) {
-                    problemAdminService.createOrUpdateProblem(req);
+                    for (CreateProblemRequest req : problems) {
+                        problemAdminService.createOrUpdateProblem(req);
+                    }
+                    log.info("Successfully ingested {} problems from catalog.json", problems.size());
                 }
-                log.info("Successfully ingested {} problems from catalog.json", problems.size());
+            } else {
+                log.info("No problems/catalog.json found; skipping auto-import.");
             }
+
+            // Seed multi-case test suites (public + hidden edge/scale cases)
+            testCaseInitializer.seedAllTestCases();
         } catch (Exception e) {
-            log.warn("Could not auto-import catalog.json problems: {}", e.getMessage());
+            log.warn("Could not auto-import catalog.json or seed test cases: {}", e.getMessage());
         }
     }
 }

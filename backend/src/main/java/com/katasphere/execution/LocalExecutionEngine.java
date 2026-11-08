@@ -164,6 +164,9 @@ public class LocalExecutionEngine {
                     "Wrong Answer",
                     userStdout
                 ));
+                if (testCases.size() > 3) {
+                    break;
+                }
             }
         }
 
@@ -311,6 +314,9 @@ public class LocalExecutionEngine {
                         "Wrong Answer",
                         userStdout
                     ));
+                    if (testCases.size() > 3) {
+                        break;
+                    }
                 }
             }
 
