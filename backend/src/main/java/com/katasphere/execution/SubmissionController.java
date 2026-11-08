@@ -47,16 +47,26 @@ public class SubmissionController {
             );
         }
 
-        String clientIp = resolveClientIp(httpRequest);
-        if (!rateLimiter.tryAcquire(clientIp)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
-                ApiResponse.error("Rate limit exceeded. Please wait before executing code again (limit: "
-                    + rateLimiter.getMaxRequestsPerMinute() + " requests/min).")
-            );
+        String clientId = resolveClientIdentifier(user, httpRequest);
+        ExecutionRateLimiter.RateLimitResult rateResult =
+            rateLimiter.tryAcquire(clientId, ExecutionRateLimiter.ExecutionType.RUN);
+
+        if (!rateResult.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("X-RateLimit-Limit", String.valueOf(rateResult.limit()))
+                .header("X-RateLimit-Remaining", "0")
+                .header("X-RateLimit-Reset", String.valueOf(rateResult.resetSeconds()))
+                .header("Retry-After", String.valueOf(Math.max(1L, rateResult.resetSeconds())))
+                .body(ApiResponse.error("Rate limit exceeded. Please wait " + rateResult.resetSeconds()
+                    + "s before executing code again (limit: " + rateResult.limit() + " requests/min)."));
         }
 
         ExecutionResultDto result = executionService.runCode(request);
-        return ResponseEntity.ok(ApiResponse.ok("Code execution completed", result));
+        return ResponseEntity.ok()
+            .header("X-RateLimit-Limit", String.valueOf(rateResult.limit()))
+            .header("X-RateLimit-Remaining", String.valueOf(rateResult.remaining()))
+            .header("X-RateLimit-Reset", String.valueOf(rateResult.resetSeconds()))
+            .body(ApiResponse.ok("Code execution completed", result));
     }
 
     @PostMapping
@@ -71,16 +81,26 @@ public class SubmissionController {
             );
         }
 
-        String clientIp = resolveClientIp(httpRequest);
-        if (!rateLimiter.tryAcquire(clientIp)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
-                ApiResponse.error("Rate limit exceeded. Please wait before submitting code again (limit: "
-                    + rateLimiter.getMaxRequestsPerMinute() + " requests/min).")
-            );
+        String clientId = resolveClientIdentifier(user, httpRequest);
+        ExecutionRateLimiter.RateLimitResult rateResult =
+            rateLimiter.tryAcquire(clientId, ExecutionRateLimiter.ExecutionType.SUBMIT);
+
+        if (!rateResult.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("X-RateLimit-Limit", String.valueOf(rateResult.limit()))
+                .header("X-RateLimit-Remaining", "0")
+                .header("X-RateLimit-Reset", String.valueOf(rateResult.resetSeconds()))
+                .header("Retry-After", String.valueOf(Math.max(1L, rateResult.resetSeconds())))
+                .body(ApiResponse.error("Rate limit exceeded. Please wait " + rateResult.resetSeconds()
+                    + "s before submitting code again (limit: " + rateResult.limit() + " requests/min)."));
         }
 
         SubmissionDto submission = executionService.submitCode(request, user);
-        return ResponseEntity.ok(ApiResponse.ok("Code submitted successfully", submission));
+        return ResponseEntity.ok()
+            .header("X-RateLimit-Limit", String.valueOf(rateResult.limit()))
+            .header("X-RateLimit-Remaining", String.valueOf(rateResult.remaining()))
+            .header("X-RateLimit-Reset", String.valueOf(rateResult.resetSeconds()))
+            .body(ApiResponse.ok("Code submitted successfully", submission));
     }
 
     @GetMapping("/problem/{slug}")
@@ -110,6 +130,13 @@ public class SubmissionController {
             return userRepository.findById(userId).orElse(null);
         }
         return null;
+    }
+
+    private String resolveClientIdentifier(User user, HttpServletRequest request) {
+        if (user != null && user.getId() != null) {
+            return "user:" + user.getId();
+        }
+        return "ip:" + resolveClientIp(request);
     }
 
     private String resolveClientIp(HttpServletRequest request) {

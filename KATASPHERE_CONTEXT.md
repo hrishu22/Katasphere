@@ -104,6 +104,19 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
    - In [`api-client.ts`](frontend/src/lib/api-client.ts), increased default timeout from 15s to 30s.
    - Set 60s for Run Code (`/api/v1/submissions/run`) and 90s for Submissions (`/api/v1/submissions`) to accommodate Java compilation and multi-testcase grading.
 
+### F. Enterprise Security Cage & Rate Limiting Hardening
+1. **Dual Sliding-Window Rate Limiter**:
+   - [`ExecutionRateLimiter.java`](backend/src/main/java/com/katasphere/execution/ExecutionRateLimiter.java): Independent buckets for `RUN` (20 req/min) and `SUBMIT` (10 req/min) with automated memory cleanup.
+   - Emits standard `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` HTTP headers.
+2. **Zero-Leakage & Input Validation**:
+   - [`RunCodeRequest.java`](backend/src/main/java/com/katasphere/execution/dto/RunCodeRequest.java) & [`SubmitCodeRequest.java`](backend/src/main/java/com/katasphere/execution/dto/SubmitCodeRequest.java): Strict regex language validation (`JAVA`, `PYTHON`, `CPP`, `JAVASCRIPT`), 64KB max code size, 100-char max slug length.
+3. **Execution Sandbox Hardening**:
+   - [`CodeSecurityValidator.java`](backend/src/main/java/com/katasphere/execution/CodeSecurityValidator.java): Guard patterns blocking `/etc/passwd`, `/etc/shadow`, `/proc/self`, `java.lang.management` (JMX), and reflection/network escapes.
+   - Child processes in [`LocalExecutionEngine.java`](backend/src/main/java/com/katasphere/execution/LocalExecutionEngine.java) have host environment variables cleared (`env.clear()`) with safe whitelisting (`PATH`, `JAVA_HOME`, `TMPDIR=/tmp`).
+   - Output truncation guards (4KB per output field) preventing buffer overflows and browser memory exhaustion.
+4. **Hardened HTTP Security Headers**:
+   - In [`SecurityConfig.java`](backend/src/main/java/com/katasphere/config/SecurityConfig.java): Configured `nosniff`, `frameOptions(DENY)`, `strict-origin-when-cross-origin`, and `Permissions-Policy`.
+
 ---
 
 ## 4. Key File Map

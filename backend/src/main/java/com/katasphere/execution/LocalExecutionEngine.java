@@ -22,6 +22,7 @@ public class LocalExecutionEngine {
 
     private static final Logger log = LoggerFactory.getLogger(LocalExecutionEngine.class);
     private static final int MAX_STREAM_CHARS = 65536; // 64KB max output buffer
+    private static final int MAX_FIELD_OUTPUT_CHARS = 4096; // 4KB per output field to protect browser/memory
     private static final long DEFAULT_TIMEOUT_MS = 5000L; // 5 seconds per testcase
     private static final long COMPILE_TIMEOUT_MS = 10000L; // 10 seconds for compilation
 
@@ -90,8 +91,8 @@ public class LocalExecutionEngine {
             totalRuntimeMs += elapsed;
 
             CodeHarnessGenerator.ParsedOutput parsed = harnessGenerator.parseOutput(runResult.stdout());
-            String actualOutput = parsed.actualOutput();
-            String userStdout = parsed.userStdout();
+            String actualOutput = truncate(parsed.actualOutput());
+            String userStdout = truncate(parsed.userStdout());
 
             if (runResult.timedOut()) {
                 overallVerdict = "TIME_LIMIT_EXCEEDED";
@@ -239,8 +240,8 @@ public class LocalExecutionEngine {
                 totalRuntimeMs += elapsed;
 
                 CodeHarnessGenerator.ParsedOutput parsed = harnessGenerator.parseOutput(runResult.stdout());
-                String actualOutput = parsed.actualOutput();
-                String userStdout = parsed.userStdout();
+                String actualOutput = truncate(parsed.actualOutput());
+                String userStdout = truncate(parsed.userStdout());
 
                 if (runResult.timedOut()) {
                     overallVerdict = "TIME_LIMIT_EXCEEDED";
@@ -537,6 +538,12 @@ public class LocalExecutionEngine {
         env.put("TMPDIR", "/tmp");
         env.put("LC_ALL", "en_US.UTF-8");
         env.put("LANG", "en_US.UTF-8");
+    }
+
+    private String truncate(String text) {
+        if (text == null) return null;
+        if (text.length() <= MAX_FIELD_OUTPUT_CHARS) return text;
+        return text.substring(0, MAX_FIELD_OUTPUT_CHARS) + "\n... [Truncated: output exceeded 4KB limit]";
     }
 
     private boolean isCommandAvailable(String cmd) {

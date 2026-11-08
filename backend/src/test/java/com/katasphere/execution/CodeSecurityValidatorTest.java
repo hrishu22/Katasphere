@@ -108,4 +108,13 @@ class CodeSecurityValidatorTest {
         assertFalse(validator.validate("CPP", "#include <cstdlib>\nint main() { system(\"ls\"); }").safe());
         assertFalse(validator.validate("CPP", "#include <unistd.h>\nint main() { fork(); }").safe());
     }
+
+    @Test
+    @DisplayName("Host file probe (/etc/passwd) and JMX management should be blocked")
+    void testFileProbeAndJmxBlocked() {
+        assertFalse(validator.validate("JAVA", "class Solution { String p = \"/etc/passwd\"; }").safe());
+        assertFalse(validator.validate("JAVA", "import java.lang.management.*; class Solution {}").safe());
+        assertFalse(validator.validate("PYTHON", "path = '/etc/shadow'").safe());
+        assertFalse(validator.validate("JAVASCRIPT", "const f = '/proc/self';").safe());
+    }
 }

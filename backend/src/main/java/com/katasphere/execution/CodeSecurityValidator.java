@@ -10,7 +10,7 @@ public class CodeSecurityValidator {
 
     public record SecurityCheckResult(boolean safe, String violationReason) {}
 
-    // Java restricted patterns (RCE, reflection, file manipulation, sockets, JVM control)
+    // Java restricted patterns (RCE, reflection, file manipulation, sockets, JVM control, JMX)
     private static final List<Pattern> JAVA_RESTRICTED = List.of(
         Pattern.compile("Runtime\\s*\\.\\s*getRuntime"),
         Pattern.compile("ProcessBuilder"),
@@ -20,24 +20,27 @@ public class CodeSecurityValidator {
         Pattern.compile("Class\\s*\\.\\s*forName"),
         Pattern.compile("(getDeclaredMethod|getMethod|getDeclaredField|getField|invoke)\\s*\\("),
         Pattern.compile("java\\.lang\\.invoke"),
+        Pattern.compile("java\\.lang\\.management"),
         Pattern.compile("sun\\.(misc\\.Unsafe|reflect)"),
         Pattern.compile("java\\.net\\.(Socket|ServerSocket|DatagramSocket|URL|HttpURLConnection|URI|HttpClient|NetworkInterface)"),
         Pattern.compile("java\\.nio\\.file\\.(Files|Paths?|Path\\s*\\.\\s*of)"),
         Pattern.compile("java\\.io\\.(File|FileInputStream|FileOutputStream|FileWriter|FileReader|RandomAccessFile)"),
         Pattern.compile("(ClassLoader|URLClassLoader)"),
-        Pattern.compile("SecurityManager")
+        Pattern.compile("SecurityManager"),
+        Pattern.compile("(/etc/passwd|/etc/shadow|/proc/self)")
     );
 
     // Python restricted patterns (OS execution, socket network, file access, dynamic code eval, introspection)
     private static final List<Pattern> PYTHON_RESTRICTED = List.of(
-        Pattern.compile("\\bimport\\s+(os|subprocess|sys|shutil|socket|urllib|requests|http|ftplib|smtplib|ctypes|pty|platform|importlib|builtins)\\b"),
-        Pattern.compile("\\bfrom\\s+(os|subprocess|sys|shutil|socket|urllib|requests|http|ctypes|pty|platform|importlib)\\s+import"),
+        Pattern.compile("\\bimport\\s+(os|subprocess|sys|shutil|socket|urllib|requests|http|ftplib|smtplib|ctypes|pty|platform|importlib|builtins|pickle|shelve)\\b"),
+        Pattern.compile("\\bfrom\\s+(os|subprocess|sys|shutil|socket|urllib|requests|http|ctypes|pty|platform|importlib|pickle|shelve)\\s+import"),
         Pattern.compile("\\bos\\.(system|popen|spawn|remove|unlink|rmdir|mkdir|rename|environ)\\b"),
         Pattern.compile("\\b(eval|exec|compile|__import__)\\s*\\("),
         Pattern.compile("\\b(open|file)\\s*\\("),
         Pattern.compile("\\bsys\\.(exit|modules)\\b"),
         Pattern.compile("(__subclasses__|__builtins__|__globals__)"),
-        Pattern.compile("\\b(getattr|setattr|delattr|globals|locals)\\s*\\(")
+        Pattern.compile("\\b(getattr|setattr|delattr|globals|locals)\\s*\\("),
+        Pattern.compile("(/etc/passwd|/etc/shadow|/proc/self)")
     );
 
     // JavaScript restricted patterns (child_process, fs, net, dynamic evaluation, process access)
@@ -46,7 +49,8 @@ public class CodeSecurityValidator {
         Pattern.compile("\\bimport\\s+.*from\\s+['\"](child_process|fs|net|http|https|cluster|os|worker_threads|vm)['\"]"),
         Pattern.compile("\\b(process|global\\.process|globalThis\\.process)\\.(exit|kill|env)"),
         Pattern.compile("\\b(eval|Function)\\s*\\("),
-        Pattern.compile("constructor\\s*\\.\\s*constructor\\s*\\(")
+        Pattern.compile("constructor\\s*\\.\\s*constructor\\s*\\("),
+        Pattern.compile("(/etc/passwd|/etc/shadow|/proc/self)")
     );
 
     // C++ restricted patterns (system commands, fork bomb, network headers, filesystem)
@@ -54,7 +58,8 @@ public class CodeSecurityValidator {
         Pattern.compile("#include\\s*<(cstdlib|unistd\\.h|sys/|windows\\.h|winsock|fstream|filesystem|dlfcn\\.h)>"),
         Pattern.compile("\\b(system|popen|fork|kill|ptrace)\\s*\\("),
         Pattern.compile("\\bexec[lv]p?\\s*\\("),
-        Pattern.compile("\\b__asm__\\b")
+        Pattern.compile("\\b__asm__\\b"),
+        Pattern.compile("(/etc/passwd|/etc/shadow|/proc/self)")
     );
 
     /**
