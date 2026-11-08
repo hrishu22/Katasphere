@@ -141,6 +141,8 @@ Please read KATASPHERE_CONTEXT.md at the root of the project to understand the f
 ---
 
 ## 5. Summary of Recent Commits (Git Log)
+- `f8f18db`: Implement sliding-window rate limiting, DTO input validation, and sandbox security cage.
+- `f5f02e7`: Add comprehensive scalability stress-test and breaking point analysis.
 - `77aceec`: Add capacity planning and back-of-the-envelope calculations.
 - `0258785`: Add enterprise architecture, security, and scalability blueprint.
 - `87ffb38`: Add master KATASPHERE_CONTEXT.md for cross-session continuity.

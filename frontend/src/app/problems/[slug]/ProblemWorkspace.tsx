@@ -1498,6 +1498,7 @@ export function ProblemWorkspace({ slug, initialProblem }: ProblemWorkspaceProps
         problemSlug={problem.slug}
         problemTitle={problem.title}
         tags={problem.tags?.map((t) => t.name) || []}
+        language={selectedLanguage}
         isOpen={showHintsModal}
         onClose={() => setShowHintsModal(false)}
         onOpenVisualizer={() => {

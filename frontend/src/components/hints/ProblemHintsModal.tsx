@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Lightbulb,
   X,
@@ -14,26 +14,50 @@ import {
   ArrowRight,
   Eye,
 } from "lucide-react";
-import { getProblemHints, ProblemHintStep } from "@/lib/problem-hints-data";
+import {
+  getProblemHints,
+  normalizeLanguage,
+  ProblemHintStep,
+} from "@/lib/problem-hints-data";
 
 export interface ProblemHintsModalProps {
   problemSlug: string;
   problemTitle: string;
   tags?: string[];
+  language?: string;
   isOpen: boolean;
   onClose: () => void;
   onOpenVisualizer: () => void;
 }
 
+const LANGUAGES = [
+  { id: "java", name: "Java 21" },
+  { id: "python", name: "Python 3" },
+  { id: "cpp", name: "C++ 20" },
+  { id: "javascript", name: "JavaScript" },
+] as const;
+
 export function ProblemHintsModal({
   problemSlug,
   problemTitle,
   tags = [],
+  language = "java",
   isOpen,
   onClose,
   onOpenVisualizer,
 }: ProblemHintsModalProps) {
-  const hintsData = getProblemHints(problemSlug, problemTitle, tags);
+  // Sync with selected workspace language
+  const [activeLang, setActiveLang] = useState<"java" | "python" | "cpp" | "javascript">(
+    normalizeLanguage(language)
+  );
+
+  useEffect(() => {
+    if (language) {
+      setActiveLang(normalizeLanguage(language));
+    }
+  }, [language]);
+
+  const hintsData = getProblemHints(problemSlug, problemTitle, tags, activeLang);
   const hints = hintsData.hints;
 
   // Track max unlocked hint index (0 to 3)
@@ -62,6 +86,9 @@ export function ProblemHintsModal({
     { num: 4, title: "Hint 4", desc: "Visual Intuition" },
   ];
 
+  const currentLangLabel =
+    LANGUAGES.find((l) => l.id === activeLang)?.name || "Java 21";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in select-none">
       <div className="relative w-full max-w-2xl rounded-2xl bg-surface border border-surface-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
@@ -72,12 +99,17 @@ export function ProblemHintsModal({
               <Lightbulb className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                Progressive Hints
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground">
+                  Progressive Hints
+                </h3>
                 <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-mono">
                   Step {activeStepIdx + 1} of 4
                 </span>
-              </h3>
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 font-mono">
+                  {currentLangLabel}
+                </span>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-sm sm:max-w-md">
                 {problemTitle}
               </p>
@@ -176,12 +208,36 @@ export function ProblemHintsModal({
 
           {/* Code Snippet Hint (if step 3) */}
           {currentHint.codeHint && (
-            <div className="space-y-1.5">
-              <div className="text-[11px] font-mono font-semibold text-slate-400 flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5 text-brand-500" />
-                Algorithm Pattern Preview
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="text-[11px] font-mono font-semibold text-slate-400 flex items-center gap-1.5">
+                  <Code2 className="h-3.5 w-3.5 text-brand-500" />
+                  <span>Algorithm Pattern ({currentLangLabel})</span>
+                </div>
+
+                {/* Language Switcher Pill */}
+                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-surface-subtle border border-surface-border self-start sm:self-auto">
+                  {LANGUAGES.map((lang) => {
+                    const isSelected = activeLang === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        onClick={() => setActiveLang(lang.id)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                          isSelected
+                            ? "bg-brand-600 text-white shadow-xs"
+                            : "text-slate-500 dark:text-slate-400 hover:text-foreground hover:bg-surface"
+                        }`}
+                      >
+                        {lang.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <pre className="p-3 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto border border-slate-800">
+
+              <pre className="p-3.5 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto border border-slate-800 leading-relaxed">
                 {currentHint.codeHint}
               </pre>
             </div>
