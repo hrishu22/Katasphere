@@ -46,8 +46,13 @@ function PricingContent() {
   // UPI state
   const [upiId, setUpiId] = useState("coder@okaxis");
 
-  const price = billingCycle === "annual" ? 8 : 14;
-  const billedTotal = billingCycle === "annual" ? 96 : 14;
+  const monthlyRate = 699;
+  const annualMonthlyEquivalent = 399;
+  const annualTotal = annualMonthlyEquivalent * 12; // ₹4,788
+  const annualSavings = (monthlyRate * 12) - annualTotal; // ₹3,600
+
+  const price = billingCycle === "annual" ? annualMonthlyEquivalent : monthlyRate;
+  const billedTotal = billingCycle === "annual" ? annualTotal : monthlyRate;
 
   const handleOpenCheckout = () => {
     if (!user) {
@@ -156,7 +161,7 @@ function PricingContent() {
               </div>
 
               <div>
-                <span className="text-4xl font-black text-foreground">$0</span>
+                <span className="text-4xl font-black text-foreground">₹0</span>
                 <span className="text-xs text-slate-400 font-medium ml-1">/ forever</span>
               </div>
 
@@ -225,13 +230,13 @@ function PricingContent() {
               </div>
 
               <div>
-                <div className="flex items-baseline space-x-2">
-                  <span className="text-5xl font-black text-foreground">${price}</span>
+                <div className="flex items-baseline space-x-1.5">
+                  <span className="text-5xl font-black text-foreground">₹{price}</span>
                   <span className="text-xs text-slate-400 font-medium">/ month</span>
                 </div>
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
                   {billingCycle === "annual"
-                    ? `Billed annually at $${billedTotal}/year (Save $72)`
+                    ? `Billed annually at ₹${billedTotal.toLocaleString("en-IN")}/year (Save ₹${annualSavings.toLocaleString("en-IN")})`
                     : "Billed monthly, cancel anytime"}
                 </p>
               </div>
@@ -363,8 +368,8 @@ function PricingContent() {
                       <span className="text-[11px] text-slate-400">All company sets & rounds unlocked</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-lg font-black text-foreground">${billedTotal}</span>
-                      <span className="text-[10px] text-slate-400 block">USD</span>
+                      <span className="text-lg font-black text-foreground">₹{billedTotal.toLocaleString("en-IN")}</span>
+                      <span className="text-[10px] text-slate-400 block font-mono">INR</span>
                     </div>
                   </div>
 
@@ -509,7 +514,7 @@ function PricingContent() {
                     ) : (
                       <>
                         <Lock className="h-4 w-4" />
-                        <span>Pay ${billedTotal} & Activate Pro</span>
+                        <span>Pay ₹{billedTotal.toLocaleString("en-IN")} & Activate Pro</span>
                       </>
                     )}
                   </button>
