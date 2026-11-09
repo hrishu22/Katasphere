@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -56,7 +57,11 @@ interface CatalogProblemSummary {
 }
 
 export default function AdminContestsPage() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const isCollegeAdmin = Boolean(
+    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
+  );
   const [contests, setContests] = useState<ContestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [catalogProblems, setCatalogProblems] = useState<CatalogProblemSummary[]>([]);
@@ -158,13 +163,17 @@ export default function AdminContestsPage() {
   };
 
   useEffect(() => {
-    if (!authLoading) {
-      loadData();
+    if (authLoading) return;
+    if (!isCollegeAdmin) {
+      router.replace("/login?role=admin&redirect=/admin/contests");
+      return;
     }
-  }, [authLoading]);
+    loadData();
+  }, [authLoading, isCollegeAdmin, router]);
 
-  // Load problem catalog for selector
+  // Load problem catalog for selector (only when signed in as College Admin)
   useEffect(() => {
+    if (authLoading || !isCollegeAdmin) return;
     async function fetchCatalog() {
       try {
         const res = await apiClient<ApiResponse<{ content: CatalogProblemSummary[] }>>("/api/v1/problems?size=100");
@@ -176,7 +185,7 @@ export default function AdminContestsPage() {
       }
     }
     fetchCatalog();
-  }, []);
+  }, [authLoading, isCollegeAdmin]);
 
   // Open monitor drawer
   const openMonitor = async (c: ContestDto) => {
@@ -289,6 +298,22 @@ export default function AdminContestsPage() {
   const totalExams = contests.length;
   const activeExams = contests.filter((c) => c.status === "ACTIVE").length;
   const totalStudents = contests.reduce((acc, c) => acc + (c.totalParticipants || 0), 0);
+
+  if (authLoading || !isCollegeAdmin) {
+    return (
+      <AppShell>
+        <div className="max-w-xl mx-auto px-4 py-24 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-foreground">
+            Redirecting to College Admin Sign-In...
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            The Faculty Examination Console requires a verified College Admin login.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

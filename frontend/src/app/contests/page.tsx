@@ -232,7 +232,7 @@ export default function ContestsPage() {
               <div className="mt-4 pt-4 border-t border-surface-border flex items-center justify-between text-xs">
                 <span className="text-slate-400">Exam Administrator?</span>
                 <Link
-                  href="/admin/contests"
+                  href={isCollegeAdmin ? "/admin/contests" : "/login?role=admin&redirect=/admin/contests"}
                   className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1"
                 >
                   <span>Faculty Console</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,13 +15,17 @@ import {
   AlertCircle,
   GraduationCap,
   Building2,
+  ShieldCheck,
 } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const explicitRedirect = searchParams?.get("redirect") || searchParams?.get("returnTo");
-  const initialRole = searchParams?.get("role") === "admin" ? "COLLEGE_ADMIN" : "USER";
+  const isAdminPortalRequested =
+    searchParams?.get("role") === "admin" ||
+    Boolean(explicitRedirect && explicitRedirect.startsWith("/admin"));
+  const initialRole = isAdminPortalRequested ? "COLLEGE_ADMIN" : "USER";
 
   const { login } = useAuth();
   const [loginAs, setLoginAs] = useState<"USER" | "COLLEGE_ADMIN">(initialRole);
@@ -31,6 +35,12 @@ function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAdminPortalRequested) {
+      setLoginAs("COLLEGE_ADMIN");
+    }
+  }, [isAdminPortalRequested]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,12 +74,24 @@ function LoginForm() {
           <Code2 className="h-6 w-6" />
         </div>
         <h2 className="text-2xl font-bold text-foreground tracking-tight">
-          Sign in to Katasphere
+          {loginAs === "COLLEGE_ADMIN" ? "College Admin Sign In" : "Sign in to Katasphere"}
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Select your portal and enter your credentials to continue.
+          {loginAs === "COLLEGE_ADMIN"
+            ? "Sign in with your verified College Admin account to access the Faculty Console."
+            : "Select your portal and enter your credentials to continue."}
         </p>
       </div>
+
+      {isAdminPortalRequested && (
+        <div className="p-3.5 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-start gap-2.5 text-brand-400 text-xs">
+          <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-brand-400" />
+          <span>
+            <strong>Faculty Console Access:</strong> Please sign in as a{" "}
+            <strong>College Admin</strong> to manage your institution&apos;s coding examinations and proctoring logs.
+          </span>
+        </div>
+      )}
 
       {/* Role Selector: Student / Candidate vs College Admin */}
       <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-background border border-surface-border">
