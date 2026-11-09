@@ -220,19 +220,18 @@ export default function AdminContestsPage() {
     }
   };
 
-  const handleTopUpContests = async () => {
-    if (topUpCount < 1) return;
+  const handleTopUpContests = async (count: number = 2) => {
     setSetupMsg(null);
     setSavingSetup(true);
     try {
-      const updated = await purchaseAdditionalContests(topUpCount);
+      const updated = await purchaseAdditionalContests(count);
       setAdminCollege(updated);
       setSetupMsg({
         type: "ok",
-        text: `Purchased ${topUpCount} additional contest${topUpCount === 1 ? "" : "s"}! You now have ${updated.contestsLeft} contests left.`,
+        text: `Added +${count} additional contests! You now have ${updated.contestsLeft} contests left.`,
       });
     } catch (err: any) {
-      setSetupMsg({ type: "err", text: err?.message || "Failed to purchase additional contests." });
+      setSetupMsg({ type: "err", text: err?.message || "Failed to add additional contests." });
     } finally {
       setSavingSetup(false);
     }
@@ -507,12 +506,11 @@ export default function AdminContestsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowSetupAndPlans(!showSetupAndPlans)}
-                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition"
+                    disabled={savingSetup}
+                    onClick={() => handleTopUpContests(2)}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
                   >
-                    {adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0
-                      ? "Choose Plan"
-                      : "+ Purchase More"}
+                    Purchase +2 Contests
                   </button>
                 </div>
 
@@ -543,12 +541,12 @@ export default function AdminContestsPage() {
                   onClick={() => setShowSetupAndPlans(!showSetupAndPlans)}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-bold text-foreground transition"
                 >
-                  <span>{showSetupAndPlans ? "Hide Setup & Plans" : "Edit Details & Plans"}</span>
+                  <span>{showSetupAndPlans ? "Hide College Details" : "Edit College Details"}</span>
                 </button>
               </div>
             </div>
 
-            {/* Post-Registration Details & Plan Purchase Panel on Admin Portal */}
+            {/* Post-Registration Details & Plan Activation Panel on Admin Portal */}
             {(showSetupAndPlans || adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0) && (
               <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-surface border-2 border-amber-500/40 shadow-xl space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -557,15 +555,15 @@ export default function AdminContestsPage() {
                       <Sparkles className="h-4 w-4" />
                       <span>
                         {adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0
-                          ? "Step 2: Complete College Details & Purchase Contest Plan (Required to Create Contests)"
-                          : "Manage College Details, Plan & Extra Contest Top-Up"}
+                          ? "Step 2: Complete College Details & Activate Contest Plan"
+                          : "Manage College Details & Contest Quota"}
                       </span>
                     </div>
                     <h3 className="text-lg font-extrabold text-foreground">
                       Complete Institution Details &amp; Activate Contest Quota
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Your Unique College ID is <strong className="font-mono text-brand-400">{adminCollege.collegeCode}</strong>. Only an Admin with a valid purchased plan can schedule coding contests.
+                      Your Unique College ID is <strong className="font-mono text-brand-400">{adminCollege.collegeCode}</strong>. Complete your campus details or click <strong>Purchase +2 Contests</strong> to add contest quota.
                     </p>
                   </div>
                 </div>
@@ -642,7 +640,7 @@ export default function AdminContestsPage() {
                     </div>
                   </div>
 
-                  {/* Choose Plan Cards */}
+                  {/* Choose Plan Cards (No payment/pricing details) */}
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-2">
                       Choose a Contest Plan *
@@ -669,31 +667,9 @@ export default function AdminContestsPage() {
                                   {plan.contestsIncluded} Contests
                                 </span>
                               </div>
-                              <div className="mt-2 text-xl font-black text-foreground">
-                                ₹{plan.priceInr.toLocaleString("en-IN")}{" "}
-                                <span className="text-[11px] font-normal text-slate-400">
-                                  {plan.periodLabel}
-                                </span>
-                              </div>
                               <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
                                 {plan.description}
                               </p>
-                            </div>
-                            <div className="mt-3 pt-2 border-t border-surface-border flex items-center justify-between text-[11px]">
-                              <span className="text-slate-400">
-                                Top-up: ₹{plan.topUpPricePerContestInr}/contest
-                              </span>
-                              <button
-                                type="button"
-                                disabled={savingSetup}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickPurchasePlan(plan.planCode);
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold text-[10px]"
-                              >
-                                {adminCollege.planCode === plan.planCode ? "Extend Plan" : "Buy Plan"}
-                              </button>
                             </div>
                           </div>
                         );
@@ -708,33 +684,19 @@ export default function AdminContestsPage() {
                       className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-lg shadow-brand-600/20"
                     >
                       {savingSetup
-                        ? "Saving & Activating Plan..."
-                        : "Save College Details & Purchase Selected Plan"}
+                        ? "Saving..."
+                        : "Save College Details & Activate Selected Plan"}
                     </button>
 
-                    {/* Extra Contest Top-Up Calculator */}
-                    <div className="flex flex-wrap items-center gap-2.5 bg-background px-4 py-2 rounded-xl border border-surface-border text-xs">
-                      <span className="text-slate-300 font-semibold">Need extra contests only?</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={200}
-                        value={topUpCount}
-                        onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-16 px-2 py-1 rounded-lg bg-surface border border-surface-border text-foreground font-bold text-center"
-                      />
-                      <span className="text-amber-400 font-extrabold">
-                        Cost: ₹{(topUpCount * (adminCollege.topUpPricePerContestInr || 499)).toLocaleString("en-IN")}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={savingSetup}
-                        onClick={handleTopUpContests}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] transition"
-                      >
-                        Purchase +{topUpCount} Contest{topUpCount === 1 ? "" : "s"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      disabled={savingSetup}
+                      onClick={() => handleTopUpContests(2)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-md disabled:opacity-50"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Purchase +2 Contests</span>
+                    </button>
                   </div>
                 </form>
               </div>

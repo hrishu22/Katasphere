@@ -324,7 +324,7 @@ function RegisterForm() {
             </div>
 
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Upon registration, we will generate your <strong>Unique College ID</strong> on the Admin Portal and ask for your full college details, campus address, optional student count, and <strong>Contest Plan purchase</strong> before scheduling contests.
+              Upon registration, we will generate your <strong>Unique College ID</strong> on the Admin Portal and ask for your full college details, campus address, and optional student count before scheduling contests.
             </p>
           </div>
         )}
@@ -502,16 +502,10 @@ function RegisterForm() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Creating account...</span>
+              <span>Registering...</span>
             </>
           ) : (
-            <span>
-              {accountType === "COLLEGE_ADMIN"
-                ? "Register College & Open Admin Portal"
-                : accountType === "COLLEGE_STUDENT"
-                ? "Register as College Student"
-                : "Create Account"}
-            </span>
+            <span>Register</span>
           )}
         </button>
       </form>

@@ -262,24 +262,19 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePurchaseTopUpContests = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePurchaseTopUpContests = async (count: number = 2) => {
     setCollegeError(null);
     setCollegeSuccess(null);
-    if (!topUpCount || topUpCount < 1) {
-      setCollegeError("Please enter at least 1 contest to purchase.");
-      return;
-    }
     setPurchasingQuota(true);
     try {
-      const updated = await purchaseAdditionalContests(Number(topUpCount));
+      const updated = await purchaseAdditionalContests(count);
       setAdminCollege(updated);
       setShowPurchaseModal(false);
       setCollegeSuccess(
-        `Successfully purchased +${topUpCount} contest(s)! You now have ${updated.contestsLeft} contest(s) left.`
+        `Added +${count} contests! You now have ${updated.contestsLeft} contest(s) left.`
       );
     } catch (err: any) {
-      setCollegeError(err.message || "Failed to purchase additional contests.");
+      setCollegeError(err.message || "Failed to add additional contests.");
     } finally {
       setPurchasingQuota(false);
     }
@@ -547,239 +542,23 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  {/* Beside the Contests Left count: Purchase More Contests / Extend Plan buttons */}
+                  {/* Beside the Contests Left count: direct Purchase +2 Contests button */}
                   <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button
                       type="button"
-                      onClick={() => {
-                        setCollegeError(null);
-                        setCollegeSuccess(null);
-                        setPurchaseTab("TOPUP");
-                        setShowPurchaseModal(!showPurchaseModal);
-                      }}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-lg shadow-amber-500/20"
+                      disabled={purchasingQuota}
+                      onClick={() => handlePurchaseTopUpContests(2)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
                     >
-                      <Plus className="h-4 w-4" />
-                      <span>Purchase More Contests</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCollegeError(null);
-                        setCollegeSuccess(null);
-                        setPurchaseTab("PLANS");
-                        setShowPurchaseModal(true);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground font-bold text-xs transition"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-brand-400" />
-                      <span>{adminCollege.contestQuotaTotal === 0 ? "Choose Plan" : "Extend / Upgrade Plan"}</span>
+                      {purchasingQuota ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                      <span>Purchase +2 Contests</span>
                     </button>
                   </div>
                 </div>
-
-                {/* Interactive Purchase Contests / Extend Plan Panel */}
-                {showPurchaseModal && (
-                  <div className="p-6 rounded-2xl bg-background border-2 border-brand-500/40 shadow-xl space-y-5 animate-in fade-in">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-4">
-                      <div>
-                        <h3 className="text-base font-extrabold text-foreground">
-                          Increase Your College Contest Quota
-                        </h3>
-                        <p className="text-xs text-slate-400">
-                          Purchase individual extra contests (added directly to your existing plan) or extend/upgrade your subscription plan.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface border border-surface-border self-start">
-                        <button
-                          type="button"
-                          onClick={() => setPurchaseTab("TOPUP")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                            purchaseTab === "TOPUP"
-                              ? "bg-brand-600 text-white"
-                              : "text-slate-400 hover:text-foreground"
-                          }`}
-                        >
-                          Buy Extra Contests
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPurchaseTab("PLANS")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                            purchaseTab === "PLANS"
-                              ? "bg-brand-600 text-white"
-                              : "text-slate-400 hover:text-foreground"
-                          }`}
-                        >
-                          3 / 6 / 20 Contest Plans
-                        </button>
-                      </div>
-                    </div>
-
-                    {collegeError && (
-                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 shrink-0" />
-                        <span>{collegeError}</span>
-                      </div>
-                    )}
-
-                    {purchaseTab === "TOPUP" ? (
-                      <form onSubmit={handlePurchaseTopUpContests} className="space-y-4 text-xs">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                          <div className="space-y-2">
-                            <label className="block font-bold text-slate-300">
-                              How many additional contests do you need?
-                            </label>
-                            <div className="flex items-center gap-2">
-                              {[1, 2, 5, 10].map((preset) => (
-                                <button
-                                  key={preset}
-                                  type="button"
-                                  onClick={() => setTopUpCount(preset)}
-                                  className={`px-3 py-2 rounded-xl border font-bold transition ${
-                                    topUpCount === preset
-                                      ? "bg-brand-600 text-white border-brand-500"
-                                      : "bg-surface border-surface-border text-slate-300 hover:border-brand-500/40"
-                                  }`}
-                                >
-                                  +{preset}
-                                </button>
-                              ))}
-                              <input
-                                type="number"
-                                min={1}
-                                max={200}
-                                value={topUpCount}
-                                onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-24 px-3 py-2 rounded-xl bg-surface border border-surface-border text-foreground font-bold text-center"
-                              />
-                            </div>
-                            <p className="text-[11px] text-slate-400">
-                              Rate under your current tier:{" "}
-                              <strong className="text-foreground">
-                                ₹{adminCollege.topUpPricePerContestInr || 499} per contest
-                              </strong>
-                            </p>
-                          </div>
-
-                          <div className="p-4 rounded-2xl bg-surface border border-surface-border flex items-center justify-between">
-                            <div>
-                              <div className="text-[11px] text-slate-400 font-semibold">Total Top-Up Cost</div>
-                              <div className="text-2xl font-extrabold text-amber-400">
-                                ₹{((topUpCount || 1) * (adminCollege.topUpPricePerContestInr || 499)).toLocaleString("en-IN")}
-                              </div>
-                              <div className="text-[11px] text-emerald-400 font-medium mt-0.5">
-                                New quota: {adminCollege.contestsLeft} + {topUpCount || 1} ={" "}
-                                {adminCollege.contestsLeft + (topUpCount || 1)} Contests Left
-                              </div>
-                            </div>
-
-                            <button
-                              type="submit"
-                              disabled={purchasingQuota}
-                              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-md disabled:opacity-50"
-                            >
-                              {purchasingQuota && <Loader2 className="h-4 w-4 animate-spin" />}
-                              <span>
-                                Purchase +{topUpCount || 1} Contest{(topUpCount || 1) > 1 ? "s" : ""}
-                              </span>
-                            </button>
-                          </div>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                        {(planOptions.length > 0
-                          ? planOptions
-                          : [
-                              {
-                                planCode: "STARTER_MONTHLY",
-                                name: "Starter Plan (3 Contests / Month)",
-                                contestsIncluded: 3,
-                                periodLabel: "per month",
-                                priceInr: 1499,
-                                topUpPricePerContestInr: 499,
-                                description: "Includes 3 proctored college contests per month.",
-                              },
-                              {
-                                planCode: "GROWTH_MONTHLY",
-                                name: "Growth Plan (6 Contests / Month)",
-                                contestsIncluded: 6,
-                                periodLabel: "per month",
-                                priceInr: 2499,
-                                topUpPricePerContestInr: 399,
-                                description: "Includes 6 proctored college contests per month.",
-                              },
-                              {
-                                planCode: "CAMPUS_YEARLY",
-                                name: "Campus Annual (20 Contests / Year)",
-                                contestsIncluded: 20,
-                                periodLabel: "per year",
-                                priceInr: 6999,
-                                topUpPricePerContestInr: 349,
-                                description: "Includes 20 proctored college contests per year.",
-                              },
-                            ]
-                        ).map((plan) => {
-                          const isCurrent = adminCollege.planCode === plan.planCode;
-                          return (
-                            <div
-                              key={plan.planCode}
-                              className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 ${
-                                isCurrent
-                                  ? "bg-brand-500/10 border-brand-500"
-                                  : "bg-surface border-surface-border"
-                              }`}
-                            >
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/20 text-brand-300">
-                                    +{plan.contestsIncluded} CONTESTS
-                                  </span>
-                                  {isCurrent && (
-                                    <span className="text-[10px] font-bold text-emerald-400">Current Plan</span>
-                                  )}
-                                </div>
-                                <h4 className="text-sm font-extrabold text-foreground">{plan.name}</h4>
-                                <div className="text-xl font-extrabold text-foreground">
-                                  ₹{plan.priceInr.toLocaleString("en-IN")}{" "}
-                                  <span className="text-xs font-normal text-slate-400">{plan.periodLabel}</span>
-                                </div>
-                                <p className="text-[11px] text-slate-400">{plan.description}</p>
-                                <div className="text-[11px] text-slate-300">
-                                  Add-on top-up rate: <strong>₹{plan.topUpPricePerContestInr}/contest</strong>
-                                </div>
-                              </div>
-
-                              <button
-                                type="button"
-                                disabled={purchasingQuota}
-                                onClick={() => handleSelectOrExtendPlan(plan.planCode)}
-                                className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition disabled:opacity-50"
-                              >
-                                {isCurrent
-                                  ? `Extend (+${plan.contestsIncluded} Contests)`
-                                  : `Select Plan (+${plan.contestsIncluded} Contests)`}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setShowPurchaseModal(false)}
-                        className="text-xs text-slate-400 hover:text-foreground"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-2xl bg-background border border-surface-border">
@@ -991,9 +770,9 @@ export default function ProfilePage() {
                           </label>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {[
-                              { code: "STARTER_MONTHLY", label: "3 Contests / Month", price: "₹1,499/mo" },
-                              { code: "GROWTH_MONTHLY", label: "6 Contests / Month", price: "₹2,499/mo" },
-                              { code: "CAMPUS_YEARLY", label: "20 Contests / Year", price: "₹6,999/yr" },
+                              { code: "STARTER_MONTHLY", label: "3 Contests / Month" },
+                              { code: "GROWTH_MONTHLY", label: "6 Contests / Month" },
+                              { code: "CAMPUS_YEARLY", label: "20 Contests / Year" },
                             ].map((p) => (
                               <button
                                 key={p.code}
@@ -1006,7 +785,6 @@ export default function ProfilePage() {
                                 }`}
                               >
                                 <div className="text-xs font-extrabold">{p.label}</div>
-                                <div className="text-[11px] opacity-80 mt-0.5">{p.price}</div>
                               </button>
                             ))}
                           </div>
