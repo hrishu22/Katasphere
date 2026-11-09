@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   getCollegeAdminDashboard,
   getExportGradebookUrl,
+  purchaseAdditionalContests,
 } from "@/lib/contest-api";
 import {
   CollegeAdminDashboardDto,
@@ -48,6 +49,7 @@ export function CollegeAdminDashboardView() {
   const [selectedContestId, setSelectedContestId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [copiedCode, setCopiedCode] = useState(false);
+  const [purchasingQuota, setPurchasingQuota] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -70,6 +72,18 @@ export function CollegeAdminDashboardView() {
     navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handlePurchasePlusTwo = async () => {
+    try {
+      setPurchasingQuota(true);
+      await purchaseAdditionalContests(2);
+      await loadDashboard();
+    } catch (err) {
+      console.error("Failed to purchase +2 contests", err);
+    } finally {
+      setPurchasingQuota(false);
+    }
   };
 
   if (loading) {
@@ -149,24 +163,24 @@ export function CollegeAdminDashboardView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Top Institutional Banner (Scoped exclusively to this Admin's College) */}
-      <div className="rounded-3xl bg-gradient-to-br from-brand-600/20 via-purple-600/10 to-surface border border-brand-500/30 p-6 sm:p-8 shadow-xl">
+      <div className="rounded-3xl bg-gradient-to-br from-brand-600/20 via-purple-600/10 to-surface border border-brand-500/30 p-6 sm:p-8 shadow-xl space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 text-brand-300 text-xs font-extrabold">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Exclusive College Admin Command Center</span>
+                <span>College Admin Dashboard</span>
               </span>
               <span className="px-2.5 py-1 rounded-full bg-surface border border-surface-border text-xs font-bold text-slate-300">
-                {college.planName}
+                {college.planName || "Active Plan"}
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              {college.name} — Examination &amp; Integrity Dashboard
+              {college.name}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
-              Private multi-tenant analytics for <strong>{college.name}</strong>. Inspect all student participation records, contest rankings &amp; scores, and real-time anti-cheat violation reports.
+              Manage your college details, contest quota, student participation metrics, rankings/results, and anti-cheat violation reports.
             </p>
           </div>
 
@@ -206,12 +220,14 @@ export function CollegeAdminDashboardView() {
                   </span>
                 </span>
               </div>
-              <Link
-                href="/profile"
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition"
+              <button
+                type="button"
+                disabled={purchasingQuota}
+                onClick={handlePurchasePlusTwo}
+                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
               >
-                + Purchase
-              </Link>
+                {purchasingQuota ? "Adding..." : "Purchase +2 Contests"}
+              </button>
             </div>
 
             <Link
@@ -219,7 +235,7 @@ export function CollegeAdminDashboardView() {
               className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold transition shadow-lg shadow-brand-600/25"
             >
               <Plus className="h-4 w-4" />
-              <span>Schedule / Manage Exams</span>
+              <span>Create / Manage Contests</span>
             </Link>
 
             <button
@@ -229,6 +245,53 @@ export function CollegeAdminDashboardView() {
             >
               <RefreshCw className="h-4 w-4" />
             </button>
+          </div>
+        </div>
+
+        {/* Registered College Details Grid inside Admin Dashboard */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-surface-border/70 text-xs">
+          <div className="p-3.5 rounded-2xl bg-background/80 border border-surface-border">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+              Official College Email
+            </span>
+            <span className="font-mono text-foreground font-semibold truncate block mt-0.5">
+              {college.officialEmail}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-background/80 border border-surface-border">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+              Campus Address &amp; Location
+            </span>
+            <span className="text-foreground font-semibold truncate block mt-0.5">
+              {[college.address, college.city, college.state].filter(Boolean).join(", ") || "Not added yet"}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-background/80 border border-surface-border">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+              Department &amp; Expected Students
+            </span>
+            <span className="text-foreground font-semibold truncate block mt-0.5">
+              {college.department || "All Engineering / CS"} • {college.expectedStudents || 100} expected
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-background/80 border border-surface-border flex items-center justify-between gap-2">
+            <div>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Institution Settings
+              </span>
+              <span className="text-emerald-400 font-bold block mt-0.5">
+                {college.linkedStudents} Verified Students
+              </span>
+            </div>
+            <Link
+              href="/profile"
+              className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground font-bold text-[11px] transition shrink-0"
+            >
+              Edit Details
+            </Link>
           </div>
         </div>
       </div>

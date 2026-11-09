@@ -153,7 +153,9 @@ public class ContestService {
         if (c.getTenantId() != null) {
             return c.getTenantId().equals(viewer.getCollegeId());
         }
-        return true;
+        return collegeRepository.findById(viewer.getCollegeId())
+            .map(col -> col.getName() != null && col.getName().equalsIgnoreCase(c.getCollegeName()))
+            .orElse(false);
     }
 
     public boolean canManage(Contest c, User user) {

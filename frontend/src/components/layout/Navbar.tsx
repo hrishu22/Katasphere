@@ -50,21 +50,32 @@ export function Navbar() {
   const isCollegeAdminUser = Boolean(
     user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
   );
-  // Contests tab is shown ONLY when signed in AND a college is registered/linked with the user
-  // AND (for student candidates) their college tenure has not expired (not passed out).
+  // Active student linked to a college within their tenure period
   const hasActiveStudentCollege = Boolean(user && user.collegeId && !user.isTenureExpired);
-  const canSeeContestsTab = Boolean(user && (isCollegeAdminUser || hasActiveStudentCollege));
+  // Normal user (not a College Admin and not a College Student)
+  const isNormalUser = Boolean(
+    user && !isCollegeAdminUser && !hasActiveStudentCollege && user.role !== "COLLEGE_STUDENT"
+  );
 
-  // Requirement 1: Dashboard is only shown for authenticated users
-  // Requirement 2: Contests tab is hidden when not signed in, when no college is linked, or when candidate has passed out
-  const navLinks = [
-    { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
-    ...(canSeeContestsTab ? [{ href: "/contests", label: "Contests", icon: Trophy, isPro: false }] : []),
-    { href: "/companies", label: "Companies", icon: Building2, isPro: true },
-    { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
-    { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },
-    ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false }] : []),
-  ];
+  // 1. For College Admin: no need to show Problems, Companies, Interview Prep, or Plans.
+  //    Show only Dashboard (/dashboard) and Contests (/admin/contests).
+  // 2. For Registered Student (active tenure): unlock the dedicated Contests tab (/contests)
+  //    which shows only what has been given by the Admin of their school.
+  const navLinks = isCollegeAdminUser
+    ? [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false },
+        { href: "/admin/contests", label: "Contests", icon: Trophy, isPro: false },
+      ]
+    : [
+        { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
+        ...(hasActiveStudentCollege
+          ? [{ href: "/contests", label: "Contests", icon: Trophy, isPro: false }]
+          : []),
+        { href: "/companies", label: "Companies", icon: Building2, isPro: true },
+        { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
+        { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },
+        ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false }] : []),
+      ];
 
   const isActive = (path: string) => pathname === path || (path !== "/" && pathname?.startsWith(path));
 
@@ -154,25 +165,27 @@ export function Navbar() {
                     <div className="px-4 py-2 border-b border-surface-border">
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Signed in as</p>
                       <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-400">Membership</span>
-                        <span
-                          className={`text-[11px] font-semibold flex items-center gap-1 ${
-                            isPremiumUser ? "text-amber-500" : "text-slate-400"
-                          }`}
-                        >
-                          {isPremiumUser ? (
-                            <>
-                              <Crown className="h-3 w-3" /> Katasphere Pro
-                            </>
-                          ) : (
-                            "Free Member"
-                          )}
-                        </span>
-                      </div>
+                      {isNormalUser && (
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-400">Membership</span>
+                          <span
+                            className={`text-[11px] font-semibold flex items-center gap-1 ${
+                              isPremiumUser ? "text-amber-500" : "text-slate-400"
+                            }`}
+                          >
+                            {isPremiumUser ? (
+                              <>
+                                <Crown className="h-3 w-3" /> Katasphere Pro
+                              </>
+                            ) : (
+                              "Free Member"
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {!isPremiumUser && (
+                    {isNormalUser && !isPremiumUser && (
                       <div className="p-2 border-b border-surface-border bg-gradient-to-r from-amber-500/10 to-orange-500/10">
                         <Link
                           href="/pricing"
@@ -193,17 +206,6 @@ export function Navbar() {
                       <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       <span>Profile</span>
                     </Link>
-
-                    {isCollegeAdminUser && (
-                      <Link
-                        href="/admin/contests"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
-                      >
-                        <ShieldCheck className="h-4 w-4 text-brand-500" />
-                        <span>Faculty Exam Console</span>
-                      </Link>
-                    )}
 
                     <div className="border-t border-surface-border my-1" />
 
