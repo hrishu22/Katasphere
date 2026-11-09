@@ -25,16 +25,15 @@ public record ContestParticipantDto(
         Instant now = Instant.now();
 
         // Server authoritative remaining time calculation:
-        // Expiration is min(started_at + duration_minutes, contest.end_time)
+        // Timing starts strictly when the candidate enters the access code (cp.getStartedAt())
+        // and runs for contest.getDurationMinutes().
         Instant durationExpiry = cp.getStartedAt().plus(Duration.ofMinutes(c.getDurationMinutes()));
-        Instant hardExpiry = c.getEndTime();
-        Instant effectiveExpiry = durationExpiry.isBefore(hardExpiry) ? durationExpiry : hardExpiry;
 
         long remainingSec = 0;
         // A flagged candidate keeps writing; the flag is for faculty review, not an ejection.
         boolean live = "IN_PROGRESS".equalsIgnoreCase(cp.getStatus()) || "FLAGGED_VIOLATION".equalsIgnoreCase(cp.getStatus());
-        if (live && now.isBefore(effectiveExpiry)) {
-            remainingSec = Duration.between(now, effectiveExpiry).getSeconds();
+        if (live && now.isBefore(durationExpiry)) {
+            remainingSec = Duration.between(now, durationExpiry).getSeconds();
         }
 
         return new ContestParticipantDto(

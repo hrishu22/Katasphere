@@ -50,9 +50,10 @@ export default function ContestWaitingRoomPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"EXAM_DETAILS" | "LEADERBOARD">("EXAM_DETAILS");
 
-  // Live countdown state
+  // Live countdown state (personal timer ticks ONLY after the student enters the access code)
   const [secondsUntilStart, setSecondsUntilStart] = useState<number | null>(null);
   const [secondsUntilEnd, setSecondsUntilEnd] = useState<number | null>(null);
+  const [participantRemainingSec, setParticipantRemainingSec] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadContest() {
@@ -69,6 +70,9 @@ export default function ContestWaitingRoomPage() {
         if (user) {
           const part = await getParticipantState(slug);
           setParticipant(part);
+          if (part) {
+            setParticipantRemainingSec(part.timeRemainingSeconds);
+          }
         }
       } catch (err: any) {
         setErrorMsg(err.message || "Failed to load examination details.");
@@ -86,17 +90,27 @@ export default function ContestWaitingRoomPage() {
   useEffect(() => {
     if (!detail) return;
 
-    const interval = setInterval(() => {
+    const updateClocks = () => {
       const now = new Date().getTime();
       const start = new Date(detail.contest.startTime).getTime();
       const end = new Date(detail.contest.endTime).getTime();
 
       setSecondsUntilStart(Math.max(0, Math.floor((start - now) / 1000)));
       setSecondsUntilEnd(Math.max(0, Math.floor((end - now) / 1000)));
-    }, 1000);
+
+      // Personal exam countdown ticks ONLY if the student has entered the access code (participant.startedAt)
+      if (participant && participant.startedAt && participant.status !== "SUBMITTED") {
+        const startedMs = new Date(participant.startedAt).getTime();
+        const personalExpiryMs = startedMs + detail.contest.durationMinutes * 60 * 1000;
+        setParticipantRemainingSec(Math.max(0, Math.floor((personalExpiryMs - now) / 1000)));
+      }
+    };
+
+    updateClocks();
+    const interval = setInterval(updateClocks, 1000);
 
     return () => clearInterval(interval);
-  }, [detail]);
+  }, [detail, participant]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,16 +231,50 @@ export default function ContestWaitingRoomPage() {
             {/* Countdown / Status Widget */}
             <div className="w-full lg:w-80 shrink-0 p-6 rounded-2xl bg-background border border-surface-border flex flex-col items-center text-center">
               {isInSession ? (
-                <>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold mb-3">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>EXAMINATION IN SESSION</span>
-                  </div>
-                  <div className="text-3xl sm:text-4xl font-mono font-extrabold text-foreground tracking-wider mb-1">
-                    {secondsUntilEnd !== null ? formatCountdown(secondsUntilEnd) : "--:--:--"}
-                  </div>
-                  <p className="text-[11px] text-slate-500">Remaining until examination window closes</p>
-                </>
+                participant ? (
+                  participant.status === "SUBMITTED" ? (
+                    <>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-bold mb-3">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>EXAMINATION SUBMITTED</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground mt-1">
+                        Your examination has been finalized
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Final Score: {participant.totalScore} pts
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold mb-3">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>EXAMINATION IN SESSION</span>
+                      </div>
+                      <div className="text-3xl sm:text-4xl font-mono font-extrabold text-foreground tracking-wider mb-1">
+                        {participantRemainingSec !== null
+                          ? formatCountdown(participantRemainingSec)
+                          : formatCountdown(contest.durationMinutes * 60)}
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Your personal examination timer is running
+                      </p>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold mb-3">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>EXAMINATION IN SESSION</span>
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-mono font-extrabold text-foreground tracking-wider mb-1">
+                      {formatCountdown(contest.durationMinutes * 60)}
+                    </div>
+                    <p className="text-[11px] text-amber-400 font-semibold">
+                      Timer starts after entering the Access Code ({contest.durationMinutes} mins)
+                    </p>
+                  </>
+                )
               ) : !isStarted ? (
                 <>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-bold mb-3">

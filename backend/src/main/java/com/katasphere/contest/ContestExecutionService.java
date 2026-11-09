@@ -150,11 +150,8 @@ public class ContestExecutionService {
     private void validateTimeWindowNotExpired(Contest contest, ContestParticipant participant) {
         Instant now = Instant.now();
 
-        if (now.isAfter(contest.getEndTime())) {
-            participant.setStatus("SUBMITTED");
-            participant.setSubmittedAt(contest.getEndTime());
-            contestParticipantRepository.save(participant);
-            throw new IllegalStateException("Contest examination time window has ended.");
+        if ("SUBMITTED".equalsIgnoreCase(participant.getStatus())) {
+            throw new IllegalStateException("Your examination has already been completed and submitted.");
         }
 
         Instant durationExpiry = participant.getStartedAt().plus(Duration.ofMinutes(contest.getDurationMinutes()));
@@ -163,10 +160,6 @@ public class ContestExecutionService {
             participant.setSubmittedAt(durationExpiry);
             contestParticipantRepository.save(participant);
             throw new IllegalStateException("Your individual examination duration has expired. Examination submitted.");
-        }
-
-        if ("SUBMITTED".equalsIgnoreCase(participant.getStatus())) {
-            throw new IllegalStateException("Your examination has already been completed and submitted.");
         }
     }
 }
