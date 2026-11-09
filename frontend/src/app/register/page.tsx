@@ -55,6 +55,7 @@ function RegisterForm() {
   const [tenureStartYear, setTenureStartYear] = useState<number>(currentYear - 2);
   const [tenureEndYear, setTenureEndYear] = useState<number>(currentYear + 2);
   const [collegeSuggestions, setCollegeSuggestions] = useState<CollegeSuggestionDto[]>([]);
+  const [showCollegeDropdown, setShowCollegeDropdown] = useState(false);
 
   useEffect(() => {
     getCollegeSuggestions()
@@ -63,8 +64,8 @@ function RegisterForm() {
   }, []);
 
   const filteredSuggestions = collegeSuggestions.filter((c) => {
-    if (!studentCollegeName.trim()) return true;
     const q = studentCollegeName.toLowerCase().trim();
+    if (!q) return false;
     return (
       c.name.toLowerCase().includes(q) ||
       c.collegeCode.toLowerCase().includes(q) ||
@@ -342,44 +343,8 @@ function RegisterForm() {
               </Link>
             </div>
 
-            {/* Saved Colleges Suggestions from DB */}
-            {collegeSuggestions.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Select your college from our registered institutions (auto-fills College Name &amp; ID):
-                </p>
-                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
-                  {filteredSuggestions.slice(0, 8).map((col) => {
-                    const isSelected =
-                      studentCollegeCode.toUpperCase() === col.collegeCode.toUpperCase();
-                    return (
-                      <button
-                        key={col.id}
-                        type="button"
-                        onClick={() => {
-                          setStudentCollegeName(col.name);
-                          setStudentCollegeCode(col.collegeCode);
-                        }}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left text-[11px] transition ${
-                          isSelected
-                            ? "bg-brand-500/15 border-brand-500 text-brand-300 font-semibold"
-                            : "bg-background border-surface-border text-slate-300 hover:border-brand-500/40"
-                        }`}
-                      >
-                        {isSelected && <Check className="h-3 w-3 text-brand-400 shrink-0" />}
-                        <span className="truncate max-w-[160px]">{col.name}</span>
-                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
-                          {col.collegeCode}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
+              <div className="relative">
                 <label className="block text-[10px] font-semibold text-slate-300 mb-1">
                   College Name *
                 </label>
@@ -387,10 +352,45 @@ function RegisterForm() {
                   type="text"
                   required
                   value={studentCollegeName}
-                  onChange={(e) => setStudentCollegeName(e.target.value)}
-                  placeholder="e.g. IIT Bombay"
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  onFocus={() => setShowCollegeDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowCollegeDropdown(false), 180)}
+                  onChange={(e) => {
+                    setStudentCollegeName(e.target.value);
+                    setStudentCollegeCode("");
+                    setShowCollegeDropdown(true);
+                  }}
+                  placeholder="Type your college name (e.g. IIT Bombay)"
+                  autoComplete="off"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
+
+                {showCollegeDropdown && studentCollegeName.trim().length > 0 && filteredSuggestions.length > 0 && (
+                  <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
+                    {filteredSuggestions.slice(0, 8).map((col) => (
+                      <button
+                        key={col.id}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setStudentCollegeName(col.name);
+                          setStudentCollegeCode(col.collegeCode);
+                          setShowCollegeDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-2 text-xs"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold text-foreground truncate">{col.name}</div>
+                          {col.city && (
+                            <div className="text-[10px] text-slate-400 truncate">{col.city}</div>
+                          )}
+                        </div>
+                        <span className="shrink-0 font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
+                          {col.collegeCode}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>

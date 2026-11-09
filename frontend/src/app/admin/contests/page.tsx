@@ -440,7 +440,7 @@ export default function AdminContestsPage() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground font-semibold text-sm transition"
             >
               <ShieldAlert className="h-4 w-4 text-rose-400" />
-              <span>Admin Dashboard & Cheats Log</span>
+              <span>Admin Dashboard</span>
             </Link>
             <button
               onClick={() => {

@@ -106,10 +106,11 @@ export default function ProfilePage() {
   // Student exam activity tab
   const [examTab, setExamTab] = useState<"UPCOMING_ACTIVE" | "PAST_RESULTS" | "COLLEGE_HISTORY">("UPCOMING_ACTIVE");
   const [copiedId, setCopiedId] = useState(false);
+  const [showCollegeDropdown, setShowCollegeDropdown] = useState(false);
 
   const filteredCollegeSuggestions = collegeSuggestions.filter((c) => {
-    if (!linkName.trim()) return true;
     const q = linkName.toLowerCase().trim();
+    if (!q) return false;
     return (
       c.name.toLowerCase().includes(q) ||
       c.collegeCode.toLowerCase().includes(q) ||
@@ -1057,51 +1058,52 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* Saved Colleges in DB as Suggestions */}
-                  {collegeSuggestions.length > 0 && (
-                    <div className="space-y-1.5">
-                      <label className="block font-semibold text-slate-300">
-                        Saved Colleges in Katasphere (Click a suggestion to auto-fill Name &amp; College ID):
-                      </label>
-                      <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
-                        {filteredCollegeSuggestions.map((col) => {
-                          const isSelected = linkCode.toUpperCase() === col.collegeCode.toUpperCase();
-                          return (
-                            <button
-                              key={col.id}
-                              type="button"
-                              onClick={() => {
-                                setLinkName(col.name);
-                                setLinkCode(col.collegeCode);
-                              }}
-                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-left transition ${
-                                isSelected
-                                  ? "bg-brand-500/15 border-brand-500 text-brand-300 font-bold"
-                                  : "bg-background border-surface-border text-slate-300 hover:border-brand-500/40"
-                              }`}
-                            >
-                              {isSelected && <Check className="h-3.5 w-3.5 text-brand-400" />}
-                              <span>{col.name}</span>
-                              <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
-                                {col.collegeCode}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
+                    <div className="relative">
                       <label className="block font-semibold text-slate-300 mb-1">College Name *</label>
                       <input
                         type="text"
                         required
                         value={linkName}
-                        onChange={(e) => setLinkName(e.target.value)}
+                        onFocus={() => setShowCollegeDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowCollegeDropdown(false), 180)}
+                        onChange={(e) => {
+                          setLinkName(e.target.value);
+                          setLinkCode("");
+                          setShowCollegeDropdown(true);
+                        }}
+                        placeholder="Type your college name..."
+                        autoComplete="off"
                         className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground"
                       />
+
+                      {showCollegeDropdown && linkName.trim().length > 0 && filteredCollegeSuggestions.length > 0 && (
+                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
+                          {filteredCollegeSuggestions.slice(0, 8).map((col) => (
+                            <button
+                              key={col.id}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setLinkName(col.name);
+                                setLinkCode(col.collegeCode);
+                                setShowCollegeDropdown(false);
+                              }}
+                              className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-2 text-xs"
+                            >
+                              <div className="min-w-0">
+                                <div className="font-semibold text-foreground truncate">{col.name}</div>
+                                {col.city && (
+                                  <div className="text-[10px] text-slate-400 truncate">{col.city}</div>
+                                )}
+                              </div>
+                              <span className="shrink-0 font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
+                                {col.collegeCode}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block font-semibold text-slate-300 mb-1">Roll No. / Student ID *</label>
@@ -1555,75 +1557,55 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* Saved Colleges Suggestions from DB */}
-                  {collegeSuggestions.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="font-semibold text-slate-300 flex items-center gap-1.5">
-                          <Building2 className="h-3.5 w-3.5 text-brand-400" />
-                          <span>Saved Colleges in Katasphere (Click your college to auto-fill Name &amp; College ID)</span>
-                        </label>
-                        <span className="text-[11px] text-slate-500">
-                          {filteredCollegeSuggestions.length} registered
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-52 overflow-y-auto pr-1">
-                        {filteredCollegeSuggestions.map((col) => {
-                          const isSelected = linkCode.toUpperCase() === col.collegeCode.toUpperCase();
-                          return (
-                            <button
-                              key={col.id}
-                              type="button"
-                              onClick={() => {
-                                setLinkName(col.name);
-                                setLinkCode(col.collegeCode);
-                              }}
-                              className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-3 ${
-                                isSelected
-                                  ? "bg-brand-500/15 border-brand-500 shadow-sm"
-                                  : "bg-background border-surface-border hover:border-brand-500/40"
-                              }`}
-                            >
-                              <div className="min-w-0">
-                                <div className="font-bold text-foreground truncate flex items-center gap-1.5">
-                                  {isSelected && <Check className="h-3.5 w-3.5 text-brand-400 shrink-0" />}
-                                  <span className="truncate">{col.name}</span>
-                                </div>
-                                <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                                  {[col.department, col.city, col.state].filter(Boolean).join(" • ") ||
-                                    `${col.linkedStudents} students • ${col.totalContests} contests`}
-                                </div>
-                              </div>
-
-                              <div className="shrink-0 text-right">
-                                <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">
-                                  College ID
-                                </div>
-                                <span className="inline-block font-mono text-xs px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-400 font-extrabold border border-brand-500/30">
-                                  {col.collegeCode}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div className="relative">
                       <label className="block font-semibold text-slate-300 mb-1.5">
                         College / University Name <span className="text-rose-400">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="Search or select your college (e.g. IIT Bombay)"
+                        placeholder="Type your college name (e.g. IIT Bombay)"
                         value={linkName}
-                        onChange={(e) => setLinkName(e.target.value)}
+                        onFocus={() => setShowCollegeDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowCollegeDropdown(false), 180)}
+                        onChange={(e) => {
+                          setLinkName(e.target.value);
+                          setLinkCode("");
+                          setShowCollegeDropdown(true);
+                        }}
+                        autoComplete="off"
                         className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
+
+                      {showCollegeDropdown && linkName.trim().length > 0 && filteredCollegeSuggestions.length > 0 && (
+                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
+                          {filteredCollegeSuggestions.slice(0, 8).map((col) => (
+                            <button
+                              key={col.id}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setLinkName(col.name);
+                                setLinkCode(col.collegeCode);
+                                setShowCollegeDropdown(false);
+                              }}
+                              className="w-full px-4 py-2.5 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-3 text-xs"
+                            >
+                              <div className="min-w-0">
+                                <div className="font-bold text-foreground truncate">{col.name}</div>
+                                <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                                  {[col.department, col.city, col.state].filter(Boolean).join(" • ") ||
+                                    `${col.linkedStudents} students • ${col.totalContests} contests`}
+                                </div>
+                              </div>
+                              <span className="shrink-0 font-mono text-xs px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-400 font-extrabold border border-brand-500/30">
+                                {col.collegeCode}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div>
