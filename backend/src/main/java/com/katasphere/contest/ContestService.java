@@ -69,7 +69,7 @@ public class ContestService {
             req.scoringSystem() != null ? req.scoringSystem() : "POINTS",
             req.allowTabSwitch() != null ? req.allowTabSwitch() : true,
             req.maxTabSwitches() != null ? req.maxTabSwitches() : 3,
-            req.isPublished() != null ? req.isPublished() : false,
+            req.isPublished() != null ? req.isPublished() : true,
             admin
         );
 
@@ -251,5 +251,50 @@ public class ContestService {
             .stream()
             .map(ContestSubmissionDto::fromEntity)
             .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContestParticipantDto> getParticipants(String slug) {
+        Contest contest = contestRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("Contest not found"));
+
+        return contestParticipantRepository.findLeaderboardByContest(contest)
+            .stream()
+            .map(ContestParticipantDto::fromEntity)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String generateGradebookCsv(String slug) {
+        Contest contest = contestRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("Contest not found"));
+
+        List<ContestParticipant> participants = contestParticipantRepository.findLeaderboardByContest(contest);
+        StringBuilder csv = new StringBuilder();
+        csv.append("Rank,Student Name,Student Email,Score,Penalty Seconds,Tab Switches,Proctor Status,Started At,Submitted At\n");
+
+        int rank = 1;
+        for (ContestParticipant cp : participants) {
+            String name = cp.getUser() != null && cp.getUser().getName() != null
+                ? "\"" + cp.getUser().getName().replace("\"", "\"\"") + "\""
+                : "\"\"";
+            String email = cp.getUser() != null && cp.getUser().getEmail() != null
+                ? "\"" + cp.getUser().getEmail().replace("\"", "\"\"") + "\""
+                : "\"\"";
+            String started = cp.getStartedAt() != null ? cp.getStartedAt().toString() : "";
+            String submitted = cp.getSubmittedAt() != null ? cp.getSubmittedAt().toString() : "";
+
+            csv.append(rank++)
+                .append(",").append(name)
+                .append(",").append(email)
+                .append(",").append(cp.getTotalScore())
+                .append(",").append(cp.getPenaltySeconds())
+                .append(",").append(cp.getTabSwitchCount())
+                .append(",").append("\"").append(cp.getStatus()).append("\"")
+                .append(",").append("\"").append(started).append("\"")
+                .append(",").append("\"").append(submitted).append("\"\n");
+        }
+
+        return csv.toString();
     }
 }

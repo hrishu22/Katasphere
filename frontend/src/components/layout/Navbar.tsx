@@ -18,6 +18,8 @@ import {
   Sparkles,
   LogOut,
   ChevronDown,
+  Trophy,
+  ShieldCheck,
 } from "lucide-react";
 
 export function Navbar() {
@@ -49,6 +51,7 @@ export function Navbar() {
   // Requirement 1: Dashboard is only shown for authenticated users
   const navLinks = [
     { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
+    { href: "/contests", label: "Contests", icon: Trophy, isPro: false },
     { href: "/companies", label: "Companies", icon: Building2, isPro: true },
     { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
     { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },
@@ -185,6 +188,15 @@ export function Navbar() {
                     >
                       <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       <span>Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/admin/contests"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-brand-500" />
+                      <span>Faculty Exam Console</span>
                     </Link>
 
                     <div className="border-t border-surface-border my-1" />

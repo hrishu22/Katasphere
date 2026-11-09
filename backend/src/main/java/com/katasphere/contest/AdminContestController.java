@@ -102,6 +102,47 @@ public class AdminContestController {
         }
     }
 
+    @GetMapping("/{slug}/participants")
+    public ResponseEntity<ApiResponse<List<ContestParticipantDto>>> getParticipants(
+        @PathVariable String slug,
+        HttpServletRequest httpRequest
+    ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        }
+
+        try {
+            List<ContestParticipantDto> participants = contestService.getParticipants(slug);
+            return ResponseEntity.ok(ApiResponse.ok("Contest participants retrieved", participants));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping(value = "/{slug}/export-csv", produces = "text/csv")
+    public ResponseEntity<String> exportGradebookCsv(
+        @PathVariable String slug,
+        HttpServletRequest httpRequest
+    ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+
+        try {
+            String csvContent = contestService.generateGradebookCsv(slug);
+            return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"gradebook-" + slug + ".csv\"")
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .body(csvContent);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     private User resolveCurrentUser(HttpServletRequest request) {
         Object attrUserId = request.getAttribute("USER_ID");
         if (attrUserId instanceof UUID uuid) {
