@@ -49,6 +49,7 @@ export function CollegeAdminDashboardView() {
   const [selectedContestId, setSelectedContestId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [copiedCode, setCopiedCode] = useState(false);
+  const [topUpCount, setTopUpCount] = useState<number>(2);
   const [purchasingQuota, setPurchasingQuota] = useState(false);
 
   const loadDashboard = useCallback(async () => {
@@ -74,13 +75,14 @@ export function CollegeAdminDashboardView() {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handlePurchasePlusTwo = async () => {
+  const handlePurchaseContests = async () => {
+    const count = Math.max(1, Number(topUpCount) || 1);
     try {
       setPurchasingQuota(true);
-      await purchaseAdditionalContests(2);
+      await purchaseAdditionalContests(count);
       await loadDashboard();
     } catch (err) {
-      console.error("Failed to purchase +2 contests", err);
+      console.error("Failed to purchase contests", err);
     } finally {
       setPurchasingQuota(false);
     }
@@ -208,7 +210,7 @@ export function CollegeAdminDashboardView() {
               </button>
             </div>
 
-            <div className="px-4 py-2.5 rounded-2xl bg-background/90 border border-amber-500/40 flex items-center gap-3">
+            <div className="px-4 py-2.5 rounded-2xl bg-background/90 border border-amber-500/40 flex flex-wrap items-center gap-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
                   Contests Left
@@ -220,14 +222,28 @@ export function CollegeAdminDashboardView() {
                   </span>
                 </span>
               </div>
-              <button
-                type="button"
-                disabled={purchasingQuota}
-                onClick={handlePurchasePlusTwo}
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
-              >
-                {purchasingQuota ? "Adding..." : "Purchase +2 Contests"}
-              </button>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={200}
+                  value={topUpCount}
+                  onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  aria-label="Number of contests to purchase"
+                  placeholder="No."
+                  className="w-16 px-2.5 py-1.5 rounded-xl bg-surface border border-surface-border text-foreground font-extrabold text-xs text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  type="button"
+                  disabled={purchasingQuota}
+                  onClick={handlePurchaseContests}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
+                >
+                  {purchasingQuota
+                    ? "Adding..."
+                    : `Purchase +${Math.max(1, Number(topUpCount) || 1)} Contest${Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}`}
+                </button>
+              </div>
             </div>
 
             <Link

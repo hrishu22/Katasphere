@@ -222,12 +222,15 @@ export default function ProfilePage() {
         city: colCity.trim() || undefined,
         state: colState.trim() || undefined,
         country: colCountry.trim() || "India",
-        planCode: (!adminCollege || adminCollege.contestQuotaTotal === 0) ? colInitialPlan : undefined,
       };
 
-      const saved = adminCollege
+      let saved = adminCollege
         ? await updateMyCollege(payload)
         : await registerCollege(payload);
+
+      if (saved.contestQuotaTotal === 0) {
+        saved = await purchaseAdditionalContests(Math.max(1, Number(topUpCount) || 1));
+      }
 
       setAdminCollege(saved);
       populateAdminForm(saved);
@@ -545,21 +548,38 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  {/* Beside the Contests Left count: direct Purchase +2 Contests button */}
+                  {/* Beside the Contests Left count: input for number of contests + Purchase button */}
                   <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <button
-                      type="button"
-                      disabled={purchasingQuota}
-                      onClick={() => handlePurchaseTopUpContests(2)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
-                    >
-                      {purchasingQuota ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Plus className="h-4 w-4" />
-                      )}
-                      <span>Purchase +2 Contests</span>
-                    </button>
+                    <div className="flex items-center gap-2 bg-background/80 p-1.5 rounded-2xl border border-amber-500/30">
+                      <label className="text-[11px] font-bold text-slate-300 pl-2">
+                        No. of Contests:
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        value={topUpCount}
+                        onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        aria-label="Number of contests to purchase"
+                        className="w-16 px-2.5 py-1.5 rounded-xl bg-surface border border-surface-border text-foreground font-extrabold text-xs text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <button
+                        type="button"
+                        disabled={purchasingQuota}
+                        onClick={() => handlePurchaseTopUpContests(Math.max(1, Number(topUpCount) || 1))}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                      >
+                        {purchasingQuota ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                        <span>
+                          Purchase +{Math.max(1, Number(topUpCount) || 1)} Contest
+                          {Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -767,29 +787,37 @@ export default function ProfilePage() {
                       </div>
 
                       {adminCollege.contestQuotaTotal === 0 && (
-                        <div className="sm:col-span-2 p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 space-y-2.5">
-                          <label className="block font-bold text-brand-300">
-                            Choose Your College Contest Plan *
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {[
-                              { code: "STARTER_MONTHLY", label: "3 Contests / Month" },
-                              { code: "GROWTH_MONTHLY", label: "6 Contests / Month" },
-                              { code: "CAMPUS_YEARLY", label: "20 Contests / Year" },
-                            ].map((p) => (
-                              <button
-                                key={p.code}
-                                type="button"
-                                onClick={() => setColInitialPlan(p.code)}
-                                className={`p-3 rounded-xl border text-left transition ${
-                                  colInitialPlan === p.code
-                                    ? "bg-brand-600 text-white border-brand-500 font-bold"
-                                    : "bg-background border-surface-border text-slate-300"
-                                }`}
-                              >
-                                <div className="text-xs font-extrabold">{p.label}</div>
-                              </button>
-                            ))}
+                        <div className="sm:col-span-2 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <label className="block font-extrabold text-amber-300">
+                              How many contests do you want to purchase? *
+                            </label>
+                            <p className="text-[11px] text-slate-400">
+                              Enter the exact number of contests you want to purchase for your college.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            <input
+                              type="number"
+                              min={1}
+                              max={200}
+                              required
+                              value={topUpCount}
+                              onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                              className="w-24 px-3.5 py-2 rounded-xl bg-background border border-amber-500/40 text-foreground font-extrabold text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            />
+                            <button
+                              type="button"
+                              disabled={purchasingQuota}
+                              onClick={() => handlePurchaseTopUpContests(Math.max(1, Number(topUpCount) || 1))}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span>
+                                Purchase +{Math.max(1, Number(topUpCount) || 1)} Contest
+                                {Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}
+                              </span>
+                            </button>
                           </div>
                         </div>
                       )}

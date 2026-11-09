@@ -189,15 +189,16 @@ export default function AdminContestsPage() {
         state: adminCollege.state || undefined,
         country: adminCollege.country || "India",
       });
-      const updatedWithPlan = await selectOrExtendCollegePlan(selectedPlanCode);
-      setAdminCollege(updatedWithPlan);
-      setFormCollege(updatedWithPlan.name);
+      const countToBuy = Math.max(1, Number(topUpCount) || 1);
+      const updatedWithContests = await purchaseAdditionalContests(countToBuy);
+      setAdminCollege(updatedWithContests);
+      setFormCollege(updatedWithContests.name);
       setSetupMsg({
         type: "ok",
-        text: `College details saved & ${updatedWithPlan.planName} activated! You now have ${updatedWithPlan.contestsLeft} contests available to schedule.`,
+        text: `College details saved & +${countToBuy} contest(s) purchased! You now have ${updatedWithContests.contestsLeft} contests available to schedule.`,
       });
     } catch (err: any) {
-      setSetupMsg({ type: "err", text: err?.message || "Failed to save college details and activate plan." });
+      setSetupMsg({ type: "err", text: err?.message || "Failed to save college details and purchase contests." });
     } finally {
       setSavingSetup(false);
     }
@@ -492,10 +493,10 @@ export default function AdminContestsPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="px-4 py-2.5 rounded-2xl bg-background border border-amber-500/40 flex items-center gap-3">
+                <div className="px-4 py-2.5 rounded-2xl bg-background border border-amber-500/40 flex flex-wrap items-center gap-3">
                   <div>
                     <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
-                      {adminCollege.planName || "No Active Plan"}
+                      {adminCollege.planName || "Contest Quota"}
                     </span>
                     <span className="text-sm font-extrabold text-amber-400">
                       {adminCollege.contestsLeft} Contest{adminCollege.contestsLeft === 1 ? "" : "s"} Left{" "}
@@ -504,14 +505,27 @@ export default function AdminContestsPage() {
                       </span>
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    disabled={savingSetup}
-                    onClick={() => handleTopUpContests(2)}
-                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
-                  >
-                    Purchase +2 Contests
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={200}
+                      value={topUpCount}
+                      onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      aria-label="Number of contests to purchase"
+                      placeholder="No."
+                      className="w-16 px-2.5 py-1.5 rounded-xl bg-surface border border-surface-border text-foreground font-extrabold text-xs text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={savingSetup}
+                      onClick={() => handleTopUpContests(Math.max(1, Number(topUpCount) || 1))}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition disabled:opacity-50"
+                    >
+                      Purchase +{Math.max(1, Number(topUpCount) || 1)} Contest
+                      {Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="px-4 py-2.5 rounded-2xl bg-background border border-brand-500/40 flex items-center gap-3">
@@ -640,40 +654,38 @@ export default function AdminContestsPage() {
                     </div>
                   </div>
 
-                  {/* Choose Plan Cards (No payment/pricing details) */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-2">
-                      Choose a Contest Plan *
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {collegePlans.map((plan) => {
-                        const isSelected = selectedPlanCode === plan.planCode;
-                        return (
-                          <div
-                            key={plan.planCode}
-                            onClick={() => setSelectedPlanCode(plan.planCode)}
-                            className={`cursor-pointer p-4 rounded-2xl border transition flex flex-col justify-between ${
-                              isSelected
-                                ? "bg-brand-500/15 border-brand-500 shadow-md"
-                                : "bg-background border-surface-border hover:border-brand-500/40"
-                            }`}
-                          >
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-extrabold text-foreground">
-                                  {plan.name}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
-                                  {plan.contestsIncluded} Contests
-                                </span>
-                              </div>
-                              <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
-                                {plan.description}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                  {/* Input to enter the exact number of contests to purchase */}
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-extrabold text-amber-300">
+                        How many contests do you want to purchase? *
+                      </label>
+                      <p className="text-[11px] text-slate-400">
+                        Enter the exact number of contests you need for your college. You can purchase only the contests you require without a fixed recurring plan.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        required
+                        value={topUpCount}
+                        onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-24 px-3.5 py-2 rounded-xl bg-background border border-amber-500/40 text-foreground font-extrabold text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <button
+                        type="button"
+                        disabled={savingSetup}
+                        onClick={() => handleTopUpContests(Math.max(1, Number(topUpCount) || 1))}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-md disabled:opacity-50"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>
+                          Purchase +{Math.max(1, Number(topUpCount) || 1)} Contest
+                          {Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}
+                        </span>
+                      </button>
                     </div>
                   </div>
 
@@ -685,17 +697,7 @@ export default function AdminContestsPage() {
                     >
                       {savingSetup
                         ? "Saving..."
-                        : "Save College Details & Activate Selected Plan"}
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={savingSetup}
-                      onClick={() => handleTopUpContests(2)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-md disabled:opacity-50"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Purchase +2 Contests</span>
+                        : `Save College Details & Purchase +${Math.max(1, Number(topUpCount) || 1)} Contest${Math.max(1, Number(topUpCount) || 1) === 1 ? "" : "s"}`}
                     </button>
                   </div>
                 </form>
