@@ -85,8 +85,8 @@ function RegisterForm() {
     }
 
     if (accountType === "COLLEGE_ADMIN") {
-      if (!collegeName.trim() || !officialCollegeEmail.trim() || !expectedStudents || expectedStudents < 1) {
-        setError("College Name, Official College Email ID, and Expected Students are required for College Admins.");
+      if (!collegeName.trim()) {
+        setError("College Name is required when registering as a College Admin.");
         return;
       }
     } else if (studentCollegeName.trim() || studentCollegeCode.trim()) {
@@ -111,9 +111,7 @@ function RegisterForm() {
         ...(accountType === "COLLEGE_ADMIN"
           ? {
               collegeName: collegeName.trim(),
-              officialCollegeEmail: officialCollegeEmail.trim(),
-              expectedStudents: Number(expectedStudents),
-              department: department.trim() || undefined,
+              officialCollegeEmail: (officialCollegeEmail.trim() || email.trim()),
             }
           : {
               collegeName: studentCollegeName.trim() || undefined,
@@ -127,8 +125,8 @@ function RegisterForm() {
       if (explicitRedirect) {
         router.push(explicitRedirect);
       } else if (accountType === "COLLEGE_ADMIN" || registeredUser.role === "COLLEGE_ADMIN") {
-        // Send newly registered College Admin to /profile so they immediately see their Unique College ID
-        router.push("/profile");
+        // Send newly registered College Admin to /profile?setup=1 to complete college details, address, optional students, and choose a Contest Plan
+        router.push("/profile?setup=1");
       } else {
         router.push("/dashboard");
       }
@@ -235,16 +233,16 @@ function RegisterForm() {
           </div>
         </div>
 
-        {/* College Admin Mandatory Fields */}
+        {/* College Admin Mandatory Fields at Signup: College Name & Email */}
         {accountType === "COLLEGE_ADMIN" ? (
-          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/25 space-y-3.5">
+          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/25 space-y-3">
             <div className="text-xs font-bold text-brand-400 flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5" />
-              <span>Institution Registration Details (Generates Unique College ID)</span>
+              <span>Step 1: Register with College Name &amp; Official Email</span>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
                 College / University Name *
               </label>
               <input
@@ -253,53 +251,13 @@ function RegisterForm() {
                 value={collegeName}
                 onChange={(e) => setCollegeName(e.target.value)}
                 placeholder="e.g. IIT Delhi"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-surface-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Official Email ID of College *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={officialCollegeEmail}
-                  onChange={(e) => setOfficialCollegeEmail(e.target.value)}
-                  placeholder="e.g. exams@iitd.ac.in"
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  No. of Expected Students *
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100000}
-                  required
-                  value={expectedStudents}
-                  onChange={(e) => setExpectedStudents(parseInt(e.target.value) || 100)}
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
-                Department (Optional — can add more details in Profile)
-              </label>
-              <input
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Dept. of Computer Science & Engineering"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              After creating your admin account, you will be directed to your Profile to enter your <strong>College Full Name</strong>, <strong>Campus Address</strong>, <strong>Number of Students (optional)</strong>, and choose your <strong>Contest Plan</strong> (3/month, 6/month, or 20/year).
+            </p>
           </div>
         ) : (
           /* Student Optional Immediate Link Fields with Saved College Suggestions & Tenure Year */

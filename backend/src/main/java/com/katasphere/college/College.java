@@ -21,8 +21,8 @@ public class College {
     @Column(name = "official_email", nullable = false)
     private String officialEmail;
 
-    @Column(name = "expected_students", nullable = false)
-    private int expectedStudents = 100;
+    @Column(name = "expected_students")
+    private Integer expectedStudents = 100;
 
     private String department;
     private String website;
@@ -36,6 +36,21 @@ public class College {
 
     @Column(name = "admin_user_id", nullable = false, unique = true)
     private UUID adminUserId;
+
+    @Column(name = "plan_code", nullable = false, length = 40)
+    private String planCode = "NONE";
+
+    @Column(name = "plan_name", nullable = false, length = 120)
+    private String planName = "No Active Plan";
+
+    @Column(name = "contest_quota_total", nullable = false)
+    private int contestQuotaTotal = 0;
+
+    @Column(name = "contests_used", nullable = false)
+    private int contestsUsed = 0;
+
+    @Column(name = "plan_expires_at")
+    private Instant planExpiresAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -55,8 +70,8 @@ public class College {
     public void setName(String name) { this.name = name; }
     public String getOfficialEmail() { return officialEmail; }
     public void setOfficialEmail(String officialEmail) { this.officialEmail = officialEmail; }
-    public int getExpectedStudents() { return expectedStudents; }
-    public void setExpectedStudents(int expectedStudents) { this.expectedStudents = expectedStudents; }
+    public Integer getExpectedStudents() { return expectedStudents; }
+    public void setExpectedStudents(Integer expectedStudents) { this.expectedStudents = expectedStudents; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
     public String getWebsite() { return website; }
@@ -73,6 +88,22 @@ public class College {
     public void setCountry(String country) { this.country = country; }
     public UUID getAdminUserId() { return adminUserId; }
     public void setAdminUserId(UUID adminUserId) { this.adminUserId = adminUserId; }
+
+    public String getPlanCode() { return planCode; }
+    public void setPlanCode(String planCode) { this.planCode = planCode; }
+    public String getPlanName() { return planName; }
+    public void setPlanName(String planName) { this.planName = planName; }
+    public int getContestQuotaTotal() { return contestQuotaTotal; }
+    public void setContestQuotaTotal(int contestQuotaTotal) { this.contestQuotaTotal = contestQuotaTotal; }
+    public int getContestsUsed() { return contestsUsed; }
+    public void setContestsUsed(int contestsUsed) { this.contestsUsed = contestsUsed; }
+    public Instant getPlanExpiresAt() { return planExpiresAt; }
+    public void setPlanExpiresAt(Instant planExpiresAt) { this.planExpiresAt = planExpiresAt; }
+
+    public int getContestsLeft() {
+        return Math.max(0, contestQuotaTotal - contestsUsed);
+    }
+
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

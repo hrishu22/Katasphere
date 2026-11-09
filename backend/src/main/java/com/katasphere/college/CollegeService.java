@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -76,6 +77,38 @@ public class CollegeService {
 
     // ---------------------------------------------------------------- admin side
 
+    public List<CollegePlanOptionDto> getPlanCatalog() {
+        return List.of(
+            new CollegePlanOptionDto(
+                "STARTER_MONTHLY",
+                "Starter Plan (3 Contests / Month)",
+                3,
+                "per month",
+                1499,
+                499,
+                "Ideal for departmental quizzes and monthly coding labs. Includes 3 proctored examinations per month."
+            ),
+            new CollegePlanOptionDto(
+                "GROWTH_MONTHLY",
+                "Growth Plan (6 Contests / Month)",
+                6,
+                "per month",
+                2499,
+                399,
+                "Designed for active placement cells and weekly coding assessments. Includes 6 examinations per month."
+            ),
+            new CollegePlanOptionDto(
+                "CAMPUS_YEARLY",
+                "Campus Annual Plan (20 Contests / Year)",
+                20,
+                "per year",
+                6999,
+                349,
+                "Full academic year coverage for mid-sems, finals, and placement drives. Includes 20 examinations per year."
+            )
+        );
+    }
+
     @Transactional
     public CollegeAdminDto register(User admin, RegisterCollegeRequest req) {
         if (collegeRepository.findByAdminUserId(admin.getId()).isPresent()) {
@@ -89,6 +122,9 @@ public class CollegeService {
         c.setCollegeCode(generateUniqueCode());
         c.setAdminUserId(admin.getId());
         apply(c, req);
+        if (req.planCode() != null && !req.planCode().isBlank() && !"NONE".equalsIgnoreCase(req.planCode())) {
+            applyPlanSelection(c, req.planCode());
+        }
         c = collegeRepository.save(c);
 
         if (!"ADMIN".equalsIgnoreCase(admin.getRole())) {
@@ -103,8 +139,69 @@ public class CollegeService {
         College c = collegeRepository.findByAdminUserId(admin.getId())
             .orElseThrow(() -> new IllegalArgumentException("No college registered for this account"));
         apply(c, req);
+        if (req.planCode() != null && !req.planCode().isBlank()
+                && !"NONE".equalsIgnoreCase(req.planCode())
+                && c.getContestQuotaTotal() == 0) {
+            applyPlanSelection(c, req.planCode());
+        }
         c = collegeRepository.save(c);
         return toAdminDto(c);
+    }
+
+    @Transactional
+    public CollegeAdminDto selectOrExtendPlan(User admin, SelectCollegePlanRequest req) {
+        College c = collegeRepository.findByAdminUserId(admin.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Please register your college first before selecting a plan."));
+        applyPlanSelection(c, req.planCode());
+        c = collegeRepository.save(c);
+        return toAdminDto(c);
+    }
+
+    @Transactional
+    public CollegeAdminDto topUpContests(User admin, TopUpContestsRequest req) {
+        College c = collegeRepository.findByAdminUserId(admin.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Please register your college first before purchasing contests."));
+        int add = req.additionalContests() != null ? req.additionalContests() : 0;
+        if (add < 1) {
+            throw new IllegalArgumentException("Please enter at least 1 contest to purchase.");
+        }
+        c.setContestQuotaTotal(c.getContestQuotaTotal() + add);
+        if ("NONE".equalsIgnoreCase(c.getPlanCode()) || c.getPlanCode() == null) {
+            c.setPlanCode("CUSTOM_TOPUP");
+            c.setPlanName("Pay-As-You-Go Contest Pack");
+            c.setPlanExpiresAt(Instant.now().plus(Duration.ofDays(365)));
+        }
+        c = collegeRepository.save(c);
+        return toAdminDto(c);
+    }
+
+    private void applyPlanSelection(College c, String rawPlanCode) {
+        String code = rawPlanCode == null ? "" : rawPlanCode.trim().toUpperCase(Locale.ROOT);
+        Instant baseExpiry = (c.getPlanExpiresAt() != null && c.getPlanExpiresAt().isAfter(Instant.now()))
+            ? c.getPlanExpiresAt()
+            : Instant.now();
+
+        switch (code) {
+            case "STARTER_MONTHLY" -> {
+                c.setPlanCode("STARTER_MONTHLY");
+                c.setPlanName("Starter Plan (3 Contests / Month)");
+                c.setContestQuotaTotal(c.getContestQuotaTotal() + 3);
+                c.setPlanExpiresAt(baseExpiry.plus(Duration.ofDays(30)));
+            }
+            case "GROWTH_MONTHLY" -> {
+                c.setPlanCode("GROWTH_MONTHLY");
+                c.setPlanName("Growth Plan (6 Contests / Month)");
+                c.setContestQuotaTotal(c.getContestQuotaTotal() + 6);
+                c.setPlanExpiresAt(baseExpiry.plus(Duration.ofDays(30)));
+            }
+            case "CAMPUS_YEARLY" -> {
+                c.setPlanCode("CAMPUS_YEARLY");
+                c.setPlanName("Campus Annual Plan (20 Contests / Year)");
+                c.setContestQuotaTotal(c.getContestQuotaTotal() + 20);
+                c.setPlanExpiresAt(baseExpiry.plus(Duration.ofDays(365)));
+            }
+            default -> throw new IllegalArgumentException("Invalid college plan code: " + rawPlanCode);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -295,7 +392,11 @@ public class CollegeService {
     private void apply(College c, RegisterCollegeRequest req) {
         c.setName(req.name().trim());
         c.setOfficialEmail(req.officialEmail().trim().toLowerCase(Locale.ROOT));
-        c.setExpectedStudents(req.expectedStudents());
+        if (req.expectedStudents() != null && req.expectedStudents() > 0) {
+            c.setExpectedStudents(req.expectedStudents());
+        } else if (c.getExpectedStudents() == null) {
+            c.setExpectedStudents(100);
+        }
         c.setDepartment(blankToNull(req.department()));
         c.setWebsite(blankToNull(req.website()));
         c.setPhone(blankToNull(req.phone()));

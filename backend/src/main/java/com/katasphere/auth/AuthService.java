@@ -50,9 +50,6 @@ public class AuthService {
             if (request.collegeName() == null || request.collegeName().isBlank()) {
                 throw new IllegalArgumentException("College name is required when registering as a College Admin");
             }
-            if (request.expectedStudents() == null || request.expectedStudents() < 1) {
-                throw new IllegalArgumentException("Expected number of students is required when registering as a College Admin");
-            }
         }
 
         User user = new User(request.name().trim(), normalizedEmail, null);

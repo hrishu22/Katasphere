@@ -13,14 +13,46 @@ public final class CollegeDtos {
     public record RegisterCollegeRequest(
         @NotBlank(message = "College name is required") @Size(max = 255) String name,
         @NotBlank(message = "Official college email is required") @Email(message = "Enter a valid email") @Size(max = 255) String officialEmail,
-        @NotNull(message = "Expected number of students is required") @Min(1) @Max(100000) Integer expectedStudents,
+        @Min(1) @Max(100000) Integer expectedStudents,
         @Size(max = 255) String department,
         @Size(max = 255) String website,
         @Size(max = 32) String phone,
         @Size(max = 500) String address,
         @Size(max = 120) String city,
         @Size(max = 120) String state,
-        @Size(max = 120) String country
+        @Size(max = 120) String country,
+        @Size(max = 40) String planCode
+    ) {
+        public RegisterCollegeRequest(
+            String name, String officialEmail, Integer expectedStudents, String department,
+            String website, String phone, String address, String city, String state, String country
+        ) {
+            this(name, officialEmail, expectedStudents, department, website, phone, address, city, state, country, null);
+        }
+    }
+
+    /** Request to choose or extend a College Examination Plan. */
+    public record SelectCollegePlanRequest(
+        @NotBlank(message = "Plan code is required") String planCode
+    ) {}
+
+    /** Request to purchase extra contests on top of the existing plan. */
+    public record TopUpContestsRequest(
+        @NotNull(message = "Number of contests is required")
+        @Min(value = 1, message = "Must purchase at least 1 contest")
+        @Max(value = 200, message = "Maximum 200 contests per top-up")
+        Integer additionalContests
+    ) {}
+
+    /** Plan option in the College Plan catalog. */
+    public record CollegePlanOptionDto(
+        String planCode,
+        String name,
+        int contestsIncluded,
+        String periodLabel,
+        int priceInr,
+        int topUpPricePerContestInr,
+        String description
     ) {}
 
     /**
@@ -52,13 +84,13 @@ public final class CollegeDtos {
         long totalContests
     ) {}
 
-    /** Full view - returned to the college's own admin. */
+    /** Full view - returned to the college's own admin, including plan & contest quota state. */
     public record CollegeAdminDto(
         UUID id,
         String collegeCode,
         String name,
         String officialEmail,
-        int expectedStudents,
+        Integer expectedStudents,
         String department,
         String website,
         String phone,
@@ -68,13 +100,44 @@ public final class CollegeDtos {
         String country,
         long linkedStudents,
         long totalContests,
+        String planCode,
+        String planName,
+        int contestQuotaTotal,
+        int contestsUsed,
+        int contestsLeft,
+        int topUpPricePerContestInr,
+        Instant planExpiresAt,
         Instant createdAt
     ) {
         public static CollegeAdminDto from(College c, long linkedStudents, long totalContests) {
+            int topUpRate = switch (c.getPlanCode() == null ? "NONE" : c.getPlanCode().toUpperCase()) {
+                case "CAMPUS_YEARLY" -> 349;
+                case "GROWTH_MONTHLY" -> 399;
+                default -> 499;
+            };
             return new CollegeAdminDto(
-                c.getId(), c.getCollegeCode(), c.getName(), c.getOfficialEmail(), c.getExpectedStudents(),
-                c.getDepartment(), c.getWebsite(), c.getPhone(), c.getAddress(), c.getCity(), c.getState(),
-                c.getCountry(), linkedStudents, totalContests, c.getCreatedAt()
+                c.getId(),
+                c.getCollegeCode(),
+                c.getName(),
+                c.getOfficialEmail(),
+                c.getExpectedStudents(),
+                c.getDepartment(),
+                c.getWebsite(),
+                c.getPhone(),
+                c.getAddress(),
+                c.getCity(),
+                c.getState(),
+                c.getCountry(),
+                linkedStudents,
+                totalContests,
+                c.getPlanCode(),
+                c.getPlanName(),
+                c.getContestQuotaTotal(),
+                c.getContestsUsed(),
+                c.getContestsLeft(),
+                topUpRate,
+                c.getPlanExpiresAt(),
+                c.getCreatedAt()
             );
         }
     }
@@ -92,7 +155,7 @@ public final class CollegeDtos {
         String city,
         String state,
         String country,
-        int expectedStudents,
+        Integer expectedStudents,
         long linkedStudents,
         long totalContests,
         String rollNumber,
@@ -119,7 +182,6 @@ public final class CollegeDtos {
         String status,          // UPCOMING | ACTIVE | PAST
         int totalProblems,
         int maxScore,
-        // Participation (null when the student never entered)
         String participationStatus,
         Integer score,
         Integer rank,

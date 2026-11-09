@@ -339,6 +339,26 @@ export default function AdminContestsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <div className="px-4 py-2.5 rounded-2xl bg-background border border-amber-500/40 flex items-center gap-3">
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
+                    Contest Plan Quota
+                  </span>
+                  <span className="text-sm font-extrabold text-amber-400">
+                    {adminCollege.contestsLeft} Contest{adminCollege.contestsLeft === 1 ? "" : "s"} Left{" "}
+                    <span className="text-[11px] font-normal text-slate-400">
+                      ({adminCollege.contestsUsed}/{adminCollege.contestQuotaTotal} used)
+                    </span>
+                  </span>
+                </div>
+                <Link
+                  href="/profile"
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition"
+                >
+                  + Purchase More
+                </Link>
+              </div>
+
               <div className="px-4 py-2.5 rounded-2xl bg-background border border-brand-500/40 flex items-center gap-3">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
@@ -365,7 +385,7 @@ export default function AdminContestsPage() {
                 href="/profile"
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-bold text-foreground transition"
               >
-                <span>Modify / Add College Details</span>
+                <span>Profile &amp; Plans</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>

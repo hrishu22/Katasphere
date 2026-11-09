@@ -72,7 +72,7 @@ public class AdminContestController {
             ContestDto contest = contestService.createContest(request, user, college);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Contest created successfully", contest));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
         }

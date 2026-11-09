@@ -8,6 +8,7 @@ import {
   ContestLeaderboardEntryDto,
   CreateContestPayload,
   RegisterCollegePayload,
+  CollegePlanOptionDto,
   LinkCollegePayload,
   CollegeSuggestionDto,
   CollegeAdminDto,
@@ -263,6 +264,31 @@ export async function updateMyCollege(payload: RegisterCollegePayload): Promise<
   const res = await apiClient<ApiResponse<CollegeAdminDto>>("/api/v1/colleges/mine", {
     method: "PUT",
     body: JSON.stringify(payload),
+  });
+  invalidateApiCache();
+  return res.data;
+}
+
+export async function getCollegePlans(): Promise<CollegePlanOptionDto[]> {
+  const res = await apiClient<ApiResponse<CollegePlanOptionDto[]>>("/api/v1/colleges/plans", {
+    cacheTtlMs: 30000,
+  });
+  return res.data || [];
+}
+
+export async function selectOrExtendCollegePlan(planCode: string): Promise<CollegeAdminDto> {
+  const res = await apiClient<ApiResponse<CollegeAdminDto>>("/api/v1/colleges/mine/plan", {
+    method: "POST",
+    body: JSON.stringify({ planCode }),
+  });
+  invalidateApiCache();
+  return res.data;
+}
+
+export async function purchaseAdditionalContests(additionalContests: number): Promise<CollegeAdminDto> {
+  const res = await apiClient<ApiResponse<CollegeAdminDto>>("/api/v1/colleges/mine/topup-contests", {
+    method: "POST",
+    body: JSON.stringify({ additionalContests }),
   });
   invalidateApiCache();
   return res.data;

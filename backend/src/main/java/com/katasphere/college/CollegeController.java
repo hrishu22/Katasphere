@@ -36,6 +36,14 @@ public class CollegeController {
         );
     }
 
+    /** Catalog of College Examination Plans (3/month, 6/month, 20/year) and top-up rates in INR. */
+    @GetMapping("/plans")
+    public ResponseEntity<ApiResponse<List<CollegePlanOptionDto>>> plans() {
+        return ResponseEntity.ok(
+            ApiResponse.ok("College examination plans retrieved", collegeService.getPlanCatalog())
+        );
+    }
+
     /** Navbar/profile: is this user a college admin, a linked student, or neither? */
     @GetMapping("/me/context")
     public ResponseEntity<ApiResponse<CollegeContextDto>> context(HttpServletRequest request) {
@@ -70,6 +78,38 @@ public class CollegeController {
             return ResponseEntity.ok(ApiResponse.ok("College updated", collegeService.update(user, req)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /** Admin chooses or extends a College Examination Plan (3/month, 6/month, 20/year). */
+    @PostMapping("/mine/plan")
+    public ResponseEntity<ApiResponse<CollegeAdminDto>> selectOrExtendPlan(
+        @Valid @RequestBody SelectCollegePlanRequest req, HttpServletRequest request
+    ) {
+        User user = resolveCurrentUser(request);
+        if (user == null) return unauthorized();
+        try {
+            return ResponseEntity.ok(
+                ApiResponse.ok("College examination plan activated!", collegeService.selectOrExtendPlan(user, req))
+            );
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /** Admin purchases additional contests to add to their existing plan quota. */
+    @PostMapping("/mine/topup-contests")
+    public ResponseEntity<ApiResponse<CollegeAdminDto>> topUpContests(
+        @Valid @RequestBody TopUpContestsRequest req, HttpServletRequest request
+    ) {
+        User user = resolveCurrentUser(request);
+        if (user == null) return unauthorized();
+        try {
+            return ResponseEntity.ok(
+                ApiResponse.ok("Additional contests added to your college quota!", collegeService.topUpContests(user, req))
+            );
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
         }
     }
 

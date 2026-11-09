@@ -47,6 +47,22 @@ public class ContestService {
 
     @Transactional
     public ContestDto createContest(CreateContestRequest req, User admin, College college) {
+        if (college == null) {
+            throw new IllegalStateException("Please register your college in your Profile before scheduling a contest.");
+        }
+
+        if (college.getContestsLeft() <= 0) {
+            if (college.getContestQuotaTotal() == 0) {
+                throw new IllegalStateException(
+                    "No active contest plan selected (0 contests available). Please choose a plan (3/month, 6/month, or 20/year) or purchase contests in your Profile."
+                );
+            }
+            throw new IllegalStateException(
+                "Contest quota exhausted (0 of " + college.getContestQuotaTotal()
+                + " contests left). Please extend your plan or purchase additional contests in your Profile."
+            );
+        }
+
         String slug = req.slug();
         if (slug == null || slug.isBlank()) {
             slug = req.title().toLowerCase()
@@ -80,6 +96,8 @@ public class ContestService {
         );
         if (college != null) {
             contest.setTenantId(college.getId());
+            college.setContestsUsed(college.getContestsUsed() + 1);
+            collegeRepository.save(college);
         }
 
         contest = contestRepository.save(contest);

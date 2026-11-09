@@ -116,7 +116,7 @@ export interface CreateContestPayload {
 export interface RegisterCollegePayload {
   name: string;
   officialEmail: string;
-  expectedStudents: number;
+  expectedStudents?: number;
   department?: string;
   website?: string;
   phone?: string;
@@ -124,6 +124,17 @@ export interface RegisterCollegePayload {
   city?: string;
   state?: string;
   country?: string;
+  planCode?: string;
+}
+
+export interface CollegePlanOptionDto {
+  planCode: "STARTER_MONTHLY" | "GROWTH_MONTHLY" | "CAMPUS_YEARLY" | string;
+  name: string;
+  contestsIncluded: number;
+  periodLabel: string;
+  priceInr: number;
+  topUpPricePerContestInr: number;
+  description: string;
 }
 
 export interface LinkCollegePayload {
@@ -151,7 +162,7 @@ export interface CollegeAdminDto {
   collegeCode: string;
   name: string;
   officialEmail: string;
-  expectedStudents: number;
+  expectedStudents?: number | null;
   department?: string | null;
   website?: string | null;
   phone?: string | null;
@@ -161,6 +172,13 @@ export interface CollegeAdminDto {
   country: string;
   linkedStudents: number;
   totalContests: number;
+  planCode: string;
+  planName: string;
+  contestQuotaTotal: number;
+  contestsUsed: number;
+  contestsLeft: number;
+  topUpPricePerContestInr: number;
+  planExpiresAt?: string | null;
   createdAt: string;
 }
 
