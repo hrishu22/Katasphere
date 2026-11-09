@@ -60,7 +60,9 @@ public class SecurityConfig {
                     "/api/v1/auth/**",
                     "/api/v1/users/**",
                     "/api/v1/admin/problems/**",
-                    "/api/v1/submissions/**"
+                    "/api/v1/submissions/**",
+                    "/api/v1/contests/**",
+                    "/api/v1/admin/contests/**"
                 )
             )
             .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -77,6 +79,8 @@ public class SecurityConfig {
                     "/api/v1/companies/**",
                     "/api/v1/admin/problems/**",
                     "/api/v1/submissions/**",
+                    "/api/v1/contests/**",
+                    "/api/v1/admin/contests/**",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/v1/users/**").authenticated()
