@@ -82,6 +82,7 @@ public class SecurityConfig {
                     "/api/v1/submissions/**",
                     "/api/v1/contests/**",
                     "/api/v1/admin/contests/**",
+                    "/api/v1/colleges/suggestions",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/v1/users/**", "/api/v1/colleges/**").authenticated()

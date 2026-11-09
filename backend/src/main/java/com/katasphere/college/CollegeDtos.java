@@ -23,14 +23,36 @@ public final class CollegeDtos {
         @Size(max = 120) String country
     ) {}
 
-    /** Students must provide BOTH the college name and the College Unique ID. */
+    /**
+     * Students must provide the college name, the College Unique ID, and their tenure
+     * (start year + graduation/passing year) so passed-out candidates don't receive active college exams.
+     */
     public record LinkCollegeRequest(
         @NotBlank(message = "College name is required") @Size(max = 255) String collegeName,
         @NotBlank(message = "College ID is required") @Size(max = 20) String collegeCode,
-        @Size(max = 64) String rollNumber
+        @Size(max = 64) String rollNumber,
+        @Min(1990) @Max(2050) Integer tenureStartYear,
+        @NotNull(message = "Graduation / Passing year is required") @Min(1990) @Max(2055) Integer tenureEndYear
+    ) {
+        public LinkCollegeRequest(String collegeName, String collegeCode, String rollNumber) {
+            this(collegeName, collegeCode, rollNumber, null, java.time.Year.now().getValue() + 1);
+        }
+    }
+
+    /** Public suggestion item for candidate autocomplete when registering/linking a college. */
+    public record CollegeSuggestionDto(
+        UUID id,
+        String collegeCode,
+        String name,
+        String department,
+        String city,
+        String state,
+        String country,
+        long linkedStudents,
+        long totalContests
     ) {}
 
-    /** Full view - only ever returned to the college's own admin. */
+    /** Full view - returned to the college's own admin. */
     public record CollegeAdminDto(
         UUID id,
         String collegeCode,
@@ -57,15 +79,27 @@ public final class CollegeDtos {
         }
     }
 
-    /** Minimal view for a linked student (no admin contact data). */
+    /** Enriched college + student tenure view displayed on the candidate's profile. */
     public record StudentCollegeDto(
         UUID id,
         String collegeCode,
         String name,
+        String officialEmail,
         String department,
+        String website,
+        String phone,
+        String address,
         String city,
         String state,
-        String rollNumber
+        String country,
+        int expectedStudents,
+        long linkedStudents,
+        long totalContests,
+        String rollNumber,
+        Integer tenureStartYear,
+        Integer tenureEndYear,
+        boolean isTenureExpired,
+        Instant createdAt
     ) {}
 
     /** What the signed-in user is, relative to colleges. Used by navbar + profile. */
@@ -96,9 +130,11 @@ public final class CollegeDtos {
 
     public record StudentExamDashboardDto(
         StudentCollegeDto college,
+        boolean isTenureExpired,
         List<ExamSummaryDto> upcoming,
         List<ExamSummaryDto> active,
         List<ExamSummaryDto> past,
+        List<ExamSummaryDto> collegeHistory,
         int examsAttempted,
         Integer bestRank,
         double averageScorePercent

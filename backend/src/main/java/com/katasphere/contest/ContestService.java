@@ -105,12 +105,23 @@ public class ContestService {
 
     // ------------------------------------------------------------ tenant access rules
 
-    /** Open contests are visible to all; college contests only to that college's students and admin. */
+    /**
+     * Contests are only visible to signed-in users who have an active registered/linked college.
+     * Passed-out candidates (isTenureExpired == true) cannot view upcoming or active contests
+     * of their passed-out college, though they can still view past contests for history/leaderboard.
+     */
     public boolean canView(Contest c, User viewer) {
-        if (c.getTenantId() == null) return true;
         if (viewer == null) return false;
-        if (c.getTenantId().equals(viewer.getCollegeId())) return true;
-        return isAdminOfTenant(c, viewer);
+        if (isAdminOfTenant(c, viewer) || canManage(c, viewer)) return true;
+
+        boolean hasActiveStudentCollege = viewer.getCollegeId() != null && !viewer.isTenureExpired();
+        boolean isPastContest = Instant.now().isAfter(c.getEndTime());
+
+        if (c.getTenantId() != null) {
+            if (!c.getTenantId().equals(viewer.getCollegeId())) return false;
+            return !viewer.isTenureExpired() || isPastContest;
+        }
+        return hasActiveStudentCollege;
     }
 
     public boolean canManage(Contest c, User user) {
@@ -147,8 +158,27 @@ public class ContestService {
 
     @Transactional(readOnly = true)
     public List<ContestDto> getAllPublishedContests(User viewer) {
-        UUID tenant = viewer != null ? viewer.getCollegeId() : null;
-        return contestRepository.findVisiblePublished(tenant).stream()
+        if (viewer == null) {
+            return List.of();
+        }
+
+        // 1. If the user is a College Admin, show their college's contests
+        Optional<College> adminCollege = collegeRepository.findByAdminUserId(viewer.getId());
+        if (adminCollege.isPresent()) {
+            College col = adminCollege.get();
+            return contestRepository.findPublishedByCollege(col.getId(), col.getName()).stream()
+                .map(c -> toDto(c).withoutAccessCode())
+                .toList();
+        }
+
+        // 2. If the user is a Student without a college, or has passed out (tenure expired), show no contests
+        if (viewer.getCollegeId() == null || viewer.isTenureExpired()) {
+            return List.of();
+        }
+
+        // 3. Active student linked to a college: show their college's published contests
+        String colName = collegeRepository.findById(viewer.getCollegeId()).map(College::getName).orElse("");
+        return contestRepository.findPublishedByCollege(viewer.getCollegeId(), colName).stream()
             .map(c -> toDto(c).withoutAccessCode())
             .toList();
     }
@@ -190,6 +220,15 @@ public class ContestService {
     public ContestParticipantDto joinContest(String slug, JoinContestRequest req, User student) {
         Contest contest = contestRepository.findBySlug(slug)
             .orElseThrow(() -> new IllegalArgumentException("Contest not found with slug: " + slug));
+
+        if (student.getCollegeId() == null) {
+            throw new IllegalStateException("Please link your college in your Profile before entering a college examination.");
+        }
+
+        if (student.isTenureExpired()) {
+            throw new IllegalStateException("Your college tenure (Graduated " + student.getTenureEndYear()
+                + ") has completed. Passed-out candidates cannot join active college examinations.");
+        }
 
         if (contest.getTenantId() != null && !contest.getTenantId().equals(student.getCollegeId())) {
             throw new IllegalStateException("This examination is restricted to students of " + contest.getCollegeName()

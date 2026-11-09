@@ -13,6 +13,9 @@ export interface User {
   isCollegeAdmin?: boolean;
   collegeId?: string | null;
   collegeRollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired?: boolean;
   createdAt?: string;
 }
 
@@ -27,6 +30,8 @@ export interface RegisterOptions {
   department?: string;
   collegeCode?: string;
   rollNumber?: string;
+  tenureStartYear?: number;
+  tenureEndYear?: number;
 }
 
 interface AuthResponse {

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { getCollegeSuggestions } from "@/lib/contest-api";
+import { CollegeSuggestionDto } from "@/types/contest";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   Code2,
@@ -16,6 +17,8 @@ import {
   GraduationCap,
   Building2,
   KeyRound,
+  Calendar,
+  Check,
 } from "lucide-react";
 
 function RegisterForm() {
@@ -40,9 +43,29 @@ function RegisterForm() {
   const [department, setDepartment] = useState("");
 
   // Optional Student immediate college link fields
+  const currentYear = new Date().getFullYear();
   const [studentCollegeName, setStudentCollegeName] = useState("");
   const [studentCollegeCode, setStudentCollegeCode] = useState("");
   const [studentRollNumber, setStudentRollNumber] = useState("");
+  const [tenureStartYear, setTenureStartYear] = useState<number>(currentYear - 2);
+  const [tenureEndYear, setTenureEndYear] = useState<number>(currentYear + 2);
+  const [collegeSuggestions, setCollegeSuggestions] = useState<CollegeSuggestionDto[]>([]);
+
+  useEffect(() => {
+    getCollegeSuggestions()
+      .then(setCollegeSuggestions)
+      .catch(() => {});
+  }, []);
+
+  const filteredSuggestions = collegeSuggestions.filter((c) => {
+    if (!studentCollegeName.trim()) return true;
+    const q = studentCollegeName.toLowerCase().trim();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.collegeCode.toLowerCase().includes(q) ||
+      (c.city && c.city.toLowerCase().includes(q))
+    );
+  });
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,6 +89,15 @@ function RegisterForm() {
         setError("College Name, Official College Email ID, and Expected Students are required for College Admins.");
         return;
       }
+    } else if (studentCollegeName.trim() || studentCollegeCode.trim()) {
+      if (!studentCollegeName.trim() || !studentCollegeCode.trim()) {
+        setError("Please select a college from suggestions or provide both College Name and College ID.");
+        return;
+      }
+      if (!tenureEndYear || tenureEndYear < tenureStartYear) {
+        setError("Graduation / Passing Year must be greater than or equal to Admission Year.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -87,6 +119,8 @@ function RegisterForm() {
               collegeName: studentCollegeName.trim() || undefined,
               collegeCode: studentCollegeCode.trim().toUpperCase() || undefined,
               rollNumber: studentRollNumber.trim() || undefined,
+              tenureStartYear: studentCollegeCode.trim() ? Number(tenureStartYear) : undefined,
+              tenureEndYear: studentCollegeCode.trim() ? Number(tenureEndYear) : undefined,
             }),
       });
 
@@ -268,15 +302,50 @@ function RegisterForm() {
             </div>
           </div>
         ) : (
-          /* Student Optional Immediate Link Fields */
+          /* Student Optional Immediate Link Fields with Saved College Suggestions & Tenure Year */
           <div className="p-4 rounded-xl bg-surface-subtle/60 border border-surface-border space-y-3">
             <div className="text-xs font-semibold text-slate-300 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <KeyRound className="h-3.5 w-3.5 text-brand-400" />
-                <span>Have your College ID? Link now (or later in Profile)</span>
+                <span>Register Your College & Tenure (or link later in Profile)</span>
               </span>
-              <span className="text-[10px] text-slate-500">Optional at signup</span>
+              <span className="text-[10px] text-slate-500">Unlocks Contests Tab</span>
             </div>
+
+            {/* Saved Colleges Suggestions from DB */}
+            {collegeSuggestions.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Registered Colleges in Katasphere (click to auto-fill Name & College ID):
+                </p>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                  {filteredSuggestions.slice(0, 8).map((col) => {
+                    const isSelected = studentCollegeCode.toUpperCase() === col.collegeCode.toUpperCase();
+                    return (
+                      <button
+                        key={col.id}
+                        type="button"
+                        onClick={() => {
+                          setStudentCollegeName(col.name);
+                          setStudentCollegeCode(col.collegeCode);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left text-[11px] transition ${
+                          isSelected
+                            ? "bg-brand-500/15 border-brand-500 text-brand-300 font-semibold"
+                            : "bg-background border-surface-border text-slate-300 hover:border-brand-500/40"
+                        }`}
+                      >
+                        {isSelected && <Check className="h-3 w-3 text-brand-400 shrink-0" />}
+                        <span className="truncate max-w-[160px]">{col.name}</span>
+                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
+                          {col.collegeCode}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <input
@@ -294,6 +363,50 @@ function RegisterForm() {
                 className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs"
               />
             </div>
+
+            {/* Candidate Tenure Years + Roll Number */}
+            {(studentCollegeName.trim() || studentCollegeCode.trim()) && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                    Admission Year
+                  </label>
+                  <input
+                    type="number"
+                    min={2000}
+                    max={2040}
+                    value={tenureStartYear}
+                    onChange={(e) => setTenureStartYear(parseInt(e.target.value) || currentYear - 2)}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                    Passing / Grad Year *
+                  </label>
+                  <input
+                    type="number"
+                    min={2000}
+                    max={2045}
+                    value={tenureEndYear}
+                    onChange={(e) => setTenureEndYear(parseInt(e.target.value) || currentYear + 2)}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                    Roll Number
+                  </label>
+                  <input
+                    type="text"
+                    value={studentRollNumber}
+                    onChange={(e) => setStudentRollNumber(e.target.value)}
+                    placeholder="e.g. 2024CS101"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 

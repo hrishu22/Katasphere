@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,6 +24,16 @@ public class CollegeController {
     public CollegeController(CollegeService collegeService, UserRepository userRepository) {
         this.collegeService = collegeService;
         this.userRepository = userRepository;
+    }
+
+    /** Public/student autocomplete directory of registered colleges with their College Unique IDs. */
+    @GetMapping("/suggestions")
+    public ResponseEntity<ApiResponse<List<CollegeSuggestionDto>>> suggestions(
+        @RequestParam(name = "q", required = false) String query
+    ) {
+        return ResponseEntity.ok(
+            ApiResponse.ok("College suggestions retrieved", collegeService.getSuggestions(query))
+        );
     }
 
     /** Navbar/profile: is this user a college admin, a linked student, or neither? */

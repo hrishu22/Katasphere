@@ -50,11 +50,16 @@ export function Navbar() {
   const isCollegeAdminUser = Boolean(
     user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
   );
+  // Contests tab is shown ONLY when signed in AND a college is registered/linked with the user
+  // AND (for student candidates) their college tenure has not expired (not passed out).
+  const hasActiveStudentCollege = Boolean(user && user.collegeId && !user.isTenureExpired);
+  const canSeeContestsTab = Boolean(user && (isCollegeAdminUser || hasActiveStudentCollege));
 
   // Requirement 1: Dashboard is only shown for authenticated users
+  // Requirement 2: Contests tab is hidden when not signed in, when no college is linked, or when candidate has passed out
   const navLinks = [
     { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
-    { href: "/contests", label: "Contests", icon: Trophy, isPro: false },
+    ...(canSeeContestsTab ? [{ href: "/contests", label: "Contests", icon: Trophy, isPro: false }] : []),
     { href: "/companies", label: "Companies", icon: Building2, isPro: true },
     { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
     { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },

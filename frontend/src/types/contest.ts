@@ -130,6 +130,20 @@ export interface LinkCollegePayload {
   collegeName: string;
   collegeCode: string;
   rollNumber?: string;
+  tenureStartYear?: number;
+  tenureEndYear: number;
+}
+
+export interface CollegeSuggestionDto {
+  id: string;
+  collegeCode: string;
+  name: string;
+  department?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  linkedStudents: number;
+  totalContests: number;
 }
 
 export interface CollegeAdminDto {
@@ -154,10 +168,22 @@ export interface StudentCollegeDto {
   id: string;
   collegeCode: string;
   name: string;
+  officialEmail?: string | null;
   department?: string | null;
+  website?: string | null;
+  phone?: string | null;
+  address?: string | null;
   city?: string | null;
   state?: string | null;
+  country?: string | null;
+  expectedStudents?: number;
+  linkedStudents?: number;
+  totalContests?: number;
   rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired?: boolean;
+  createdAt?: string;
 }
 
 export interface CollegeContextDto {
@@ -186,9 +212,11 @@ export interface ExamSummaryDto {
 
 export interface StudentExamDashboardDto {
   college: StudentCollegeDto | null;
+  isTenureExpired?: boolean;
   upcoming: ExamSummaryDto[];
   active: ExamSummaryDto[];
   past: ExamSummaryDto[];
+  collegeHistory: ExamSummaryDto[];
   examsAttempted: number;
   bestRank: number | null;
   averageScorePercent: number;

@@ -27,7 +27,13 @@ public interface ContestRepository extends JpaRepository<Contest, UUID> {
     @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND c.tenantId = :tenantId ORDER BY c.startTime DESC")
     List<Contest> findPublishedByTenant(@Param("tenantId") UUID tenantId);
 
+    @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND (c.tenantId = :tenantId OR LOWER(c.collegeName) = LOWER(:collegeName)) ORDER BY c.startTime DESC")
+    List<Contest> findPublishedByCollege(@Param("tenantId") UUID tenantId, @Param("collegeName") String collegeName);
+
     long countByTenantId(UUID tenantId);
+
+    @Query("SELECT COUNT(c) FROM Contest c WHERE c.tenantId = :tenantId OR LOWER(c.collegeName) = LOWER(:collegeName)")
+    long countByCollege(@Param("tenantId") UUID tenantId, @Param("collegeName") String collegeName);
 
     /** Public catalogue: open contests plus (optionally) the viewer's own college contests. */
     @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND (c.tenantId IS NULL OR c.tenantId = :tenantId) ORDER BY c.startTime DESC")

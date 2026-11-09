@@ -76,10 +76,15 @@ public class AuthService {
             ));
         } else if (request.collegeName() != null && !request.collegeName().isBlank()
                 && request.collegeCode() != null && !request.collegeCode().isBlank()) {
+            Integer endYear = request.tenureEndYear() != null
+                ? request.tenureEndYear()
+                : java.time.Year.now().getValue() + 2;
             collegeService.linkStudent(user, new LinkCollegeRequest(
                 request.collegeName().trim(),
                 request.collegeCode().trim(),
-                request.rollNumber()
+                request.rollNumber(),
+                request.tenureStartYear(),
+                endYear
             ));
         }
 

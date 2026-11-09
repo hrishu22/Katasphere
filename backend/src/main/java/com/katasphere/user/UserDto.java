@@ -13,6 +13,9 @@ public record UserDto(
     boolean isCollegeAdmin,
     UUID collegeId,
     String collegeRollNumber,
+    Integer tenureStartYear,
+    Integer tenureEndYear,
+    boolean isTenureExpired,
     Instant createdAt
 ) {
     public UserDto(UUID id, String name, String email, String avatarUrl, String role, Instant createdAt) {
@@ -26,6 +29,9 @@ public record UserDto(
             "COLLEGE_ADMIN".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role),
             null,
             null,
+            null,
+            null,
+            false,
             createdAt
         );
     }
@@ -44,6 +50,9 @@ public record UserDto(
             collegeAdmin,
             user.getCollegeId(),
             user.getCollegeRollNumber(),
+            user.getTenureStartYear(),
+            user.getTenureEndYear(),
+            user.isTenureExpired(),
             user.getCreatedAt()
         );
     }

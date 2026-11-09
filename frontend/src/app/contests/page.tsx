@@ -28,14 +28,25 @@ import {
 
 export default function ContestsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [contests, setContests] = useState<ContestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "ACTIVE" | "UPCOMING" | "CONCLUDED">("ALL");
   const [quickAccessSlug, setQuickAccessSlug] = useState("");
 
+  const isCollegeAdmin = Boolean(
+    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
+  );
+  const hasActiveStudentCollege = Boolean(user && user.collegeId && !user.isTenureExpired);
+  const canAccessContests = Boolean(user && (isCollegeAdmin || hasActiveStudentCollege));
+
   useEffect(() => {
+    if (authLoading) return;
+    if (!canAccessContests) {
+      setLoading(false);
+      return;
+    }
     async function load() {
       try {
         const data = await getContests();
@@ -47,7 +58,94 @@ export default function ContestsPage() {
       }
     }
     load();
-  }, []);
+  }, [authLoading, canAccessContests]);
+
+  if (authLoading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-28">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AppShell>
+        <div className="max-w-xl mx-auto px-4 py-20 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-500 mx-auto mb-5">
+            <Lock className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-foreground mb-2">
+            Sign In Required for College Contests
+          </h1>
+          <p className="text-sm text-slate-400 mb-6">
+            Institutional coding examinations are private to verified students and college faculty. Please sign in and link your active college to access your college&apos;s examination portal.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              href="/login?redirect=/contests"
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="px-5 py-2.5 rounded-xl bg-surface border border-surface-border hover:border-brand-500/40 text-foreground text-sm font-semibold transition"
+            >
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!canAccessContests) {
+    return (
+      <AppShell>
+        <div className="max-w-xl mx-auto px-4 py-20 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto mb-5">
+            <GraduationCap className="h-7 w-7" />
+          </div>
+          {user.isTenureExpired ? (
+            <>
+              <h1 className="text-2xl font-extrabold text-foreground mb-2">
+                College Tenure Completed (Batch of {user.tenureEndYear})
+              </h1>
+              <p className="text-sm text-slate-400 mb-6">
+                Because your registered graduation year ({user.tenureEndYear}) has passed, live and upcoming college contests are hidden. You can view your college details, past contest history, and your achieved ranks in your Profile.
+              </p>
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition"
+              >
+                <span>View College History & Past Ranks in Profile</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-extrabold text-foreground mb-2">
+                Link Your College to Unlock Contests
+              </h1>
+              <p className="text-sm text-slate-400 mb-6">
+                The Contests portal is exclusively unlocked once a college is registered or linked with your account. Select your college, verify its Unique ID, and enter your tenure year on your Profile.
+              </p>
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition"
+              >
+                <span>Register / Link Your College in Profile</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </>
+          )}
+        </div>
+      </AppShell>
+    );
+  }
 
   const filteredContests = contests.filter((c) => {
     const matchesSearch =

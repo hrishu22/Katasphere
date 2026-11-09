@@ -9,6 +9,7 @@ import {
   CreateContestPayload,
   RegisterCollegePayload,
   LinkCollegePayload,
+  CollegeSuggestionDto,
   CollegeAdminDto,
   StudentCollegeDto,
   CollegeContextDto,
@@ -233,6 +234,14 @@ export function getExportGradebookUrl(slug: string): string {
 }
 
 // ======================== COLLEGE & STUDENT AFFILIATION APIS ========================
+
+export async function getCollegeSuggestions(query?: string): Promise<CollegeSuggestionDto[]> {
+  const qs = query && query.trim() ? `?q=${encodeURIComponent(query.trim())}` : "";
+  const res = await apiClient<ApiResponse<CollegeSuggestionDto[]>>(`/api/v1/colleges/suggestions${qs}`, {
+    cacheTtlMs: 10000,
+  });
+  return res.data || [];
+}
 
 export async function getMyCollegeContext(): Promise<CollegeContextDto> {
   const res = await apiClient<ApiResponse<CollegeContextDto>>("/api/v1/colleges/me/context", {

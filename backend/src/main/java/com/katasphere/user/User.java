@@ -31,6 +31,12 @@ public class User {
     @Column(name = "college_roll_number", length = 64)
     private String collegeRollNumber;
 
+    @Column(name = "tenure_start_year")
+    private Integer tenureStartYear;
+
+    @Column(name = "tenure_end_year")
+    private Integer tenureEndYear;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -68,6 +74,21 @@ public class User {
 
     public String getCollegeRollNumber() { return collegeRollNumber; }
     public void setCollegeRollNumber(String collegeRollNumber) { this.collegeRollNumber = collegeRollNumber; }
+
+    public Integer getTenureStartYear() { return tenureStartYear; }
+    public void setTenureStartYear(Integer tenureStartYear) { this.tenureStartYear = tenureStartYear; }
+
+    public Integer getTenureEndYear() { return tenureEndYear; }
+    public void setTenureEndYear(Integer tenureEndYear) { this.tenureEndYear = tenureEndYear; }
+
+    /**
+     * Returns true if the student has a graduation/pass-out year (tenureEndYear)
+     * that is strictly earlier than the current calendar year.
+     */
+    public boolean isTenureExpired() {
+        int currentYear = java.time.Year.now().getValue();
+        return tenureEndYear != null && tenureEndYear < currentYear;
+    }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

@@ -38,9 +38,13 @@ public record RegisterRequest(
     String collegeCode,
 
     @Size(max = 64)
-    String rollNumber
+    String rollNumber,
+
+    Integer tenureStartYear,
+
+    Integer tenureEndYear
 ) {
     public RegisterRequest(String name, String email, String password) {
-        this(name, email, password, "USER", null, null, null, null, null, null);
+        this(name, email, password, "USER", null, null, null, null, null, null, null, null);
     }
 }
