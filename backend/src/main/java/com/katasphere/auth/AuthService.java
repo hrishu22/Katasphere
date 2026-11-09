@@ -53,11 +53,14 @@ public class AuthService {
                 throw new IllegalArgumentException("College name is required when registering to create contests");
             }
         } else if (isCollegeStudent) {
-            if (request.collegeName() == null || request.collegeName().isBlank()) {
-                throw new IllegalArgumentException("College name is mandatory for student registration");
+            if (request.collegeCode() == null || request.collegeCode().isBlank()) {
+                throw new IllegalArgumentException("College Unique ID is mandatory for student registration");
             }
             if (request.rollNumber() == null || request.rollNumber().isBlank()) {
                 throw new IllegalArgumentException("Roll number / Student ID is mandatory for student registration");
+            }
+            if (request.tenureEndYear() == null) {
+                throw new IllegalArgumentException("Tenure / Passing Year is mandatory for student registration");
             }
         }
 
@@ -86,7 +89,7 @@ public class AuthService {
                 request.department(),
                 null, null, null, null, null, "India"
             ));
-        } else if (isCollegeStudent || (request.collegeName() != null && !request.collegeName().isBlank())) {
+        } else if (isCollegeStudent || (request.collegeCode() != null && !request.collegeCode().isBlank())) {
             Integer startYear = request.tenureStartYear() != null
                 ? request.tenureStartYear()
                 : java.time.Year.now().getValue() - 2;
@@ -94,7 +97,7 @@ public class AuthService {
                 ? request.tenureEndYear()
                 : java.time.Year.now().getValue() + 2;
             collegeService.linkStudent(user, new LinkCollegeRequest(
-                request.collegeName().trim(),
+                request.collegeName() != null ? request.collegeName().trim() : null,
                 request.collegeCode() != null ? request.collegeCode().trim() : "",
                 request.rollNumber(),
                 startYear,

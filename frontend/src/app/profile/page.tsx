@@ -286,8 +286,8 @@ export default function ProfilePage() {
     setLinkError(null);
     setLinkSuccess(null);
 
-    if (!linkName.trim()) {
-      setLinkError("College Name is mandatory to register as a student.");
+    if (!linkCode.trim()) {
+      setLinkError("College Unique ID is mandatory to register as a student of that college.");
       return;
     }
     if (!linkRoll.trim()) {
@@ -306,7 +306,7 @@ export default function ProfilePage() {
     setLinking(true);
     try {
       const linked = await linkStudentCollege({
-        collegeName: linkName.trim(),
+        collegeName: linkName.trim() || undefined,
         collegeCode: linkCode.trim().toUpperCase(),
         rollNumber: linkRoll.trim(),
         tenureStartYear: linkStartYear ? Number(linkStartYear) : undefined,
@@ -1119,11 +1119,22 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">College Unique ID</label>
+                      <label className="block font-semibold text-slate-300 mb-1">College Unique ID *</label>
                       <input
                         type="text"
+                        required
                         value={linkCode}
-                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                        onChange={(e) => {
+                          const code = e.target.value.toUpperCase();
+                          setLinkCode(code);
+                          const matched = collegeSuggestions.find(
+                            (col) => col.collegeCode.toUpperCase() === code.trim()
+                          );
+                          if (matched) {
+                            setLinkName(matched.name);
+                          }
+                        }}
+                        placeholder="e.g. KS-57BMQ9"
                         className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase"
                       />
                     </div>
@@ -1626,13 +1637,23 @@ export default function ProfilePage() {
 
                     <div>
                       <label className="block font-semibold text-slate-300 mb-1.5">
-                        College Unique ID (Auto-filled on selection)
+                        College Unique ID <span className="text-rose-400">*</span>
                       </label>
                       <input
                         type="text"
+                        required
                         placeholder="e.g. KS-57BMQ9"
                         value={linkCode}
-                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                        onChange={(e) => {
+                          const code = e.target.value.toUpperCase();
+                          setLinkCode(code);
+                          const matched = collegeSuggestions.find(
+                            (col) => col.collegeCode.toUpperCase() === code.trim()
+                          );
+                          if (matched) {
+                            setLinkName(matched.name);
+                          }
+                        }}
                         className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                     </div>

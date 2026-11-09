@@ -28,6 +28,7 @@ export function Navbar() {
   const { user, logout, canUseStudentMode, isStudentMode, setStudentMode } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [redirectingToKatasphere, setRedirectingToKatasphere] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking anywhere outside
@@ -55,8 +56,9 @@ export function Navbar() {
 
   // Strict route isolation for College Admin and Student Mode
   useEffect(() => {
-    if (!user || !pathname) return;
+    if (!user || !pathname || redirectingToKatasphere) return;
     const isPracticeOrNormalTab =
+      pathname === "/" ||
       pathname.startsWith("/problems") ||
       pathname.startsWith("/companies") ||
       pathname.startsWith("/interview-prep") ||
@@ -67,16 +69,17 @@ export function Navbar() {
     } else if (isStudentMode && isPracticeOrNormalTab) {
       router.replace("/contests");
     } else if (!isCollegeAdminUser && !isStudentMode && pathname === "/contests") {
-      router.replace("/dashboard");
+      router.replace("/");
     }
-  }, [user, pathname, isCollegeAdminUser, isStudentMode, router]);
+  }, [user, pathname, isCollegeAdminUser, isStudentMode, redirectingToKatasphere, router]);
 
   const handleToggleStudentMode = () => {
     const next = !isStudentMode;
-    setStudentMode(next);
     if (next) {
-      // Turning Student toggle ON -> show only Contests & Student Dashboard
+      // Turning Student toggle ON -> hide normal user features & show only Contests + Student Dashboard
+      setStudentMode(true);
       if (
+        pathname === "/" ||
         pathname?.startsWith("/problems") ||
         pathname?.startsWith("/companies") ||
         pathname?.startsWith("/interview-prep") ||
@@ -85,10 +88,13 @@ export function Navbar() {
         router.push("/contests");
       }
     } else {
-      // Turning Student toggle OFF -> normal user mode
-      if (pathname?.startsWith("/contests")) {
-        router.push("/dashboard");
-      }
+      // Turning Student toggle OFF -> show "Redirecting to Katasphere..." and redirect to main homepage ("/") with all Normal User tabs
+      setRedirectingToKatasphere(true);
+      setStudentMode(false);
+      router.push("/");
+      setTimeout(() => {
+        setRedirectingToKatasphere(false);
+      }, 1100);
     }
   };
 
@@ -122,12 +128,31 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-surface-border bg-background/80 backdrop-blur-md">
+    <>
+      {redirectingToKatasphere && (
+        <div className="fixed inset-0 z-[100] bg-background/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="max-w-md w-full p-6 rounded-2xl bg-surface border border-brand-500/40 shadow-2xl text-center space-y-3">
+            <div className="h-12 w-12 rounded-2xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400 mx-auto">
+              <Code2 className="h-6 w-6 animate-pulse" />
+            </div>
+            <h3 className="text-lg font-extrabold text-foreground">
+              Redirecting to Katasphere...
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Switching from Student Mode to Katasphere Normal User Mode — opening the main homepage with Problems, Companies, Interview Prep, Plans, and Dashboard.
+            </p>
+          </div>
+        </div>
+      )}
+      <header className="sticky top-0 z-50 w-full border-b border-surface-border bg-background/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-8">
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link
+              href={isCollegeAdminUser ? "/dashboard" : isStudentMode ? "/contests" : "/"}
+              className="flex items-center space-x-3 group"
+            >
               <div className="h-9 w-9 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-500 group-hover:bg-brand-500/20 group-hover:border-brand-500/50 transition-all">
                 <Code2 className="h-5 w-5" />
               </div>
@@ -412,5 +437,6 @@ export function Navbar() {
         </div>
       )}
     </header>
+    </>
   );
 }

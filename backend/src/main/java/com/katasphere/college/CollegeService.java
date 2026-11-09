@@ -469,20 +469,13 @@ public class CollegeService {
         }
 
         String code = req.collegeCode() != null ? req.collegeCode().trim().toUpperCase(Locale.ROOT) : "";
-        College c;
-        if (!code.isEmpty()) {
-            c = collegeRepository.findByCollegeCode(code)
-                .filter(col -> normalize(col.getName()).equals(normalize(req.collegeName())))
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "College name and College ID do not match. Please select a college from the suggestions or check the details shared by your college."));
-        } else {
-            String targetName = normalize(req.collegeName());
-            c = collegeRepository.findAllByOrderByNameAsc().stream()
-                .filter(col -> normalize(col.getName()).equals(targetName))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "College not found in registered institutions. Please select your college from the registered suggestions or enter your College ID."));
+        if (code.isEmpty()) {
+            throw new IllegalArgumentException("College Unique ID is mandatory to register as a student of a college.");
         }
+
+        College c = collegeRepository.findByCollegeCode(code)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Invalid College Unique ID (" + code + "). Please enter the valid College Unique ID shared by your college."));
 
         student.setCollegeId(c.getId());
         student.setCollegeRollNumber(blankToNull(req.rollNumber()));

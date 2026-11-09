@@ -138,9 +138,9 @@ export interface CollegePlanOptionDto {
 }
 
 export interface LinkCollegePayload {
-  collegeName: string;
+  collegeName?: string;
   collegeCode: string;
-  rollNumber?: string;
+  rollNumber: string;
   tenureStartYear?: number;
   tenureEndYear: number;
 }

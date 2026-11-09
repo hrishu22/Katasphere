@@ -47,15 +47,14 @@ function RegisterForm() {
   // "Want to create contest?" (COLLEGE_ADMIN) fields
   const [collegeName, setCollegeName] = useState("");
 
-  // "Are you a student?" (COLLEGE_STUDENT) mandatory fields
+  // "Are you a student?" (COLLEGE_STUDENT) mandatory fields:
+  // Name, Email, College Unique ID, Passwords, Roll No, Tenure
   const currentYear = new Date().getFullYear();
-  const [studentCollegeName, setStudentCollegeName] = useState("");
   const [studentCollegeCode, setStudentCollegeCode] = useState("");
   const [studentRollNumber, setStudentRollNumber] = useState("");
   const [tenureStartYear, setTenureStartYear] = useState<number>(currentYear - 2);
   const [tenureEndYear, setTenureEndYear] = useState<number>(currentYear + 2);
   const [collegeSuggestions, setCollegeSuggestions] = useState<CollegeSuggestionDto[]>([]);
-  const [showCollegeDropdown, setShowCollegeDropdown] = useState(false);
 
   useEffect(() => {
     getCollegeSuggestions()
@@ -63,15 +62,9 @@ function RegisterForm() {
       .catch(() => {});
   }, []);
 
-  const filteredSuggestions = collegeSuggestions.filter((c) => {
-    const q = studentCollegeName.toLowerCase().trim();
-    if (!q) return false;
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.collegeCode.toLowerCase().includes(q) ||
-      (c.city && c.city.toLowerCase().includes(q))
-    );
-  });
+  const matchedCollegeByCode = collegeSuggestions.find(
+    (c) => c.collegeCode.toUpperCase() === studentCollegeCode.trim().toUpperCase()
+  );
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -96,15 +89,15 @@ function RegisterForm() {
         return;
       }
     } else if (accountType === "COLLEGE_STUDENT") {
-      if (!studentCollegeName.trim()) {
-        setError("College Name is mandatory for student registration.");
+      if (!studentCollegeCode.trim()) {
+        setError("College Unique ID is mandatory to register as a student of that college.");
         return;
       }
       if (!studentRollNumber.trim()) {
         setError("Roll No. / Student ID is mandatory for student registration.");
         return;
       }
-      if (!tenureEndYear || tenureEndYear < tenureStartYear) {
+      if (!tenureStartYear || !tenureEndYear || tenureEndYear < tenureStartYear) {
         setError("Graduation / Passing Year must be greater than or equal to Admission Year.");
         return;
       }
@@ -125,8 +118,8 @@ function RegisterForm() {
             }
           : accountType === "COLLEGE_STUDENT"
           ? {
-              collegeName: studentCollegeName.trim(),
-              collegeCode: studentCollegeCode.trim().toUpperCase() || undefined,
+              collegeCode: studentCollegeCode.trim().toUpperCase(),
+              collegeName: matchedCollegeByCode?.name || undefined,
               rollNumber: studentRollNumber.trim(),
               tenureStartYear: Number(tenureStartYear),
               tenureEndYear: Number(tenureEndYear),
@@ -169,7 +162,7 @@ function RegisterForm() {
           {accountType === "COLLEGE_ADMIN"
             ? "Register with your Name, College Name, and College Email to generate your Unique College ID."
             : accountType === "COLLEGE_STUDENT"
-            ? "Register with your mandatory College Name and Roll No. / Student ID to attend college examinations."
+            ? "Register with your Name, Email, College Unique ID, Roll No., Tenure, and Password to attend college examinations."
             : "Practice algorithmic coding challenges and track your engineering progress."}
         </p>
       </div>
@@ -330,13 +323,13 @@ function RegisterForm() {
           </div>
         )}
 
-        {/* Option 1: "Are you a student?" -> Mandatory College Name & Mandatory Roll No / Student ID */}
+        {/* Option 1: "Are you a student?" -> Mandatory College Unique ID, Roll No / Student ID & Tenure */}
         {accountType === "COLLEGE_STUDENT" && (
           <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/25 space-y-3">
             <div className="text-xs font-bold text-brand-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5" />
-                <span>Mandatory Student Details (College Name &amp; Roll No. / ID)</span>
+                <span>Mandatory Student Details (College Unique ID, Roll No. &amp; Tenure)</span>
               </span>
               <Link href="/login" className="text-[11px] underline hover:text-brand-300">
                 Already registered? Log in
@@ -344,51 +337,26 @@ function RegisterForm() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="relative">
+              <div>
                 <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                  College Name *
+                  College Unique ID *
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={studentCollegeName}
-                  onFocus={() => setShowCollegeDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowCollegeDropdown(false), 180)}
-                  onChange={(e) => {
-                    setStudentCollegeName(e.target.value);
-                    setStudentCollegeCode("");
-                    setShowCollegeDropdown(true);
-                  }}
-                  placeholder="Type your college name (e.g. IIT Bombay)"
-                  autoComplete="off"
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-
-                {showCollegeDropdown && studentCollegeName.trim().length > 0 && filteredSuggestions.length > 0 && (
-                  <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
-                    {filteredSuggestions.slice(0, 8).map((col) => (
-                      <button
-                        key={col.id}
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setStudentCollegeName(col.name);
-                          setStudentCollegeCode(col.collegeCode);
-                          setShowCollegeDropdown(false);
-                        }}
-                        className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-2 text-xs"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-semibold text-foreground truncate">{col.name}</div>
-                          {col.city && (
-                            <div className="text-[10px] text-slate-400 truncate">{col.city}</div>
-                          )}
-                        </div>
-                        <span className="shrink-0 font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
-                          {col.collegeCode}
-                        </span>
-                      </button>
-                    ))}
+                <div className="relative">
+                  <KeyRound className="h-3.5 w-3.5 text-brand-400 absolute left-3 top-2.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    value={studentCollegeCode}
+                    onChange={(e) => setStudentCollegeCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. KS-57BMQ9"
+                    autoComplete="off"
+                    className="w-full pl-8 pr-3 py-2 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+                {matchedCollegeByCode && (
+                  <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
+                    <Check className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Verified: {matchedCollegeByCode.name}</span>
                   </div>
                 )}
               </div>
@@ -403,52 +371,42 @@ function RegisterForm() {
                   value={studentRollNumber}
                   onChange={(e) => setStudentRollNumber(e.target.value)}
                   placeholder="e.g. 23B030014"
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground font-mono text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
               <div>
-                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                  College ID (if known)
-                </label>
-                <input
-                  type="text"
-                  value={studentCollegeCode}
-                  onChange={(e) => setStudentCollegeCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. KS-57BMQ9"
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                  Admission Year
+                <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                  Tenure Admission Year *
                 </label>
                 <input
                   type="number"
+                  required
                   min={2000}
                   max={2040}
                   value={tenureStartYear}
                   onChange={(e) =>
                     setTenureStartYear(parseInt(e.target.value) || currentYear - 2)
                   }
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                  Passing / Grad Year *
+                <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                  Tenure Passing / Grad Year *
                 </label>
                 <input
                   type="number"
+                  required
                   min={2000}
                   max={2045}
                   value={tenureEndYear}
                   onChange={(e) =>
                     setTenureEndYear(parseInt(e.target.value) || currentYear + 2)
                   }
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>

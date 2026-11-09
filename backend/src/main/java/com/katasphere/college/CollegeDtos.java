@@ -56,13 +56,13 @@ public final class CollegeDtos {
     ) {}
 
     /**
-     * Students must provide the college name, the College Unique ID, and their tenure
+     * Students must provide the College Unique ID, Roll No., and their tenure
      * (start year + graduation/passing year) so passed-out candidates don't receive active college exams.
      */
     public record LinkCollegeRequest(
-        @NotBlank(message = "College name is required") @Size(max = 255) String collegeName,
-        @NotBlank(message = "College ID is required") @Size(max = 20) String collegeCode,
-        @Size(max = 64) String rollNumber,
+        @Size(max = 255) String collegeName,
+        @NotBlank(message = "College Unique ID is required") @Size(max = 20) String collegeCode,
+        @NotBlank(message = "Roll No. / Student ID is required") @Size(max = 64) String rollNumber,
         @Min(1990) @Max(2050) Integer tenureStartYear,
         @NotNull(message = "Graduation / Passing year is required") @Min(1990) @Max(2055) Integer tenureEndYear
     ) {
