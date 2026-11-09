@@ -47,19 +47,34 @@ public class ContestService {
 
     @Transactional
     public ContestDto createContest(CreateContestRequest req, User admin, College college) {
-        if (college == null) {
-            throw new IllegalStateException("Please register your college in your Profile before scheduling a contest.");
+        if (admin == null || (!"COLLEGE_ADMIN".equalsIgnoreCase(admin.getRole()) && !"ADMIN".equalsIgnoreCase(admin.getRole()))) {
+            throw new IllegalStateException("Only a registered College Admin can create a contest.");
+        }
+
+        if (college == null || !admin.getId().equals(college.getAdminUserId())) {
+            throw new IllegalStateException("Only the registered Admin of a college can create contests for that institution.");
+        }
+
+        boolean hasPurchasedPlan = college.getPlanCode() != null
+            && !"NONE".equalsIgnoreCase(college.getPlanCode())
+            && college.getContestQuotaTotal() > 0;
+
+        if (!hasPurchasedPlan) {
+            throw new IllegalStateException(
+                "Only a College Admin with a valid purchased plan can create a contest. Please purchase a plan (3/month, 6/month, or 20/year) or top-up contests first."
+            );
+        }
+
+        if (college.getPlanExpiresAt() != null && college.getPlanExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalStateException(
+                "Your college contest plan has expired. Please renew or extend your plan to schedule new contests."
+            );
         }
 
         if (college.getContestsLeft() <= 0) {
-            if (college.getContestQuotaTotal() == 0) {
-                throw new IllegalStateException(
-                    "No active contest plan selected (0 contests available). Please choose a plan (3/month, 6/month, or 20/year) or purchase contests in your Profile."
-                );
-            }
             throw new IllegalStateException(
                 "Contest quota exhausted (0 of " + college.getContestQuotaTotal()
-                + " contests left). Please extend your plan or purchase additional contests in your Profile."
+                + " contests left). Please extend your plan or purchase additional contests to schedule a new contest."
             );
         }
 

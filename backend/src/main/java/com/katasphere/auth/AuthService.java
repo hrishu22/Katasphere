@@ -45,15 +45,30 @@ public class AuthService {
         }
 
         boolean isCollegeAdmin = "COLLEGE_ADMIN".equalsIgnoreCase(request.accountType());
+        boolean isCollegeStudent = "COLLEGE_STUDENT".equalsIgnoreCase(request.accountType())
+            || "STUDENT".equalsIgnoreCase(request.accountType());
 
         if (isCollegeAdmin) {
             if (request.collegeName() == null || request.collegeName().isBlank()) {
-                throw new IllegalArgumentException("College name is required when registering as a College Admin");
+                throw new IllegalArgumentException("College name is required when registering to create contests");
+            }
+        } else if (isCollegeStudent) {
+            if (request.collegeName() == null || request.collegeName().isBlank()) {
+                throw new IllegalArgumentException("College name is mandatory for student registration");
+            }
+            if (request.rollNumber() == null || request.rollNumber().isBlank()) {
+                throw new IllegalArgumentException("Roll number / Student ID is mandatory for student registration");
             }
         }
 
         User user = new User(request.name().trim(), normalizedEmail, null);
-        user.setRole(isCollegeAdmin ? "COLLEGE_ADMIN" : "USER");
+        if (isCollegeAdmin) {
+            user.setRole("COLLEGE_ADMIN");
+        } else if (isCollegeStudent) {
+            user.setRole("COLLEGE_STUDENT");
+        } else {
+            user.setRole("USER");
+        }
         user = userRepository.save(user);
 
         String passwordHash = passwordEncoder.encode(request.password());
@@ -71,16 +86,18 @@ public class AuthService {
                 request.department(),
                 null, null, null, null, null, "India"
             ));
-        } else if (request.collegeName() != null && !request.collegeName().isBlank()
-                && request.collegeCode() != null && !request.collegeCode().isBlank()) {
+        } else if (isCollegeStudent || (request.collegeName() != null && !request.collegeName().isBlank())) {
+            Integer startYear = request.tenureStartYear() != null
+                ? request.tenureStartYear()
+                : java.time.Year.now().getValue() - 2;
             Integer endYear = request.tenureEndYear() != null
                 ? request.tenureEndYear()
                 : java.time.Year.now().getValue() + 2;
             collegeService.linkStudent(user, new LinkCollegeRequest(
                 request.collegeName().trim(),
-                request.collegeCode().trim(),
+                request.collegeCode() != null ? request.collegeCode().trim() : "",
                 request.rollNumber(),
-                request.tenureStartYear(),
+                startYear,
                 endYear
             ));
         }
@@ -102,27 +119,14 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        // Backfill role if user previously registered a college before role separation
+        // Ensure stored role accurately reflects user, college student, or college admin
         boolean ownsCollege = collegeRepository.findByAdminUserId(user.getId()).isPresent();
         if (ownsCollege && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
             user.setRole("COLLEGE_ADMIN");
             user = userRepository.save(user);
-        }
-
-        boolean isAdminRole = "COLLEGE_ADMIN".equalsIgnoreCase(user.getRole())
-            || "ADMIN".equalsIgnoreCase(user.getRole())
-            || ownsCollege;
-
-        if ("COLLEGE_ADMIN".equalsIgnoreCase(request.loginAs()) && !isAdminRole) {
-            throw new IllegalArgumentException(
-                "This account is registered as a Student/Candidate, not a College Admin. Please switch to 'Student / Candidate' login."
-            );
-        }
-
-        if ("USER".equalsIgnoreCase(request.loginAs()) && isAdminRole) {
-            throw new IllegalArgumentException(
-                "This account is a registered College Admin account. Please switch to 'College Admin / Faculty' login."
-            );
+        } else if (!ownsCollege && user.getCollegeId() != null && "USER".equalsIgnoreCase(user.getRole())) {
+            user.setRole("COLLEGE_STUDENT");
+            user = userRepository.save(user);
         }
 
         return UserDto.fromEntity(user);

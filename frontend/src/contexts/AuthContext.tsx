@@ -23,7 +23,7 @@ export interface RegisterOptions {
   name: string;
   email: string;
   password: string;
-  accountType?: "USER" | "COLLEGE_ADMIN";
+  accountType?: "USER" | "COLLEGE_STUDENT" | "COLLEGE_ADMIN";
   collegeName?: string;
   officialCollegeEmail?: string;
   expectedStudents?: number;

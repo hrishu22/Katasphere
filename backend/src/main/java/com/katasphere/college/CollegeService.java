@@ -455,16 +455,29 @@ public class CollegeService {
             throw new IllegalArgumentException("Graduation / Passing Year cannot be earlier than Admission / Start Year.");
         }
 
-        String code = req.collegeCode().trim().toUpperCase(Locale.ROOT);
-        College c = collegeRepository.findByCollegeCode(code)
-            .filter(col -> normalize(col.getName()).equals(normalize(req.collegeName())))
-            .orElseThrow(() -> new IllegalArgumentException(
-                "College name and College ID do not match. Please select a college from the suggestions or check the details shared by your college."));
+        String code = req.collegeCode() != null ? req.collegeCode().trim().toUpperCase(Locale.ROOT) : "";
+        College c;
+        if (!code.isEmpty()) {
+            c = collegeRepository.findByCollegeCode(code)
+                .filter(col -> normalize(col.getName()).equals(normalize(req.collegeName())))
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "College name and College ID do not match. Please select a college from the suggestions or check the details shared by your college."));
+        } else {
+            String targetName = normalize(req.collegeName());
+            c = collegeRepository.findAllByOrderByNameAsc().stream()
+                .filter(col -> normalize(col.getName()).equals(targetName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "College not found in registered institutions. Please select your college from the registered suggestions or enter your College ID."));
+        }
 
         student.setCollegeId(c.getId());
         student.setCollegeRollNumber(blankToNull(req.rollNumber()));
         student.setTenureStartYear(req.tenureStartYear());
         student.setTenureEndYear(req.tenureEndYear());
+        if (!"ADMIN".equalsIgnoreCase(student.getRole()) && !"COLLEGE_ADMIN".equalsIgnoreCase(student.getRole())) {
+            student.setRole("COLLEGE_STUDENT");
+        }
         userRepository.save(student);
         return toStudentDto(c, student);
     }

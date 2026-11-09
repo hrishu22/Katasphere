@@ -13,6 +13,10 @@ import {
   getExportGradebookUrl,
   getMyCollegeContext,
   registerCollege,
+  updateMyCollege,
+  getCollegePlans,
+  selectOrExtendCollegePlan,
+  purchaseAdditionalContests,
 } from "@/lib/contest-api";
 import { apiClient, ApiResponse } from "@/lib/api-client";
 import {
@@ -21,6 +25,7 @@ import {
   ContestSubmissionDto,
   CreateContestPayload,
   CollegeAdminDto,
+  CollegePlanOptionDto,
 } from "@/types/contest";
 import {
   ShieldCheck,
@@ -66,6 +71,18 @@ export default function AdminContestsPage() {
   const [loading, setLoading] = useState(true);
   const [catalogProblems, setCatalogProblems] = useState<CatalogProblemSummary[]>([]);
   const [adminCollege, setAdminCollege] = useState<CollegeAdminDto | null>(null);
+  const [collegePlans, setCollegePlans] = useState<CollegePlanOptionDto[]>([]);
+
+  // Post-registration setup & plan purchase state (shown right on Admin Portal after registering)
+  const [showSetupAndPlans, setShowSetupAndPlans] = useState(false);
+  const [setupFullName, setSetupFullName] = useState("");
+  const [setupAddress, setSetupAddress] = useState("");
+  const [setupCity, setSetupCity] = useState("");
+  const [setupExpectedStudents, setSetupExpectedStudents] = useState<number>(100);
+  const [selectedPlanCode, setSelectedPlanCode] = useState<string>("STARTER_MONTHLY");
+  const [topUpCount, setTopUpCount] = useState<number>(2);
+  const [savingSetup, setSavingSetup] = useState(false);
+  const [setupMsg, setSetupMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Inline College Registration state (if admin hasn't registered a college yet)
   const [regName, setRegName] = useState("");
@@ -118,14 +135,24 @@ export default function AdminContestsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [data, ctx] = await Promise.all([
+      const [data, ctx, plans] = await Promise.all([
         getFacultyContests(),
         getMyCollegeContext().catch(() => ({ adminCollege: null, studentCollege: null })),
+        getCollegePlans().catch(() => []),
       ]);
       setContests(data);
+      setCollegePlans(plans);
       if (ctx.adminCollege) {
-        setAdminCollege(ctx.adminCollege);
-        setFormCollege(ctx.adminCollege.name);
+        const col = ctx.adminCollege;
+        setAdminCollege(col);
+        setFormCollege(col.name);
+        setSetupFullName(col.name || "");
+        setSetupAddress(col.address || "");
+        setSetupCity(col.city || "");
+        setSetupExpectedStudents(col.expectedStudents || 100);
+        if (col.planCode === "NONE" || col.contestQuotaTotal === 0 || !col.address) {
+          setShowSetupAndPlans(true);
+        }
       } else if (user?.email) {
         setRegEmail(user.email);
       }
@@ -133,6 +160,81 @@ export default function AdminContestsPage() {
       console.error("Failed to load faculty contests", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveDetailsAndPurchasePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminCollege) return;
+    setSetupMsg(null);
+    if (!setupFullName.trim()) {
+      setSetupMsg({ type: "err", text: "College Full Name is required." });
+      return;
+    }
+    if (!setupAddress.trim()) {
+      setSetupMsg({ type: "err", text: "Campus Address is required." });
+      return;
+    }
+    setSavingSetup(true);
+    try {
+      await updateMyCollege({
+        name: setupFullName.trim(),
+        officialEmail: adminCollege.officialEmail,
+        expectedStudents: setupExpectedStudents ? Number(setupExpectedStudents) : 100,
+        address: setupAddress.trim(),
+        city: setupCity.trim() || undefined,
+        department: adminCollege.department || undefined,
+        website: adminCollege.website || undefined,
+        phone: adminCollege.phone || undefined,
+        state: adminCollege.state || undefined,
+        country: adminCollege.country || "India",
+      });
+      const updatedWithPlan = await selectOrExtendCollegePlan(selectedPlanCode);
+      setAdminCollege(updatedWithPlan);
+      setFormCollege(updatedWithPlan.name);
+      setSetupMsg({
+        type: "ok",
+        text: `College details saved & ${updatedWithPlan.planName} activated! You now have ${updatedWithPlan.contestsLeft} contests available to schedule.`,
+      });
+    } catch (err: any) {
+      setSetupMsg({ type: "err", text: err?.message || "Failed to save college details and activate plan." });
+    } finally {
+      setSavingSetup(false);
+    }
+  };
+
+  const handleQuickPurchasePlan = async (planCode: string) => {
+    setSetupMsg(null);
+    setSavingSetup(true);
+    try {
+      const updated = await selectOrExtendCollegePlan(planCode);
+      setAdminCollege(updated);
+      setSetupMsg({
+        type: "ok",
+        text: `${updated.planName} purchased! Total available contests: ${updated.contestsLeft}.`,
+      });
+    } catch (err: any) {
+      setSetupMsg({ type: "err", text: err?.message || "Failed to purchase plan." });
+    } finally {
+      setSavingSetup(false);
+    }
+  };
+
+  const handleTopUpContests = async () => {
+    if (topUpCount < 1) return;
+    setSetupMsg(null);
+    setSavingSetup(true);
+    try {
+      const updated = await purchaseAdditionalContests(topUpCount);
+      setAdminCollege(updated);
+      setSetupMsg({
+        type: "ok",
+        text: `Purchased ${topUpCount} additional contest${topUpCount === 1 ? "" : "s"}! You now have ${updated.contestsLeft} contests left.`,
+      });
+    } catch (err: any) {
+      setSetupMsg({ type: "err", text: err?.message || "Failed to purchase additional contests." });
+    } finally {
+      setSavingSetup(false);
     }
   };
 
@@ -347,6 +449,19 @@ export default function AdminContestsPage() {
                   alert("Please register your college in the card below first so your exams are linked to your official College ID.");
                   return;
                 }
+                const hasValidPurchase =
+                  adminCollege.planCode &&
+                  adminCollege.planCode !== "NONE" &&
+                  adminCollege.contestQuotaTotal > 0 &&
+                  adminCollege.contestsLeft > 0;
+                if (!hasValidPurchase) {
+                  setShowSetupAndPlans(true);
+                  setSetupMsg({
+                    type: "err",
+                    text: "Only the Admin of a college with a valid purchased plan and remaining contest quota can create a contest. Please complete your college details and purchase a Contest Plan below.",
+                  });
+                  return;
+                }
                 setFormCollege(adminCollege.name);
                 generateSlugAndCode();
                 setShowCreateModal(true);
@@ -361,70 +476,270 @@ export default function AdminContestsPage() {
 
         {/* College Registration / Unique ID Banner */}
         {adminCollege ? (
-          <div className="mb-8 p-6 rounded-3xl bg-gradient-to-r from-brand-600/15 via-purple-600/10 to-surface border border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-400">
-                <Building2 className="h-4 w-4" />
-                <span>Registered Institution • {adminCollege.officialEmail}</span>
+          <>
+            <div className="mb-6 p-6 rounded-3xl bg-gradient-to-r from-brand-600/15 via-purple-600/10 to-surface border border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-400">
+                  <Building2 className="h-4 w-4" />
+                  <span>Registered Institution • {adminCollege.officialEmail}</span>
+                </div>
+                <h2 className="text-xl font-extrabold text-foreground">{adminCollege.name}</h2>
+                <p className="text-xs text-slate-400">
+                  Expected Capacity: <strong className="text-foreground">{adminCollege.expectedStudents} students</strong> • Verified Linked Students: <strong className="text-emerald-400">{adminCollege.linkedStudents}</strong>
+                  {adminCollege.address ? (
+                    <> • Address: <strong className="text-slate-300">{adminCollege.address}{adminCollege.city ? `, ${adminCollege.city}` : ""}</strong></>
+                  ) : null}
+                </p>
               </div>
-              <h2 className="text-xl font-extrabold text-foreground">{adminCollege.name}</h2>
-              <p className="text-xs text-slate-400">
-                Expected Capacity: <strong className="text-foreground">{adminCollege.expectedStudents} students</strong> • Verified Linked Students: <strong className="text-emerald-400">{adminCollege.linkedStudents}</strong>
-              </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="px-4 py-2.5 rounded-2xl bg-background border border-amber-500/40 flex items-center gap-3">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
-                    Contest Plan Quota
-                  </span>
-                  <span className="text-sm font-extrabold text-amber-400">
-                    {adminCollege.contestsLeft} Contest{adminCollege.contestsLeft === 1 ? "" : "s"} Left{" "}
-                    <span className="text-[11px] font-normal text-slate-400">
-                      ({adminCollege.contestsUsed}/{adminCollege.contestQuotaTotal} used)
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="px-4 py-2.5 rounded-2xl bg-background border border-amber-500/40 flex items-center gap-3">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
+                      {adminCollege.planName || "No Active Plan"}
                     </span>
-                  </span>
+                    <span className="text-sm font-extrabold text-amber-400">
+                      {adminCollege.contestsLeft} Contest{adminCollege.contestsLeft === 1 ? "" : "s"} Left{" "}
+                      <span className="text-[11px] font-normal text-slate-400">
+                        ({adminCollege.contestsUsed}/{adminCollege.contestQuotaTotal} used)
+                      </span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSetupAndPlans(!showSetupAndPlans)}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition"
+                  >
+                    {adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0
+                      ? "Choose Plan"
+                      : "+ Purchase More"}
+                  </button>
                 </div>
-                <Link
-                  href="/profile"
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold transition"
-                >
-                  + Purchase More
-                </Link>
-              </div>
 
-              <div className="px-4 py-2.5 rounded-2xl bg-background border border-brand-500/40 flex items-center gap-3">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
-                    College Unique ID (Share with Students)
-                  </span>
-                  <span className="font-mono text-lg font-extrabold text-brand-400 tracking-widest">
-                    {adminCollege.collegeCode}
-                  </span>
+                <div className="px-4 py-2.5 rounded-2xl bg-background border border-brand-500/40 flex items-center gap-3">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
+                      College Unique ID (Share with Students)
+                    </span>
+                    <span className="font-mono text-lg font-extrabold text-brand-400 tracking-widest">
+                      {adminCollege.collegeCode}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(adminCollege.collegeCode)}
+                    className="p-2 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground transition"
+                    title="Copy College Unique ID"
+                  >
+                    {copiedCode === adminCollege.collegeCode ? (
+                      <Check className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-brand-400" />
+                    )}
+                  </button>
                 </div>
+
                 <button
-                  onClick={() => copyToClipboard(adminCollege.collegeCode)}
-                  className="p-2 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground transition"
-                  title="Copy College Unique ID"
+                  type="button"
+                  onClick={() => setShowSetupAndPlans(!showSetupAndPlans)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-bold text-foreground transition"
                 >
-                  {copiedCode === adminCollege.collegeCode ? (
-                    <Check className="h-4 w-4 text-emerald-400" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-brand-400" />
-                  )}
+                  <span>{showSetupAndPlans ? "Hide Setup & Plans" : "Edit Details & Plans"}</span>
                 </button>
               </div>
-
-              <Link
-                href="/profile"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-bold text-foreground transition"
-              >
-                <span>Profile &amp; Plans</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
             </div>
-          </div>
+
+            {/* Post-Registration Details & Plan Purchase Panel on Admin Portal */}
+            {(showSetupAndPlans || adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0) && (
+              <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-surface border-2 border-amber-500/40 shadow-xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-1">
+                      <Sparkles className="h-4 w-4" />
+                      <span>
+                        {adminCollege.planCode === "NONE" || adminCollege.contestQuotaTotal === 0
+                          ? "Step 2: Complete College Details & Purchase Contest Plan (Required to Create Contests)"
+                          : "Manage College Details, Plan & Extra Contest Top-Up"}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-extrabold text-foreground">
+                      Complete Institution Details &amp; Activate Contest Quota
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Your Unique College ID is <strong className="font-mono text-brand-400">{adminCollege.collegeCode}</strong>. Only an Admin with a valid purchased plan can schedule coding contests.
+                    </p>
+                  </div>
+                </div>
+
+                {setupMsg && (
+                  <div
+                    className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                      setupMsg.type === "ok"
+                        ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                        : "bg-rose-500/10 border border-rose-500/30 text-rose-400"
+                    }`}
+                  >
+                    {setupMsg.type === "ok" ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                    )}
+                    <span>{setupMsg.text}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveDetailsAndPurchasePlan} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <label className="block font-semibold text-slate-300 mb-1">
+                        College Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={setupFullName}
+                        onChange={(e) => setSetupFullName(e.target.value)}
+                        placeholder="e.g. Indian Institute of Technology Delhi"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-300 mb-1">
+                        Campus Address *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={setupAddress}
+                        onChange={(e) => setSetupAddress(e.target.value)}
+                        placeholder="e.g. Hauz Khas, Main Campus"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-300 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={setupCity}
+                        onChange={(e) => setSetupCity(e.target.value)}
+                        placeholder="e.g. New Delhi"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-300 mb-1">
+                        No. of Students (Optional)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100000}
+                        value={setupExpectedStudents}
+                        onChange={(e) => setSetupExpectedStudents(parseInt(e.target.value) || 100)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Choose Plan Cards */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-2">
+                      Choose a Contest Plan *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {collegePlans.map((plan) => {
+                        const isSelected = selectedPlanCode === plan.planCode;
+                        return (
+                          <div
+                            key={plan.planCode}
+                            onClick={() => setSelectedPlanCode(plan.planCode)}
+                            className={`cursor-pointer p-4 rounded-2xl border transition flex flex-col justify-between ${
+                              isSelected
+                                ? "bg-brand-500/15 border-brand-500 shadow-md"
+                                : "bg-background border-surface-border hover:border-brand-500/40"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-extrabold text-foreground">
+                                  {plan.name}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                                  {plan.contestsIncluded} Contests
+                                </span>
+                              </div>
+                              <div className="mt-2 text-xl font-black text-foreground">
+                                ₹{plan.priceInr.toLocaleString("en-IN")}{" "}
+                                <span className="text-[11px] font-normal text-slate-400">
+                                  {plan.periodLabel}
+                                </span>
+                              </div>
+                              <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
+                                {plan.description}
+                              </p>
+                            </div>
+                            <div className="mt-3 pt-2 border-t border-surface-border flex items-center justify-between text-[11px]">
+                              <span className="text-slate-400">
+                                Top-up: ₹{plan.topUpPricePerContestInr}/contest
+                              </span>
+                              <button
+                                type="button"
+                                disabled={savingSetup}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickPurchasePlan(plan.planCode);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold text-[10px]"
+                              >
+                                {adminCollege.planCode === plan.planCode ? "Extend Plan" : "Buy Plan"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-surface-border">
+                    <button
+                      type="submit"
+                      disabled={savingSetup}
+                      className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-lg shadow-brand-600/20"
+                    >
+                      {savingSetup
+                        ? "Saving & Activating Plan..."
+                        : "Save College Details & Purchase Selected Plan"}
+                    </button>
+
+                    {/* Extra Contest Top-Up Calculator */}
+                    <div className="flex flex-wrap items-center gap-2.5 bg-background px-4 py-2 rounded-xl border border-surface-border text-xs">
+                      <span className="text-slate-300 font-semibold">Need extra contests only?</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        value={topUpCount}
+                        onChange={(e) => setTopUpCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-16 px-2 py-1 rounded-lg bg-surface border border-surface-border text-foreground font-bold text-center"
+                      />
+                      <span className="text-amber-400 font-extrabold">
+                        Cost: ₹{(topUpCount * (adminCollege.topUpPricePerContestInr || 499)).toLocaleString("en-IN")}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={savingSetup}
+                        onClick={handleTopUpContests}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] transition"
+                      >
+                        Purchase +{topUpCount} Contest{topUpCount === 1 ? "" : "s"}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
+          </>
         ) : !loading && user ? (
           <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-surface border-2 border-brand-500/40 shadow-xl">
             <div className="flex items-center gap-2 text-brand-400 text-xs font-bold mb-1">

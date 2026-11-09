@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,8 +13,6 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  GraduationCap,
-  Building2,
   ShieldCheck,
 } from "lucide-react";
 
@@ -25,10 +23,8 @@ function LoginForm() {
   const isAdminPortalRequested =
     searchParams?.get("role") === "admin" ||
     Boolean(explicitRedirect && explicitRedirect.startsWith("/admin"));
-  const initialRole = isAdminPortalRequested ? "COLLEGE_ADMIN" : "USER";
 
   const { login } = useAuth();
-  const [loginAs, setLoginAs] = useState<"USER" | "COLLEGE_ADMIN">(initialRole);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,27 +32,36 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isAdminPortalRequested) {
-      setLoginAs("COLLEGE_ADMIN");
-    }
-  }, [isAdminPortalRequested]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const loggedInUser = await login(email, password, rememberMe, loginAs);
+      const loggedInUser = await login(email, password, rememberMe);
+      const isAdmin =
+        loggedInUser.role === "COLLEGE_ADMIN" ||
+        loggedInUser.role === "ADMIN" ||
+        Boolean(loggedInUser.isCollegeAdmin);
+      const isCollegeStudent =
+        loggedInUser.role === "COLLEGE_STUDENT" ||
+        Boolean(loggedInUser.collegeId && !isAdmin);
+
+      // If the user clicked "Faculty Console" (/admin/contests), require a College Admin account
+      if (isAdminPortalRequested && !isAdmin) {
+        setError(
+          "Faculty Console access requires a registered College Admin account. Please sign in with your College Admin credentials."
+        );
+        setLoading(false);
+        return;
+      }
+
       if (explicitRedirect) {
         router.push(explicitRedirect);
-      } else if (
-        loginAs === "COLLEGE_ADMIN" ||
-        loggedInUser.role === "COLLEGE_ADMIN" ||
-        loggedInUser.isCollegeAdmin
-      ) {
+      } else if (isAdmin) {
         router.push("/admin/contests");
+      } else if (isCollegeStudent && !loggedInUser.isTenureExpired) {
+        router.push("/contests");
       } else {
         router.push("/dashboard");
       }
@@ -74,12 +79,10 @@ function LoginForm() {
           <Code2 className="h-6 w-6" />
         </div>
         <h2 className="text-2xl font-bold text-foreground tracking-tight">
-          {loginAs === "COLLEGE_ADMIN" ? "College Admin Sign In" : "Sign in to Katasphere"}
+          Sign in to Katasphere
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {loginAs === "COLLEGE_ADMIN"
-            ? "Sign in with your verified College Admin account to access the Faculty Console."
-            : "Select your portal and enter your credentials to continue."}
+          Enter your credentials to sign in. Your account type (User, College Student, or College Admin) is detected automatically.
         </p>
       </div>
 
@@ -87,46 +90,11 @@ function LoginForm() {
         <div className="p-3.5 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-start gap-2.5 text-brand-400 text-xs">
           <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-brand-400" />
           <span>
-            <strong>Faculty Console Access:</strong> Please sign in as a{" "}
-            <strong>College Admin</strong> to manage your institution&apos;s coding examinations and proctoring logs.
+            <strong>Faculty Console Access:</strong> Please sign in with your{" "}
+            <strong>College Admin</strong> account to manage examinations and proctoring logs.
           </span>
         </div>
       )}
-
-      {/* Role Selector: Student / Candidate vs College Admin */}
-      <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-background border border-surface-border">
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setLoginAs("USER");
-          }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
-            loginAs === "USER"
-              ? "bg-brand-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-foreground"
-          }`}
-        >
-          <GraduationCap className="h-4 w-4" />
-          <span>Student / Candidate</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setLoginAs("COLLEGE_ADMIN");
-          }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
-            loginAs === "COLLEGE_ADMIN"
-              ? "bg-brand-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-foreground"
-          }`}
-        >
-          <Building2 className="h-4 w-4" />
-          <span>College Admin</span>
-        </button>
-      </div>
 
       {error && (
         <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-start space-x-2.5 text-rose-500 text-xs">
@@ -138,16 +106,14 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-            {loginAs === "COLLEGE_ADMIN" ? "Faculty / Admin Email" : "Email Address"}
+            Email Address
           </label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={
-              loginAs === "COLLEGE_ADMIN" ? "dean.exams@college.edu.in" : "student@university.edu.in"
-            }
+            placeholder="you@example.com"
             className="w-full px-3.5 py-2.5 rounded-lg bg-surface-subtle border border-surface-border text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition"
           />
         </div>
@@ -201,11 +167,7 @@ function LoginForm() {
               <span>Signing in...</span>
             </>
           ) : (
-            <span>
-              {loginAs === "COLLEGE_ADMIN"
-                ? "Sign In as College Admin"
-                : "Sign In as Student / Candidate"}
-            </span>
+            <span>Sign In</span>
           )}
         </button>
       </form>
@@ -251,10 +213,10 @@ function LoginForm() {
       <p className="text-center text-xs text-slate-500">
         Don&apos;t have an account?{" "}
         <Link
-          href={`/register${loginAs === "COLLEGE_ADMIN" ? "?role=admin" : ""}`}
+          href={`/register${isAdminPortalRequested ? "?role=admin" : ""}`}
           className="text-brand-500 hover:text-brand-400 font-medium"
         >
-          {loginAs === "COLLEGE_ADMIN" ? "Register your college" : "Create student account"}
+          Create an account
         </Link>
       </p>
 

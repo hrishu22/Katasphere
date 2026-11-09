@@ -17,32 +17,37 @@ import {
   GraduationCap,
   Building2,
   KeyRound,
-  Calendar,
   Check,
+  User,
 } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const explicitRedirect = searchParams?.get("redirect") || searchParams?.get("returnTo");
-  const initialAccountType = searchParams?.get("role") === "admin" ? "COLLEGE_ADMIN" : "USER";
+  const roleParam = searchParams?.get("role");
+  const initialAccountType: "USER" | "COLLEGE_STUDENT" | "COLLEGE_ADMIN" =
+    roleParam === "admin"
+      ? "COLLEGE_ADMIN"
+      : roleParam === "student"
+      ? "COLLEGE_STUDENT"
+      : "USER";
 
   const { register } = useAuth();
 
-  const [accountType, setAccountType] = useState<"USER" | "COLLEGE_ADMIN">(initialAccountType);
+  const [accountType, setAccountType] = useState<"USER" | "COLLEGE_STUDENT" | "COLLEGE_ADMIN">(
+    initialAccountType
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // College Admin fields
+  // "Want to create contest?" (COLLEGE_ADMIN) fields
   const [collegeName, setCollegeName] = useState("");
-  const [officialCollegeEmail, setOfficialCollegeEmail] = useState("");
-  const [expectedStudents, setExpectedStudents] = useState<number>(100);
-  const [department, setDepartment] = useState("");
 
-  // Optional Student immediate college link fields
+  // "Are you a student?" (COLLEGE_STUDENT) mandatory fields
   const currentYear = new Date().getFullYear();
   const [studentCollegeName, setStudentCollegeName] = useState("");
   const [studentCollegeCode, setStudentCollegeCode] = useState("");
@@ -86,12 +91,16 @@ function RegisterForm() {
 
     if (accountType === "COLLEGE_ADMIN") {
       if (!collegeName.trim()) {
-        setError("College Name is required when registering as a College Admin.");
+        setError("College Name is mandatory to register and create contests.");
         return;
       }
-    } else if (studentCollegeName.trim() || studentCollegeCode.trim()) {
-      if (!studentCollegeName.trim() || !studentCollegeCode.trim()) {
-        setError("Please select a college from suggestions or provide both College Name and College ID.");
+    } else if (accountType === "COLLEGE_STUDENT") {
+      if (!studentCollegeName.trim()) {
+        setError("College Name is mandatory for student registration.");
+        return;
+      }
+      if (!studentRollNumber.trim()) {
+        setError("Roll No. / Student ID is mandatory for student registration.");
         return;
       }
       if (!tenureEndYear || tenureEndYear < tenureStartYear) {
@@ -111,22 +120,27 @@ function RegisterForm() {
         ...(accountType === "COLLEGE_ADMIN"
           ? {
               collegeName: collegeName.trim(),
-              officialCollegeEmail: (officialCollegeEmail.trim() || email.trim()),
+              officialCollegeEmail: email.trim(),
             }
-          : {
-              collegeName: studentCollegeName.trim() || undefined,
+          : accountType === "COLLEGE_STUDENT"
+          ? {
+              collegeName: studentCollegeName.trim(),
               collegeCode: studentCollegeCode.trim().toUpperCase() || undefined,
-              rollNumber: studentRollNumber.trim() || undefined,
-              tenureStartYear: studentCollegeCode.trim() ? Number(tenureStartYear) : undefined,
-              tenureEndYear: studentCollegeCode.trim() ? Number(tenureEndYear) : undefined,
-            }),
+              rollNumber: studentRollNumber.trim(),
+              tenureStartYear: Number(tenureStartYear),
+              tenureEndYear: Number(tenureEndYear),
+            }
+          : {}),
       });
 
       if (explicitRedirect) {
         router.push(explicitRedirect);
       } else if (accountType === "COLLEGE_ADMIN" || registeredUser.role === "COLLEGE_ADMIN") {
-        // Send newly registered College Admin to /profile?setup=1 to complete college details, address, optional students, and choose a Contest Plan
-        router.push("/profile?setup=1");
+        // Redirect straight to the Admin Portal (/admin/contests?onboarding=1) where the new Unique College ID is shown
+        // and we ask the admin for the remaining college details & Contest Plan purchase
+        router.push("/admin/contests?onboarding=1");
+      } else if (accountType === "COLLEGE_STUDENT" || registeredUser.role === "COLLEGE_STUDENT") {
+        router.push("/contests");
       } else {
         router.push("/dashboard");
       }
@@ -145,49 +159,102 @@ function RegisterForm() {
         </div>
         <h2 className="text-2xl font-bold text-foreground tracking-tight">
           {accountType === "COLLEGE_ADMIN"
-            ? "Register as College Admin"
-            : "Create your Student Account"}
+            ? "Register College to Create Contests"
+            : accountType === "COLLEGE_STUDENT"
+            ? "Student Registration"
+            : "Create your Katasphere Account"}
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           {accountType === "COLLEGE_ADMIN"
-            ? "Register your institution to receive an official College Unique ID and conduct proctored exams."
-            : "Practice algorithmic coding challenges and attend your university examinations."}
+            ? "Register with your Name, College Name, and College Email to generate your Unique College ID."
+            : accountType === "COLLEGE_STUDENT"
+            ? "Register with your mandatory College Name and Roll No. / Student ID to attend college examinations."
+            : "Practice algorithmic coding challenges and track your engineering progress."}
         </p>
       </div>
 
-      {/* Role Selector: Student / Candidate vs College Admin */}
-      <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-background border border-surface-border">
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setAccountType("USER");
-          }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
-            accountType === "USER"
-              ? "bg-brand-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-foreground"
-          }`}
-        >
-          <GraduationCap className="h-4 w-4" />
-          <span>Student / Candidate</span>
-        </button>
+      {/* Interactive Registration Prompts:
+          1. "Are you a student? Register / Log in here"
+          2. "Want to create contest?"
+          Plus option to switch back to Normal User */}
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setAccountType(accountType === "COLLEGE_STUDENT" ? "USER" : "COLLEGE_STUDENT");
+            }}
+            className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 ${
+              accountType === "COLLEGE_STUDENT"
+                ? "bg-brand-500/15 border-brand-500 text-foreground shadow-sm"
+                : "bg-background hover:bg-surface-subtle border-surface-border text-slate-300"
+            }`}
+          >
+            <GraduationCap
+              className={`h-4 w-4 shrink-0 mt-0.5 ${
+                accountType === "COLLEGE_STUDENT" ? "text-brand-400" : "text-slate-400"
+              }`}
+            />
+            <div>
+              <div className="text-xs font-bold text-foreground">
+                Are you a student?
+              </div>
+              <div className="text-[11px] text-brand-400 font-semibold">
+                {accountType === "COLLEGE_STUDENT" ? "✓ Student Registration Active" : "Register / Log in here →"}
+              </div>
+            </div>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setAccountType("COLLEGE_ADMIN");
-          }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
-            accountType === "COLLEGE_ADMIN"
-              ? "bg-brand-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-foreground"
-          }`}
-        >
-          <Building2 className="h-4 w-4" />
-          <span>College Admin / Faculty</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setAccountType(accountType === "COLLEGE_ADMIN" ? "USER" : "COLLEGE_ADMIN");
+            }}
+            className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 ${
+              accountType === "COLLEGE_ADMIN"
+                ? "bg-purple-500/15 border-purple-500 text-foreground shadow-sm"
+                : "bg-background hover:bg-surface-subtle border-surface-border text-slate-300"
+            }`}
+          >
+            <Building2
+              className={`h-4 w-4 shrink-0 mt-0.5 ${
+                accountType === "COLLEGE_ADMIN" ? "text-purple-400" : "text-slate-400"
+              }`}
+            />
+            <div>
+              <div className="text-xs font-bold text-foreground">
+                Want to create contest?
+              </div>
+              <div className="text-[11px] text-purple-400 font-semibold">
+                {accountType === "COLLEGE_ADMIN" ? "✓ College Admin Active" : "Register your college →"}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {accountType !== "USER" && (
+          <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
+            <span>
+              Selected Role:{" "}
+              <strong className="text-foreground">
+                {accountType === "COLLEGE_STUDENT" ? "College Student" : "College Admin"}
+              </strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setAccountType("USER");
+              }}
+              className="text-slate-400 hover:text-foreground inline-flex items-center gap-1 underline"
+            >
+              <User className="h-3 w-3" />
+              <span>Switch to Normal User registration</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -201,7 +268,7 @@ function RegisterForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              {accountType === "COLLEGE_ADMIN" ? "Admin / Professor Name *" : "Full Name *"}
+              {accountType === "COLLEGE_ADMIN" ? "Your Name *" : "Full Name *"}
             </label>
             <input
               type="text"
@@ -215,35 +282,36 @@ function RegisterForm() {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              {accountType === "COLLEGE_ADMIN" ? "Login Email *" : "Email Address *"}
+              {accountType === "COLLEGE_ADMIN" ? "College Email ID *" : "Email ID *"}
             </label>
             <input
               type="email"
               required
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (!officialCollegeEmail) setOfficialCollegeEmail(e.target.value);
-              }}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder={
-                accountType === "COLLEGE_ADMIN" ? "sharma@iitd.ac.in" : "student@college.edu.in"
+                accountType === "COLLEGE_ADMIN"
+                  ? "admin@college.edu.in"
+                  : accountType === "COLLEGE_STUDENT"
+                  ? "student@college.edu.in"
+                  : "you@example.com"
               }
               className="w-full px-3.5 py-2.5 rounded-lg bg-surface-subtle border border-surface-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
             />
           </div>
         </div>
 
-        {/* College Admin Mandatory Fields at Signup: College Name & Email */}
-        {accountType === "COLLEGE_ADMIN" ? (
-          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/25 space-y-3">
-            <div className="text-xs font-bold text-brand-400 flex items-center gap-1.5">
+        {/* Option 2: "Want to create contest?" -> Ask for College Name (along with Name & College Email above) */}
+        {accountType === "COLLEGE_ADMIN" && (
+          <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/25 space-y-3">
+            <div className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5" />
-              <span>Step 1: Register with College Name &amp; Official Email</span>
+              <span>Institution Registration (Generates Unique College ID)</span>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                College / University Name *
+                College Name *
               </label>
               <input
                 type="text"
@@ -256,29 +324,34 @@ function RegisterForm() {
             </div>
 
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              After creating your admin account, you will be directed to your Profile to enter your <strong>College Full Name</strong>, <strong>Campus Address</strong>, <strong>Number of Students (optional)</strong>, and choose your <strong>Contest Plan</strong> (3/month, 6/month, or 20/year).
+              Upon registration, we will generate your <strong>Unique College ID</strong> on the Admin Portal and ask for your full college details, campus address, optional student count, and <strong>Contest Plan purchase</strong> before scheduling contests.
             </p>
           </div>
-        ) : (
-          /* Student Optional Immediate Link Fields with Saved College Suggestions & Tenure Year */
-          <div className="p-4 rounded-xl bg-surface-subtle/60 border border-surface-border space-y-3">
-            <div className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+        )}
+
+        {/* Option 1: "Are you a student?" -> Mandatory College Name & Mandatory Roll No / Student ID */}
+        {accountType === "COLLEGE_STUDENT" && (
+          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/25 space-y-3">
+            <div className="text-xs font-bold text-brand-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <KeyRound className="h-3.5 w-3.5 text-brand-400" />
-                <span>Register Your College & Tenure (or link later in Profile)</span>
+                <GraduationCap className="h-3.5 w-3.5" />
+                <span>Mandatory Student Details (College Name &amp; Roll No. / ID)</span>
               </span>
-              <span className="text-[10px] text-slate-500">Unlocks Contests Tab</span>
+              <Link href="/login" className="text-[11px] underline hover:text-brand-300">
+                Already registered? Log in
+              </Link>
             </div>
 
             {/* Saved Colleges Suggestions from DB */}
             {collegeSuggestions.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-[11px] text-slate-400 font-medium">
-                  Registered Colleges in Katasphere (click to auto-fill Name & College ID):
+                  Select your college from our registered institutions (auto-fills College Name &amp; ID):
                 </p>
                 <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                   {filteredSuggestions.slice(0, 8).map((col) => {
-                    const isSelected = studentCollegeCode.toUpperCase() === col.collegeCode.toUpperCase();
+                    const isSelected =
+                      studentCollegeCode.toUpperCase() === col.collegeCode.toUpperCase();
                     return (
                       <button
                         key={col.id}
@@ -306,65 +379,79 @@ function RegisterForm() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input
-                type="text"
-                value={studentCollegeName}
-                onChange={(e) => setStudentCollegeName(e.target.value)}
-                placeholder="College Name (e.g. IIT Delhi)"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs"
-              />
-              <input
-                type="text"
-                value={studentCollegeCode}
-                onChange={(e) => setStudentCollegeCode(e.target.value.toUpperCase())}
-                placeholder="College ID (e.g. KS-57BMQ9)"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs"
-              />
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                  College Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={studentCollegeName}
+                  onChange={(e) => setStudentCollegeName(e.target.value)}
+                  placeholder="e.g. IIT Bombay"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                  Roll No. / Student ID *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={studentRollNumber}
+                  onChange={(e) => setStudentRollNumber(e.target.value)}
+                  placeholder="e.g. 23B030014"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                />
+              </div>
             </div>
 
-            {/* Candidate Tenure Years + Roll Number */}
-            {(studentCollegeName.trim() || studentCollegeCode.trim()) && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                    Admission Year
-                  </label>
-                  <input
-                    type="number"
-                    min={2000}
-                    max={2040}
-                    value={tenureStartYear}
-                    onChange={(e) => setTenureStartYear(parseInt(e.target.value) || currentYear - 2)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                    Passing / Grad Year *
-                  </label>
-                  <input
-                    type="number"
-                    min={2000}
-                    max={2045}
-                    value={tenureEndYear}
-                    onChange={(e) => setTenureEndYear(parseInt(e.target.value) || currentYear + 2)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
-                    Roll Number
-                  </label>
-                  <input
-                    type="text"
-                    value={studentRollNumber}
-                    onChange={(e) => setStudentRollNumber(e.target.value)}
-                    placeholder="e.g. 2024CS101"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                  College ID (if known)
+                </label>
+                <input
+                  type="text"
+                  value={studentCollegeCode}
+                  onChange={(e) => setStudentCollegeCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. KS-57BMQ9"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs"
+                />
               </div>
-            )}
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                  Admission Year
+                </label>
+                <input
+                  type="number"
+                  min={2000}
+                  max={2040}
+                  value={tenureStartYear}
+                  onChange={(e) =>
+                    setTenureStartYear(parseInt(e.target.value) || currentYear - 2)
+                  }
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                  Passing / Grad Year *
+                </label>
+                <input
+                  type="number"
+                  min={2000}
+                  max={2045}
+                  value={tenureEndYear}
+                  onChange={(e) =>
+                    setTenureEndYear(parseInt(e.target.value) || currentYear + 2)
+                  }
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-surface-border text-foreground text-xs"
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -420,8 +507,10 @@ function RegisterForm() {
           ) : (
             <span>
               {accountType === "COLLEGE_ADMIN"
-                ? "Register College & Create Admin Account"
-                : "Create Student Account"}
+                ? "Register College & Open Admin Portal"
+                : accountType === "COLLEGE_STUDENT"
+                ? "Register as College Student"
+                : "Create Account"}
             </span>
           )}
         </button>
@@ -429,10 +518,7 @@ function RegisterForm() {
 
       <p className="text-center text-xs text-slate-500">
         Already have an account?{" "}
-        <Link
-          href={`/login${accountType === "COLLEGE_ADMIN" ? "?role=admin" : ""}`}
-          className="text-brand-500 hover:text-brand-400 font-medium"
-        >
+        <Link href="/login" className="text-brand-500 hover:text-brand-400 font-medium">
           Sign in
         </Link>
       </p>
