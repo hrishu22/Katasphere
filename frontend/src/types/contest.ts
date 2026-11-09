@@ -239,3 +239,113 @@ export interface StudentExamDashboardDto {
   bestRank: number | null;
   averageScorePercent: number;
 }
+
+// ======================== DEDICATED COLLEGE ADMIN DASHBOARD ========================
+
+export interface AdminContestSummaryDto {
+  contestId: string;
+  slug: string;
+  title: string;
+  status: "UPCOMING" | "ACTIVE" | "PAST";
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  totalProblems: number;
+  maxScore: number;
+  totalParticipants: number;
+  submittedCount: number;
+  flaggedCheatersCount: number;
+  totalTabSwitches: number;
+  averageScorePercent: number;
+  topScorerName?: string | null;
+  topScore?: number | null;
+}
+
+export interface AdminParticipantDetailDto {
+  participantId: string;
+  contestId: string;
+  contestSlug: string;
+  contestTitle: string;
+  contestStatus: string;
+  maxScore: number;
+  userId: string;
+  studentName: string;
+  studentEmail: string;
+  rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired: boolean;
+  rank: number;
+  totalParticipants: number;
+  totalScore: number;
+  scorePercent: number;
+  solvedProblems: number;
+  totalProblems: number;
+  penaltySeconds: number;
+  status: string;
+  tabSwitchCount: number;
+  maxTabSwitches: number;
+  isCheaterFlagged: boolean;
+  cheatSeverity: "CRITICAL" | "WARNING" | "CLEAN";
+  startedAt: string;
+  submittedAt?: string | null;
+}
+
+export interface AdminCheatIncidentDto {
+  participantId: string;
+  contestId: string;
+  contestSlug: string;
+  contestTitle: string;
+  userId: string;
+  studentName: string;
+  studentEmail: string;
+  rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  tabSwitchCount: number;
+  maxTabSwitches: number;
+  status: string;
+  severity: "CRITICAL_DISQUALIFIED" | "WARNING_TAB_SWITCH";
+  violationSummary: string;
+  totalScore: number;
+  maxScore: number;
+  rank: number;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export interface AdminEnrolledStudentDto {
+  userId: string;
+  name: string;
+  email: string;
+  rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired: boolean;
+  examsAttempted: number;
+  bestRank?: number | null;
+  averageScorePercent: number;
+  totalTabSwitches: number;
+  flaggedViolationsCount: number;
+  joinedAt: string;
+}
+
+export interface CollegeAdminDashboardDto {
+  college: CollegeAdminDto;
+  totalLinkedStudents: number;
+  activeTenureStudents: number;
+  passedOutStudents: number;
+  totalContestsConducted: number;
+  activeContestsCount: number;
+  upcomingContestsCount: number;
+  completedContestsCount: number;
+  totalParticipations: number;
+  averageScorePercent: number;
+  totalCheatIncidents: number;
+  criticalDisqualifiedCount: number;
+  totalTabSwitchesRecorded: number;
+  contests: AdminContestSummaryDto[];
+  participantsAndRankings: AdminParticipantDetailDto[];
+  cheatIncidents: AdminCheatIncidentDto[];
+  enrolledStudents: AdminEnrolledStudentDto[];
+}

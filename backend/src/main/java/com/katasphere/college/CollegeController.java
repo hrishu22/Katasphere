@@ -52,6 +52,24 @@ public class CollegeController {
         return ResponseEntity.ok(ApiResponse.ok("College context retrieved", collegeService.getContext(user)));
     }
 
+    /**
+     * Dedicated College Admin Dashboard: strictly scoped to the signed-in admin's own college.
+     * Returns all college metrics, student participation details, contest rankings/results,
+     * and anti-cheat violation logs (who cheated, in which contest, and tab switch counts).
+     */
+    @GetMapping("/mine/dashboard")
+    public ResponseEntity<ApiResponse<CollegeAdminDashboardDto>> adminDashboard(HttpServletRequest request) {
+        User user = resolveCurrentUser(request);
+        if (user == null) return unauthorized();
+        try {
+            return ResponseEntity.ok(
+                ApiResponse.ok("College admin dashboard retrieved", collegeService.getAdminDashboard(user))
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     /** Register a new college; caller becomes its admin. */
     @PostMapping
     public ResponseEntity<ApiResponse<CollegeAdminDto>> register(

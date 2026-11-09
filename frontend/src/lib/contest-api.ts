@@ -12,6 +12,7 @@ import {
   LinkCollegePayload,
   CollegeSuggestionDto,
   CollegeAdminDto,
+  CollegeAdminDashboardDto,
   StudentCollegeDto,
   CollegeContextDto,
   StudentExamDashboardDto,
@@ -306,6 +307,13 @@ export async function linkStudentCollege(payload: LinkCollegePayload): Promise<S
 export async function getStudentExamDashboard(): Promise<StudentExamDashboardDto> {
   const res = await apiClient<ApiResponse<StudentExamDashboardDto>>("/api/v1/colleges/me/exams", {
     cacheTtlMs: 8000,
+  });
+  return res.data;
+}
+
+export async function getCollegeAdminDashboard(): Promise<CollegeAdminDashboardDto> {
+  const res = await apiClient<ApiResponse<CollegeAdminDashboardDto>>("/api/v1/colleges/mine/dashboard", {
+    cacheTtlMs: 5000,
   });
   return res.data;
 }

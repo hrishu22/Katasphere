@@ -209,6 +209,237 @@ public class CollegeService {
         return collegeRepository.findByAdminUserId(user.getId());
     }
 
+    /**
+     * Dedicated Admin Dashboard strictly scoped to the signed-in admin's own college.
+     * Aggregates all college metrics, student participation details, rankings/results,
+     * and anti-cheat violation incidents (who cheated, in which contest, and how many tab switches).
+     */
+    @Transactional(readOnly = true)
+    public CollegeAdminDashboardDto getAdminDashboard(User admin) {
+        College college = collegeRepository.findByAdminUserId(admin.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Admin access required: No college registered with this account."));
+
+        CollegeAdminDto collegeDto = toAdminDto(college);
+        List<User> enrolledUsers = userRepository.findByCollegeIdOrderByCreatedAtDesc(college.getId());
+        List<Contest> collegeContests = contestRepository.findPublishedByCollege(college.getId(), college.getName());
+
+        long activeTenureStudents = enrolledUsers.stream().filter(u -> !u.isTenureExpired()).count();
+        long passedOutStudents = enrolledUsers.size() - activeTenureStudents;
+
+        Instant now = Instant.now();
+        long activeContestsCount = 0;
+        long upcomingContestsCount = 0;
+        long completedContestsCount = 0;
+
+        long totalParticipations = 0;
+        double totalScorePctSum = 0;
+        long totalScorePctCount = 0;
+
+        long totalCheatIncidents = 0;
+        long criticalDisqualifiedCount = 0;
+        long totalTabSwitchesRecorded = 0;
+
+        List<AdminContestSummaryDto> contestSummaries = new ArrayList<>();
+        List<AdminParticipantDetailDto> participantsAndRankings = new ArrayList<>();
+        List<AdminCheatIncidentDto> cheatIncidents = new ArrayList<>();
+
+        // Track per-student stats across this college's contests
+        Map<UUID, List<AdminParticipantDetailDto>> studentParticipationMap = new HashMap<>();
+
+        for (Contest c : collegeContests) {
+            String status = now.isBefore(c.getStartTime()) ? "UPCOMING" : now.isAfter(c.getEndTime()) ? "PAST" : "ACTIVE";
+            switch (status) {
+                case "ACTIVE" -> activeContestsCount++;
+                case "UPCOMING" -> upcomingContestsCount++;
+                default -> completedContestsCount++;
+            }
+
+            int totalProblems = (int) contestProblemRepository.countByContest(c);
+            int maxScore = contestProblemRepository.sumPointsByContest(c);
+            List<ContestParticipant> lb = participantRepository.findLeaderboardByContest(c);
+
+            long cSubmitted = 0;
+            long cFlagged = 0;
+            long cTabSwitches = 0;
+            double cPctSum = 0;
+            String topScorerName = lb.isEmpty() ? null : lb.get(0).getUser().getName();
+            Integer topScore = lb.isEmpty() ? null : lb.get(0).getTotalScore();
+
+            int rankCounter = 1;
+            for (ContestParticipant cp : lb) {
+                totalParticipations++;
+                User stu = cp.getUser();
+                int solved = (int) submissionRepository.countSolvedProblems(cp);
+                int score = cp.getTotalScore();
+                double scorePct = maxScore > 0 ? Math.round(((100.0 * score) / maxScore) * 10.0) / 10.0 : 0.0;
+
+                cPctSum += scorePct;
+                totalScorePctSum += scorePct;
+                totalScorePctCount++;
+
+                if ("SUBMITTED".equalsIgnoreCase(cp.getStatus())) {
+                    cSubmitted++;
+                }
+
+                int tabs = cp.getTabSwitchCount();
+                int maxTabs = c.getMaxTabSwitches();
+                cTabSwitches += tabs;
+                totalTabSwitchesRecorded += tabs;
+
+                boolean isCritical = "FLAGGED_VIOLATION".equalsIgnoreCase(cp.getStatus())
+                    || (c.isAllowTabSwitch() && tabs > maxTabs);
+                boolean isCheater = isCritical || tabs > 0;
+                String cheatSeverity = isCritical ? "CRITICAL" : (tabs > 0 ? "WARNING" : "CLEAN");
+
+                if (isCheater) {
+                    cFlagged++;
+                    totalCheatIncidents++;
+                    if (isCritical) {
+                        criticalDisqualifiedCount++;
+                    }
+                    String summary = isCritical
+                        ? "Auto-flagged violation: switched tabs/windows " + tabs + " times (limit: " + maxTabs + ")"
+                        : "Suspicious focus loss: switched tabs/windows " + tabs + " time(s) during exam (limit: " + maxTabs + ")";
+
+                    cheatIncidents.add(new AdminCheatIncidentDto(
+                        cp.getId(),
+                        c.getId(),
+                        c.getSlug(),
+                        c.getTitle(),
+                        stu.getId(),
+                        stu.getName(),
+                        stu.getEmail(),
+                        stu.getCollegeRollNumber(),
+                        stu.getTenureStartYear(),
+                        stu.getTenureEndYear(),
+                        tabs,
+                        maxTabs,
+                        cp.getStatus(),
+                        isCritical ? "CRITICAL_DISQUALIFIED" : "WARNING_TAB_SWITCH",
+                        summary,
+                        score,
+                        maxScore,
+                        rankCounter,
+                        cp.getStartedAt(),
+                        cp.getUpdatedAt()
+                    ));
+                }
+
+                AdminParticipantDetailDto detail = new AdminParticipantDetailDto(
+                    cp.getId(),
+                    c.getId(),
+                    c.getSlug(),
+                    c.getTitle(),
+                    status,
+                    maxScore,
+                    stu.getId(),
+                    stu.getName(),
+                    stu.getEmail(),
+                    stu.getCollegeRollNumber(),
+                    stu.getTenureStartYear(),
+                    stu.getTenureEndYear(),
+                    stu.isTenureExpired(),
+                    rankCounter,
+                    lb.size(),
+                    score,
+                    scorePct,
+                    solved,
+                    totalProblems,
+                    cp.getPenaltySeconds(),
+                    cp.getStatus(),
+                    tabs,
+                    maxTabs,
+                    isCheater,
+                    cheatSeverity,
+                    cp.getStartedAt(),
+                    cp.getSubmittedAt()
+                );
+
+                participantsAndRankings.add(detail);
+                studentParticipationMap.computeIfAbsent(stu.getId(), k -> new ArrayList<>()).add(detail);
+                rankCounter++;
+            }
+
+            double cAvg = lb.isEmpty() ? 0.0 : Math.round((cPctSum / lb.size()) * 10.0) / 10.0;
+            contestSummaries.add(new AdminContestSummaryDto(
+                c.getId(),
+                c.getSlug(),
+                c.getTitle(),
+                status,
+                c.getStartTime(),
+                c.getEndTime(),
+                c.getDurationMinutes(),
+                totalProblems,
+                maxScore,
+                lb.size(),
+                cSubmitted,
+                cFlagged,
+                cTabSwitches,
+                cAvg,
+                topScorerName,
+                topScore
+            ));
+        }
+
+        // Sort cheat incidents so CRITICAL violations with highest tab-switch count appear first
+        cheatIncidents.sort(
+            Comparator.comparing((AdminCheatIncidentDto a) -> !"CRITICAL_DISQUALIFIED".equals(a.severity()))
+                .thenComparing(Comparator.comparingInt(AdminCheatIncidentDto::tabSwitchCount).reversed())
+        );
+
+        List<AdminEnrolledStudentDto> enrolledDtos = new ArrayList<>();
+        for (User stu : enrolledUsers) {
+            List<AdminParticipantDetailDto> attempts = studentParticipationMap.getOrDefault(stu.getId(), List.of());
+            int examsAttempted = attempts.size();
+            Integer bestRank = attempts.stream().map(AdminParticipantDetailDto::rank).min(Integer::compareTo).orElse(null);
+            double avgPct = attempts.isEmpty()
+                ? 0.0
+                : Math.round(attempts.stream().mapToDouble(AdminParticipantDetailDto::scorePercent).average().orElse(0.0) * 10.0) / 10.0;
+            int totalTabs = attempts.stream().mapToInt(AdminParticipantDetailDto::tabSwitchCount).sum();
+            int flaggedCount = (int) attempts.stream().filter(AdminParticipantDetailDto::isCheaterFlagged).count();
+
+            enrolledDtos.add(new AdminEnrolledStudentDto(
+                stu.getId(),
+                stu.getName(),
+                stu.getEmail(),
+                stu.getCollegeRollNumber(),
+                stu.getTenureStartYear(),
+                stu.getTenureEndYear(),
+                stu.isTenureExpired(),
+                examsAttempted,
+                bestRank,
+                avgPct,
+                totalTabs,
+                flaggedCount,
+                stu.getCreatedAt()
+            ));
+        }
+
+        double overallAvgPct = totalScorePctCount == 0
+            ? 0.0
+            : Math.round((totalScorePctSum / totalScorePctCount) * 10.0) / 10.0;
+
+        return new CollegeAdminDashboardDto(
+            collegeDto,
+            enrolledUsers.size(),
+            activeTenureStudents,
+            passedOutStudents,
+            collegeContests.size(),
+            activeContestsCount,
+            upcomingContestsCount,
+            completedContestsCount,
+            totalParticipations,
+            overallAvgPct,
+            totalCheatIncidents,
+            criticalDisqualifiedCount,
+            totalTabSwitchesRecorded,
+            contestSummaries,
+            participantsAndRankings,
+            cheatIncidents,
+            enrolledDtos
+        );
+    }
+
     // -------------------------------------------------------------- student side
 
     @Transactional

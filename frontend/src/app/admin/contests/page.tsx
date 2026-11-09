@@ -23,6 +23,7 @@ import {
 } from "@/types/contest";
 import {
   ShieldCheck,
+  ShieldAlert,
   Building2,
   Users,
   Trophy,
@@ -307,21 +308,30 @@ export default function AdminContestsPage() {
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              if (!adminCollege) {
-                alert("Please register your college in the card below first so your exams are linked to your official College ID.");
-                return;
-              }
-              setFormCollege(adminCollege.name);
-              generateSlugAndCode();
-              setShowCreateModal(true);
-            }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition shadow-lg shadow-brand-600/20"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create New Examination</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground font-semibold text-sm transition"
+            >
+              <ShieldAlert className="h-4 w-4 text-rose-400" />
+              <span>Admin Dashboard & Cheats Log</span>
+            </Link>
+            <button
+              onClick={() => {
+                if (!adminCollege) {
+                  alert("Please register your college in the card below first so your exams are linked to your official College ID.");
+                  return;
+                }
+                setFormCollege(adminCollege.name);
+                generateSlugAndCode();
+                setShowCreateModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition shadow-lg shadow-brand-600/20"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create New Examination</span>
+            </button>
+          </div>
         </div>
 
         {/* College Registration / Unique ID Banner */}

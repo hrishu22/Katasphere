@@ -201,4 +201,114 @@ public final class CollegeDtos {
         Integer bestRank,
         double averageScorePercent
     ) {}
+
+    // ======================== DEDICATED COLLEGE ADMIN DASHBOARD DTOs ========================
+
+    public record AdminContestSummaryDto(
+        UUID contestId,
+        String slug,
+        String title,
+        String status,
+        Instant startTime,
+        Instant endTime,
+        int durationMinutes,
+        int totalProblems,
+        int maxScore,
+        long totalParticipants,
+        long submittedCount,
+        long flaggedCheatersCount,
+        long totalTabSwitches,
+        double averageScorePercent,
+        String topScorerName,
+        Integer topScore
+    ) {}
+
+    public record AdminParticipantDetailDto(
+        UUID participantId,
+        UUID contestId,
+        String contestSlug,
+        String contestTitle,
+        String contestStatus,
+        int maxScore,
+        UUID userId,
+        String studentName,
+        String studentEmail,
+        String rollNumber,
+        Integer tenureStartYear,
+        Integer tenureEndYear,
+        boolean isTenureExpired,
+        int rank,
+        long totalParticipants,
+        int totalScore,
+        double scorePercent,
+        int solvedProblems,
+        int totalProblems,
+        int penaltySeconds,
+        String status,
+        int tabSwitchCount,
+        int maxTabSwitches,
+        boolean isCheaterFlagged,
+        String cheatSeverity,       // "CRITICAL" | "WARNING" | "CLEAN"
+        Instant startedAt,
+        Instant submittedAt
+    ) {}
+
+    public record AdminCheatIncidentDto(
+        UUID participantId,
+        UUID contestId,
+        String contestSlug,
+        String contestTitle,
+        UUID userId,
+        String studentName,
+        String studentEmail,
+        String rollNumber,
+        Integer tenureStartYear,
+        Integer tenureEndYear,
+        int tabSwitchCount,
+        int maxTabSwitches,
+        String status,
+        String severity,            // "CRITICAL_DISQUALIFIED" | "WARNING_TAB_SWITCH"
+        String violationSummary,
+        int totalScore,
+        int maxScore,
+        int rank,
+        Instant startedAt,
+        Instant lastUpdatedAt
+    ) {}
+
+    public record AdminEnrolledStudentDto(
+        UUID userId,
+        String name,
+        String email,
+        String rollNumber,
+        Integer tenureStartYear,
+        Integer tenureEndYear,
+        boolean isTenureExpired,
+        int examsAttempted,
+        Integer bestRank,
+        double averageScorePercent,
+        int totalTabSwitches,
+        int flaggedViolationsCount,
+        Instant joinedAt
+    ) {}
+
+    public record CollegeAdminDashboardDto(
+        CollegeAdminDto college,
+        long totalLinkedStudents,
+        long activeTenureStudents,
+        long passedOutStudents,
+        long totalContestsConducted,
+        long activeContestsCount,
+        long upcomingContestsCount,
+        long completedContestsCount,
+        long totalParticipations,
+        double averageScorePercent,
+        long totalCheatIncidents,
+        long criticalDisqualifiedCount,
+        long totalTabSwitchesRecorded,
+        List<AdminContestSummaryDto> contests,
+        List<AdminParticipantDetailDto> participantsAndRankings,
+        List<AdminCheatIncidentDto> cheatIncidents,
+        List<AdminEnrolledStudentDto> enrolledStudents
+    ) {}
 }

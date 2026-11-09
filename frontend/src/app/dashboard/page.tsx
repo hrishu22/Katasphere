@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
+import { CollegeAdminDashboardView } from "@/components/college/CollegeAdminDashboardView";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -170,6 +171,10 @@ export default function DashboardPage() {
   const [loadingDashboard, setLoadingDashboard] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isCollegeAdmin = Boolean(
+    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN")
+  );
+
   // Requirement: Developer dashboard comes after login only
   useEffect(() => {
     if (!isLoading && !user) {
@@ -177,9 +182,9 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  // Fetch real-time dashboard data
+  // Fetch real-time dashboard data for candidate users
   useEffect(() => {
-    if (!user) return;
+    if (!user || isCollegeAdmin) return;
 
     let isMounted = true;
     async function fetchDashboard() {
@@ -209,7 +214,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, isCollegeAdmin]);
 
   if (isLoading || !user) {
     return (
@@ -218,6 +223,15 @@ export default function DashboardPage() {
           <Loader2 className="h-8 w-8 animate-spin text-brand-500 mb-3" />
           <p className="text-sm text-slate-500">Checking authentication...</p>
         </div>
+      </AppShell>
+    );
+  }
+
+  // Dedicated College Admin Dashboard specific to this admin's institution only
+  if (isCollegeAdmin) {
+    return (
+      <AppShell>
+        <CollegeAdminDashboardView />
       </AppShell>
     );
   }
