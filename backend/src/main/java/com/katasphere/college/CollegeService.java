@@ -448,6 +448,9 @@ public class CollegeService {
             throw new IllegalStateException("College administrator accounts cannot enrol as students.");
         }
 
+        if (req.rollNumber() == null || req.rollNumber().isBlank()) {
+            throw new IllegalArgumentException("Roll No. / Student ID is mandatory to register as a student.");
+        }
         if (req.tenureEndYear() == null) {
             throw new IllegalArgumentException("Please provide your Graduation / Tenure Passing Year.");
         }
@@ -503,6 +506,12 @@ public class CollegeService {
             : collegeRepository.findById(userCollegeId(student)).map(c -> toStudentDto(c, student)).orElse(null);
 
         boolean tenureExpired = student.isTenureExpired();
+        // Candidate profile works only during the candidate's active college tenure period
+        if (tenureExpired) {
+            return new StudentExamDashboardDto(
+                collegeDto, true, List.of(), List.of(), List.of(), List.of(), 0, null, 0.0
+            );
+        }
 
         Map<UUID, ContestParticipant> myParticipation = new HashMap<>();
         for (ContestParticipant p : participantRepository.findByUserWithContest(student)) {

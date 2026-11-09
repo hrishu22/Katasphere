@@ -186,21 +186,12 @@ export function Navbar() {
                     )}
 
                     <Link
-                      href="/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
-                    >
-                      <LayoutDashboard className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                      <span>{isCollegeAdminUser ? "Admin Dashboard" : "Dashboard"}</span>
-                    </Link>
-
-                    <Link
                       href="/profile"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
                     >
                       <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                      <span>{isCollegeAdminUser ? "Profile & College ID" : "Profile & College Exams"}</span>
+                      <span>Profile</span>
                     </Link>
 
                     {isCollegeAdminUser && (

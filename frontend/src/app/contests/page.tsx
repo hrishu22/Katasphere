@@ -112,16 +112,16 @@ export default function ContestsPage() {
           {user.isTenureExpired ? (
             <>
               <h1 className="text-2xl font-extrabold text-foreground mb-2">
-                College Tenure Completed (Batch of {user.tenureEndYear})
+                Candidate Profile Tenure Expired (Batch of {user.tenureEndYear})
               </h1>
               <p className="text-sm text-slate-400 mb-6">
-                Because your registered graduation year ({user.tenureEndYear}) has passed, live and upcoming college contests are hidden. You can view your college details, past contest history, and your achieved ranks in your Profile.
+                Candidate profiles and college contests work only during your active college tenure period. Because your graduation year ({user.tenureEndYear}) has passed, you can update your student registration in your Profile if you are currently enrolled in a new program.
               </p>
               <Link
                 href="/profile"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition"
               >
-                <span>View College History & Past Ranks in Profile</span>
+                <span>Update Student Registration in Profile</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </>
@@ -160,6 +160,7 @@ export default function ContestsPage() {
 
   const activeCount = contests.filter((c) => c.status === "ACTIVE").length;
   const upcomingCount = contests.filter((c) => c.status === "UPCOMING").length;
+  const concludedCount = contests.filter((c) => c.status === "CONCLUDED").length;
 
   const handleQuickEnter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,7 +287,7 @@ export default function ContestsPage() {
                   : "text-slate-400 hover:text-foreground"
               }`}
             >
-              Concluded
+              Past Contests ({concludedCount})
             </button>
           </div>
 

@@ -290,8 +290,12 @@ export default function ProfilePage() {
     setLinkError(null);
     setLinkSuccess(null);
 
-    if (!linkName.trim() || !linkCode.trim()) {
-      setLinkError("Both College Name and College Unique ID are mandatory.");
+    if (!linkName.trim()) {
+      setLinkError("College Name is mandatory to register as a student.");
+      return;
+    }
+    if (!linkRoll.trim()) {
+      setLinkError("Roll No. / Student ID is mandatory to register as a student.");
       return;
     }
     if (!linkEndYear || linkEndYear < 1990 || linkEndYear > 2055) {
@@ -308,22 +312,24 @@ export default function ProfilePage() {
       const linked = await linkStudentCollege({
         collegeName: linkName.trim(),
         collegeCode: linkCode.trim().toUpperCase(),
-        rollNumber: linkRoll.trim() || undefined,
+        rollNumber: linkRoll.trim(),
         tenureStartYear: linkStartYear ? Number(linkStartYear) : undefined,
         tenureEndYear: Number(linkEndYear),
       });
       setStudentCollege(linked);
       setEditingStudentLink(false);
       await refreshUser();
-      setLinkSuccess(
-        linked.isTenureExpired
-          ? `Linked to ${linked.name} (${linked.collegeCode}) as Alumni (Batch of ${linked.tenureEndYear}). Past history & ranks are unlocked!`
-          : `Successfully linked to ${linked.name} (${linked.collegeCode})! Active college contests are now unlocked in the Contests tab.`
-      );
-      const dash = await getStudentExamDashboard();
-      setExamDashboard(dash);
       if (linked.isTenureExpired) {
-        setExamTab("PAST_RESULTS");
+        setLinkSuccess(
+          `Your tenure (${linked.tenureStartYear ? `${linked.tenureStartYear}–` : ""}${linked.tenureEndYear}) has ended. Candidate profile works only during active tenure time.`
+        );
+        setExamDashboard(null);
+      } else {
+        setLinkSuccess(
+          `Registered as a student of ${linked.name} (${linked.collegeCode})! The Contests tab is now unlocked with your college's upcoming and past contests.`
+        );
+        const dash = await getStudentExamDashboard();
+        setExamDashboard(dash);
       }
     } catch (err: any) {
       setLinkError(
@@ -390,9 +396,15 @@ export default function ProfilePage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-bold text-foreground">{user.name}</h2>
-                  <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/25 font-bold font-mono">
-                    {adminCollege ? "COLLEGE ADMIN" : studentCollege ? "VERIFIED STUDENT" : user.role}
-                  </span>
+                  {adminCollege ? (
+                    <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/25 font-bold font-mono">
+                      COLLEGE ADMIN
+                    </span>
+                  ) : studentCollege && !studentCollege.isTenureExpired ? (
+                    <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-bold font-mono">
+                      COLLEGE STUDENT
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-1.5">
                   <span className="flex items-center gap-1.5 font-mono">
@@ -1098,9 +1110,9 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        ) : studentCollege ? (
+        ) : studentCollege && !studentCollege.isTenureExpired ? (
           /* ===================================================================
-             MODE B: LINKED STUDENT VIEW — FULL COLLEGE DETAILS + TENURE + HISTORY
+             MODE B: ACTIVE STUDENT CANDIDATE VIEW (WORKS ONLY DURING ACTIVE TENURE)
              =================================================================== */
           <div className="space-y-8">
             {/* Student Linked College Full Details Card */}
@@ -1108,23 +1120,16 @@ export default function ProfilePage() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    {studentCollege.isTenureExpired ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold">
-                        <GraduationCap className="h-3.5 w-3.5" />
-                        <span>Passed Out / Alumni (Batch of {studentCollege.tenureEndYear})</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>Active College Candidate — Contests Unlocked</span>
-                      </span>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>Active College Candidate — Contests Unlocked</span>
+                    </span>
 
                     {studentCollege.tenureEndYear && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background border border-surface-border text-xs font-semibold text-slate-300">
                         <Calendar className="h-3.5 w-3.5 text-brand-400" />
                         <span>
-                          Tenure: {studentCollege.tenureStartYear ? `${studentCollege.tenureStartYear} – ` : "Graduating "}
+                          Active Tenure: {studentCollege.tenureStartYear ? `${studentCollege.tenureStartYear} – ` : "Graduating "}
                           {studentCollege.tenureEndYear}
                         </span>
                       </span>
@@ -1151,7 +1156,7 @@ export default function ProfilePage() {
 
                     {studentCollege.rollNumber && (
                       <span>
-                        Roll / Reg No:{" "}
+                        Roll / Student ID:{" "}
                         <strong className="font-mono text-foreground">{studentCollege.rollNumber}</strong>
                       </span>
                     )}
@@ -1165,17 +1170,28 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setLinkError(null);
-                    setLinkSuccess(null);
-                    setEditingStudentLink(!editingStudentLink);
-                  }}
-                  className="self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-subtle hover:bg-surface-border border border-surface-border text-xs font-semibold text-foreground transition"
-                >
-                  <Edit3 className="h-3.5 w-3.5 text-brand-400" />
-                  <span>{editingStudentLink ? "Close Editor" : "Update College / Tenure Year"}</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2.5 self-start">
+                  <Link
+                    href="/contests"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-md shadow-brand-600/20"
+                  >
+                    <Trophy className="h-3.5 w-3.5" />
+                    <span>Open College Contests (Upcoming &amp; Past)</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setLinkError(null);
+                      setLinkSuccess(null);
+                      setEditingStudentLink(!editingStudentLink);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-subtle hover:bg-surface-border border border-surface-border text-xs font-semibold text-foreground transition"
+                  >
+                    <Edit3 className="h-3.5 w-3.5 text-brand-400" />
+                    <span>{editingStudentLink ? "Close Editor" : "Update Student Details"}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Full College Details Grid for Candidate */}
@@ -1244,21 +1260,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {studentCollege.isTenureExpired && (
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-start gap-3">
-                  <GraduationCap className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-bold">
-                      Your College Tenure ({studentCollege.tenureStartYear ? `${studentCollege.tenureStartYear}–` : ""}
-                      {studentCollege.tenureEndYear}) Has Completed
-                    </p>
-                    <p className="text-[11px] text-slate-300 mt-0.5">
-                      Because you have graduated/passed out from <strong>{studentCollege.name}</strong>, active and upcoming college contests are hidden and the Contests tab is turned off. Your college details, past contest results, and your college&apos;s examination history remain permanently accessible below.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {linkSuccess && (
                 <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -1325,23 +1326,23 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">College Unique ID *</label>
+                      <label className="block font-semibold text-slate-300 mb-1">Roll No. / Student ID *</label>
                       <input
                         type="text"
                         required
-                        value={linkCode}
-                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
-                        className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Roll / Student ID</label>
-                      <input
-                        type="text"
                         value={linkRoll}
                         onChange={(e) => setLinkRoll(e.target.value)}
                         placeholder="e.g. 2026CS1042"
                         className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-300 mb-1">College Unique ID</label>
+                      <input
+                        type="text"
+                        value={linkCode}
+                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                        className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase"
                       />
                     </div>
                   </div>
@@ -1349,10 +1350,11 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-semibold text-slate-300 mb-1">
-                        Admission / Tenure Start Year
+                        Admission / Tenure Start Year *
                       </label>
                       <input
                         type="number"
+                        required
                         min={1995}
                         max={2040}
                         value={linkStartYear}
@@ -1364,7 +1366,7 @@ export default function ProfilePage() {
                       <label className="block font-semibold text-slate-300 mb-1">
                         Graduation / Tenure Passing Year *{" "}
                         <span className="text-[11px] font-normal text-slate-400">
-                          (If &lt; {currentYear}, marks as Passed Out)
+                          (Candidate profile works only during active tenure)
                         </span>
                       </label>
                       <input
@@ -1386,7 +1388,7 @@ export default function ProfilePage() {
                       className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition"
                     >
                       {linking && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      <span>Save College &amp; Tenure</span>
+                      <span>Save Student Details</span>
                     </button>
                   </div>
                 </form>
@@ -1726,73 +1728,52 @@ export default function ProfilePage() {
           </div>
         ) : (
           /* ===================================================================
-             MODE C: UNLINKED USER — STUDENT LINK FORM OR ADMIN COLLEGE REGISTER
+             MODE C: USER / EXPIRED TENURE — REGISTER YOURSELF AS A STUDENT
              =================================================================== */
-          <div className="rounded-3xl bg-surface border border-surface-border overflow-hidden shadow-lg">
-            {/* Switcher Header */}
-            <div className="p-6 sm:p-8 border-b border-surface-border bg-gradient-to-br from-brand-600/10 via-surface to-surface">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold mb-2">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Complete Your Institutional Profile</span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
-                    Connect With Your College on Katasphere
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                    Students must select or enter their <strong>College Name</strong>, <strong>College Unique ID</strong>, and <strong>Tenure Year</strong> to unlock college contests. Faculty/Admins can register their college here to receive a unique College ID.
+          <div className="space-y-6">
+            {studentCollege && studentCollege.isTenureExpired && (
+              <div className="p-6 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex items-start gap-4">
+                <div className="h-11 w-11 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <GraduationCap className="h-6 w-6" />
+                </div>
+                <div className="space-y-1 text-xs">
+                  <h3 className="text-base font-extrabold text-amber-300">
+                    Candidate Profile Tenure Expired ({studentCollege.tenureStartYear ? `${studentCollege.tenureStartYear}–` : ""}{studentCollege.tenureEndYear})
+                  </h3>
+                  <p className="text-slate-300 leading-relaxed">
+                    Your registered tenure at <strong>{studentCollege.name}</strong> ({studentCollege.collegeCode}) ended in <strong>{studentCollege.tenureEndYear}</strong>. Because a candidate profile works only during your active college tenure period, the Contests tab and college examination profile are currently deactivated. If you are enrolled in an active degree program, update your student tenure below.
                   </p>
                 </div>
-
-                {/* Role Tabs */}
-                <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-background border border-surface-border shrink-0 self-start">
-                  <button
-                    type="button"
-                    onClick={() => setOnboardingTab("STUDENT")}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
-                      onboardingTab === "STUDENT"
-                        ? "bg-brand-600 text-white shadow-sm"
-                        : "text-slate-400 hover:text-foreground"
-                    }`}
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    <span>I&apos;m a Student</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOnboardingTab("ADMIN")}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
-                      onboardingTab === "ADMIN"
-                        ? "bg-brand-600 text-white shadow-sm"
-                        : "text-slate-400 hover:text-foreground"
-                    }`}
-                  >
-                    <Building2 className="h-4 w-4" />
-                    <span>Register a College (Admin)</span>
-                  </button>
-                </div>
               </div>
-            </div>
+            )}
 
-            <div className="p-6 sm:p-8">
-              {onboardingTab === "STUDENT" ? (
-                /* STUDENT MANDATORY COLLEGE LINK FORM WITH SAVED DB SUGGESTIONS & TENURE */
+            <div className="rounded-3xl bg-surface border border-surface-border overflow-hidden shadow-lg">
+              <div className="p-6 sm:p-8 border-b border-surface-border bg-gradient-to-br from-brand-600/10 via-surface to-surface">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-400 text-xs font-bold mb-2">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  <span>Student Registration</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
+                  Register Yourself as a College Student
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Enter your <strong>College Name</strong>, mandatory <strong>Roll No. / Student ID</strong>, and <strong>Tenure Years</strong> to unlock the <strong>Contests</strong> tab with your college&apos;s upcoming and past contests.
+                </p>
+              </div>
+
+              <div className="p-6 sm:p-8">
                 <form onSubmit={handleLinkStudent} className="space-y-5 max-w-3xl text-xs">
-                  <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-slate-300 space-y-1">
-                    <div className="font-bold text-brand-300 flex items-center gap-1.5">
-                      <KeyRound className="h-4 w-4" />
-                      <span>Candidate College &amp; Tenure Registration</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Select your college from the saved institutions below (or type your <strong>College Name</strong> &amp; <strong>College Unique ID</strong>) and provide your <strong>Tenure Passing Year</strong>. Active students unlock the <strong>Contests</strong> tab; passed-out alumni automatically have live contests hidden while keeping full college history.
-                    </p>
-                  </div>
-
                   {linkError && (
                     <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 shrink-0" />
                       <span>{linkError}</span>
+                    </div>
+                  )}
+
+                  {linkSuccess && (
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      <span>{linkSuccess}</span>
                     </div>
                   )}
 
@@ -1802,7 +1783,7 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between">
                         <label className="font-semibold text-slate-300 flex items-center gap-1.5">
                           <Building2 className="h-3.5 w-3.5 text-brand-400" />
-                          <span>Saved Colleges in Katasphere (Click any college to auto-fill Name &amp; College ID)</span>
+                          <span>Saved Colleges in Katasphere (Click your college to auto-fill Name &amp; College ID)</span>
                         </label>
                         <span className="text-[11px] text-slate-500">
                           {filteredCollegeSuggestions.length} registered
@@ -1853,14 +1834,14 @@ export default function ProfilePage() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
+                    <div>
                       <label className="block font-semibold text-slate-300 mb-1.5">
                         College / University Name <span className="text-rose-400">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="Search or select your college (e.g. IIT Delhi)"
+                        placeholder="Search or select your college (e.g. IIT Bombay)"
                         value={linkName}
                         onChange={(e) => setLinkName(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -1869,24 +1850,11 @@ export default function ProfilePage() {
 
                     <div>
                       <label className="block font-semibold text-slate-300 mb-1.5">
-                        College Unique ID <span className="text-rose-400">*</span>
+                        Roll No. / Student ID <span className="text-rose-400">*</span>
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. KS-7X9K2P"
-                        value={linkCode}
-                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        University Roll / Registration No.
-                      </label>
-                      <input
-                        type="text"
                         placeholder="e.g. 2026CS1042"
                         value={linkRoll}
                         onChange={(e) => setLinkRoll(e.target.value)}
@@ -1896,39 +1864,53 @@ export default function ProfilePage() {
 
                     <div>
                       <label className="block font-semibold text-slate-300 mb-1.5">
-                        Admission / Tenure Start Year <span className="text-rose-400">*</span>
+                        College Unique ID (Auto-filled on selection)
                       </label>
                       <input
-                        type="number"
-                        required
-                        min={1995}
-                        max={2040}
-                        value={linkStartYear}
-                        onChange={(e) => setLinkStartYear(parseInt(e.target.value) || currentYear - 2)}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        type="text"
+                        placeholder="e.g. KS-57BMQ9"
+                        value={linkCode}
+                        onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground font-mono uppercase tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                     </div>
 
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Graduation / Tenure Passing Year <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min={1995}
-                        max={2045}
-                        value={linkEndYear}
-                        onChange={(e) => setLinkEndYear(parseInt(e.target.value) || currentYear + 2)}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
-                      />
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        {linkEndYear < currentYear
-                          ? `Note: ${linkEndYear} is in the past — you will be registered as Passed Out / Alumni (live contests hidden).`
-                          : `Active student until ${linkEndYear} — unlocks live college contests.`}
-                      </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-slate-300 mb-1.5">
+                          Admission Year <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min={1995}
+                          max={2040}
+                          value={linkStartYear}
+                          onChange={(e) => setLinkStartYear(parseInt(e.target.value) || currentYear - 2)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-background border border-surface-border text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-semibold text-slate-300 mb-1.5">
+                          Passing Year <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min={1995}
+                          max={2045}
+                          value={linkEndYear}
+                          onChange={(e) => setLinkEndYear(parseInt(e.target.value) || currentYear + 2)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-background border border-surface-border text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  <p className="text-[11px] text-slate-400">
+                    Note: Your candidate profile and access to the <strong>Contests</strong> tab remain active only during your college tenure period (until <strong>{linkEndYear}</strong>).
+                  </p>
 
                   <button
                     type="submit"
@@ -1938,192 +1920,17 @@ export default function ProfilePage() {
                     {linking ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Verifying College ID &amp; Tenure...</span>
+                        <span>Registering Student Profile...</span>
                       </>
                     ) : (
                       <>
                         <CheckCircle2 className="h-4 w-4" />
-                        <span>Verify &amp; Register My College</span>
+                        <span>Register as Student &amp; Unlock Contests</span>
                       </>
                     )}
                   </button>
                 </form>
-              ) : (
-                /* ADMIN REGISTER COLLEGE FORM */
-                <form onSubmit={handleSaveCollege} className="space-y-5 text-xs">
-                  <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 text-slate-300 space-y-1">
-                    <div className="font-bold text-purple-300 flex items-center gap-1.5">
-                      <Building2 className="h-4 w-4" />
-                      <span>Institutional Registration for Faculty &amp; Placement Cells</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Register your college with expected student count and official email. Upon registration, a unique <strong>College ID</strong> (e.g. <code className="font-mono text-foreground">KS-XXXXXX</code>) will be generated and displayed on your profile.
-                    </p>
-                  </div>
-
-                  {collegeError && (
-                    <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 shrink-0" />
-                      <span>{collegeError}</span>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        College / University Name <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. IIT Delhi"
-                        value={colName}
-                        onChange={(e) => setColName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Official Email ID of College <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="e.g. exams@iitd.ac.in"
-                        value={colEmail}
-                        onChange={(e) => setColEmail(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        No. of Expected Students (Optional)
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={100000}
-                        placeholder="Optional (e.g. 150)"
-                        value={colExpected}
-                        onChange={(e) => setColExpected(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Choose Your Contest Plan <span className="text-rose-400">*</span>
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {[
-                          { code: "STARTER_MONTHLY", label: "3 Contests / Month", price: "₹1,499 / month" },
-                          { code: "GROWTH_MONTHLY", label: "6 Contests / Month", price: "₹2,499 / month" },
-                          { code: "CAMPUS_YEARLY", label: "20 Contests / Year", price: "₹6,999 / year" },
-                        ].map((p) => (
-                          <button
-                            key={p.code}
-                            type="button"
-                            onClick={() => setColInitialPlan(p.code)}
-                            className={`p-3.5 rounded-xl border text-left transition ${
-                              colInitialPlan === p.code
-                                ? "bg-brand-600 text-white border-brand-500 font-bold"
-                                : "bg-background border-surface-border text-slate-300 hover:border-brand-500/40"
-                            }`}
-                          >
-                            <div className="text-xs font-extrabold">{p.label}</div>
-                            <div className="text-[11px] opacity-85 mt-0.5">{p.price}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Department / School
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Dept. of Computer Science"
-                        value={colDept}
-                        onChange={(e) => setColDept(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. New Delhi"
-                        value={colCity}
-                        onChange={(e) => setColCity(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Delhi"
-                        value={colState}
-                        onChange={(e) => setColState(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        College Website
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://www.iitd.ac.in"
-                        value={colWebsite}
-                        onChange={(e) => setColWebsite(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Contact Phone
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="+91 11 2659 7135"
-                        value={colPhone}
-                        onChange={(e) => setColPhone(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={savingCollege}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition shadow-lg shadow-brand-600/25 disabled:opacity-50"
-                  >
-                    {savingCollege ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Registering College...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4" />
-                        <span>Register College &amp; Generate Unique ID</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
+              </div>
             </div>
           </div>
         )}

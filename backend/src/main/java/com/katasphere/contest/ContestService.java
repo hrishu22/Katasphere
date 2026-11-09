@@ -139,22 +139,21 @@ public class ContestService {
     // ------------------------------------------------------------ tenant access rules
 
     /**
-     * Contests are only visible to signed-in users who have an active registered/linked college.
-     * Passed-out candidates (isTenureExpired == true) cannot view upcoming or active contests
-     * of their passed-out college, though they can still view past contests for history/leaderboard.
+     * Contests are only visible to signed-in users who have an active registered/linked college
+     * and are currently within their active college tenure period (isTenureExpired == false).
      */
     public boolean canView(Contest c, User viewer) {
         if (viewer == null) return false;
         if (isAdminOfTenant(c, viewer) || canManage(c, viewer)) return true;
 
-        boolean hasActiveStudentCollege = viewer.getCollegeId() != null && !viewer.isTenureExpired();
-        boolean isPastContest = Instant.now().isAfter(c.getEndTime());
+        if (viewer.getCollegeId() == null || viewer.isTenureExpired()) {
+            return false;
+        }
 
         if (c.getTenantId() != null) {
-            if (!c.getTenantId().equals(viewer.getCollegeId())) return false;
-            return !viewer.isTenureExpired() || isPastContest;
+            return c.getTenantId().equals(viewer.getCollegeId());
         }
-        return hasActiveStudentCollege;
+        return true;
     }
 
     public boolean canManage(Contest c, User user) {
