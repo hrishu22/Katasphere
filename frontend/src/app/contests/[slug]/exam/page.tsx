@@ -69,6 +69,49 @@ export default function ContestExamWorkspacePage() {
   const [isConsoleExpanded, setIsConsoleExpanded] = useState(true);
   const [activeSampleCaseIndex, setActiveSampleCaseIndex] = useState(0);
 
+  // Resizable Split Pane State (Question / Editor / Output windows)
+  const [leftPanelWidthPct, setLeftPanelWidthPct] = useState<number>(48);
+  const [consoleHeightPx, setConsoleHeightPx] = useState<number>(260);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+  const isDraggingHorizontalRef = useRef<boolean>(false);
+  const isDraggingVerticalRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingHorizontalRef.current && splitContainerRef.current) {
+        const rect = splitContainerRef.current.getBoundingClientRect();
+        const newPct = ((e.clientX - rect.left) / rect.width) * 100;
+        setLeftPanelWidthPct(Math.min(72, Math.max(25, newPct)));
+      }
+      if (isDraggingVerticalRef.current && rightPanelRef.current) {
+        const rect = rightPanelRef.current.getBoundingClientRect();
+        const newHeight = rect.bottom - e.clientY;
+        const maxConsoleHeight = Math.max(180, rect.height - 140);
+        setConsoleHeightPx(Math.min(maxConsoleHeight, Math.max(110, newHeight)));
+        if (!isConsoleExpanded) {
+          setIsConsoleExpanded(true);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingHorizontalRef.current || isDraggingVerticalRef.current) {
+        isDraggingHorizontalRef.current = false;
+        isDraggingVerticalRef.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isConsoleExpanded]);
+
   // Success & Warning Dialogs
   const [submissionSuccessModal, setSubmissionSuccessModal] = useState<ContestSubmissionDto | null>(null);
   const [tabSwitchWarning, setTabSwitchWarning] = useState<number | null>(null);
@@ -447,17 +490,28 @@ export default function ContestExamWorkspacePage() {
       </header>
 
       {/* Main Split Body */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left Panel: Problem Details & Submissions */}
-        <div className="w-full lg:w-1/2 flex flex-col border-r border-surface-border overflow-hidden bg-background">
+      <div
+        ref={splitContainerRef}
+        className="flex-1 min-h-0 min-w-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden"
+      >
+        {/* Left Panel: Question / Problem Statement Window */}
+        <div
+          style={{ width: undefined }}
+          className="w-full lg:w-(--left-panel-width) min-h-[340px] lg:min-h-0 min-w-0 flex flex-col border-b lg:border-b-0 lg:border-r border-surface-border overflow-hidden bg-background shrink-0"
+          ref={(el) => {
+            if (el) {
+              el.style.setProperty("--left-panel-width", `${leftPanelWidthPct}%`);
+            }
+          }}
+        >
           {/* Problem Statement Header */}
           <div className="p-4 border-b border-surface-border bg-surface flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-foreground text-base">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-extrabold text-foreground text-base truncate">
                 {String.fromCharCode(65 + activeProblemIndex)}. {currentProblem?.title}
               </span>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
                   currentProblem?.difficulty === "EASY"
                     ? "bg-emerald-500/10 text-emerald-400"
                     : currentProblem?.difficulty === "MEDIUM"
@@ -469,7 +523,7 @@ export default function ContestExamWorkspacePage() {
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs font-bold text-foreground bg-surface-border px-2.5 py-1 rounded-md">
                 {currentProblem?.points} pts
               </span>
@@ -482,9 +536,9 @@ export default function ContestExamWorkspacePage() {
           </div>
 
           {/* Problem Content Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-slate-300 leading-relaxed">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto overscroll-contain select-text p-6 space-y-6 text-sm text-slate-300 leading-relaxed">
             {/* Description */}
-            <div className="prose prose-invert max-w-none text-xs sm:text-sm whitespace-pre-line">
+            <div className="prose prose-invert max-w-none text-xs sm:text-sm whitespace-pre-line break-words">
               {currentProblem?.description}
             </div>
 
@@ -525,8 +579,24 @@ export default function ContestExamWorkspacePage() {
           </div>
         </div>
 
-        {/* Right Panel: Code Editor + Console Drawer */}
-        <div className="w-full lg:w-1/2 flex flex-col overflow-hidden bg-surface">
+        {/* Horizontal Resize Divider (Desktop) */}
+        <div
+          onMouseDown={() => {
+            isDraggingHorizontalRef.current = true;
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+          }}
+          title="Drag to resize Question and Editor panels"
+          className="hidden lg:flex w-1.5 hover:w-2 bg-surface-border/40 hover:bg-brand-500/60 cursor-col-resize items-center justify-center transition-colors shrink-0 z-10"
+        >
+          <div className="h-8 w-0.5 rounded-full bg-slate-500/60" />
+        </div>
+
+        {/* Right Panel: Code Editor Window + Console Output Window */}
+        <div
+          ref={rightPanelRef}
+          className="flex-1 min-h-[520px] lg:min-h-0 min-w-0 flex flex-col overflow-hidden bg-surface"
+        >
           {/* Editor Header Toolbar */}
           <div className="h-11 border-b border-surface-border px-4 flex items-center justify-between shrink-0 bg-surface">
             {/* Language Selector */}
@@ -574,21 +644,33 @@ export default function ContestExamWorkspacePage() {
             </div>
           </div>
 
-          {/* Monaco Code Editor */}
-          <div className="flex-1 relative overflow-hidden">
+          {/* Monaco Code Editor Window */}
+          <div className="flex-1 min-h-[200px] min-w-0 relative overflow-hidden">
             <CodeEditor
               value={currentCode}
               onChange={handleCodeChange}
               language={language}
-              className="h-full w-full"
+              className="h-full w-full rounded-none border-0"
             />
           </div>
 
-          {/* Bottom Console Drawer */}
+          {/* Vertical Resize Divider between Editor and Output Console */}
           <div
-            className={`border-t border-surface-border bg-background transition-all flex flex-col ${
-              isConsoleExpanded ? "h-64" : "h-10"
-            }`}
+            onMouseDown={() => {
+              isDraggingVerticalRef.current = true;
+              document.body.style.cursor = "row-resize";
+              document.body.style.userSelect = "none";
+            }}
+            title="Drag to resize Editor and Output area"
+            className="h-1.5 hover:h-2 bg-surface-border/50 hover:bg-brand-500/60 cursor-row-resize flex items-center justify-center transition-colors shrink-0 z-10"
+          >
+            <div className="w-8 h-0.5 rounded-full bg-slate-500/60" />
+          </div>
+
+          {/* Bottom Console / Output Window */}
+          <div
+            style={{ height: isConsoleExpanded ? `${consoleHeightPx}px` : "40px" }}
+            className="border-t border-surface-border bg-background flex flex-col min-h-0 min-w-0 overflow-hidden shrink-0"
           >
             {/* Console Toolbar */}
             <div className="h-10 border-b border-surface-border px-4 flex items-center justify-between shrink-0 bg-surface">
@@ -639,12 +721,12 @@ export default function ContestExamWorkspacePage() {
               </button>
             </div>
 
-            {/* Console Body */}
+            {/* Console Scrollable Body */}
             {isConsoleExpanded && (
-              <div className="flex-1 overflow-y-auto p-4 text-xs font-mono">
+              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto overscroll-contain select-text p-4 text-xs font-mono">
                 {activeOutputTab === "TEST_CASES" ? (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {currentProblem?.sampleTestCases?.map((tc, idx) => (
                         <button
                           key={idx}
@@ -664,13 +746,13 @@ export default function ContestExamWorkspacePage() {
                       <div className="space-y-2 mt-2">
                         <div>
                           <span className="text-slate-500 block text-[11px]">Input:</span>
-                          <pre className="p-2 rounded-lg bg-surface text-emerald-400">
+                          <pre className="p-2 rounded-lg bg-surface text-emerald-400 overflow-x-auto">
                             {currentProblem.sampleTestCases[activeSampleCaseIndex].input}
                           </pre>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[11px]">Expected Output:</span>
-                          <pre className="p-2 rounded-lg bg-surface text-foreground">
+                          <pre className="p-2 rounded-lg bg-surface text-foreground overflow-x-auto">
                             {currentProblem.sampleTestCases[activeSampleCaseIndex].expectedOutput}
                           </pre>
                         </div>
@@ -686,7 +768,7 @@ export default function ContestExamWorkspacePage() {
                       </div>
                     ) : sampleRunResult ? (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           <span
                             className={`px-2.5 py-1 rounded-md text-xs font-bold ${
                               sampleRunResult.verdict === "ACCEPTED"
@@ -703,13 +785,13 @@ export default function ContestExamWorkspacePage() {
                         </div>
 
                         {sampleRunResult.compileOutput && (
-                          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/25 overflow-x-auto">
                             <pre className="whitespace-pre-wrap">{sampleRunResult.compileOutput}</pre>
                           </div>
                         )}
 
                         {sampleRunResult.errorMessage && (
-                          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/25 overflow-x-auto">
                             {sampleRunResult.errorMessage}
                           </div>
                         )}
@@ -730,14 +812,14 @@ export default function ContestExamWorkspacePage() {
                                   {tc.passed ? "PASSED" : "FAILED"}
                                 </span>
                               </div>
-                              <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 mt-2">
-                                <div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-400 mt-2">
+                                <div className="min-w-0">
                                   <span className="text-slate-500 block">Your Output:</span>
                                   <pre className="p-1.5 rounded bg-background text-foreground mt-0.5 overflow-x-auto">
                                     {tc.actualOutput || "(none)"}
                                   </pre>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                   <span className="text-slate-500 block">Expected:</span>
                                   <pre className="p-1.5 rounded bg-background text-foreground mt-0.5 overflow-x-auto">
                                     {tc.expectedOutput}

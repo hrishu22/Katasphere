@@ -248,10 +248,10 @@ export function CodeEditor({
   }, [value]);
 
   return (
-    <div className={`relative flex flex-col w-full h-full rounded-xl overflow-hidden border border-surface-border bg-surface shadow-xs ${className}`}>
+    <div className={`relative flex flex-col w-full h-full min-h-0 min-w-0 rounded-xl overflow-hidden border border-surface-border bg-surface shadow-xs ${className}`}>
       {/* Monaco Editor Canvas (Primary IDE engine) */}
       {mounted && !monacoFailed && (
-        <div className={`w-full h-full flex-1 ${monacoLoaded ? "opacity-100" : "opacity-0 absolute pointer-events-none"} transition-opacity duration-200`}>
+        <div className={`w-full h-full flex-1 min-h-0 min-w-0 ${monacoLoaded ? "opacity-100" : "opacity-0 absolute pointer-events-none"} transition-opacity duration-200`}>
           <MonacoEditor
             height="100%"
             width="100%"
@@ -278,17 +278,23 @@ export function CodeEditor({
               suggestOnTriggerCharacters: true,
               acceptSuggestionOnEnter: "on",
               wordWrap: "on",
-              scrollBeyondLastLine: false,
+              scrollBeyondLastLine: true,
+              smoothScrolling: true,
+              mouseWheelScrollSensitivity: 1,
               automaticLayout: true,
               lineNumbers: "on",
               lineDecorationsWidth: 10,
               lineNumbersMinChars: 3,
               renderLineHighlight: "all",
               scrollbar: {
-                verticalScrollbarSize: 8,
-                horizontalScrollbarSize: 8,
+                vertical: "visible",
+                horizontal: "visible",
+                useShadows: true,
+                verticalScrollbarSize: 10,
+                horizontalScrollbarSize: 10,
+                alwaysConsumeMouseWheel: false,
               },
-              padding: { top: 12, bottom: 12 },
+              padding: { top: 12, bottom: 24 },
               cursorBlinking: "smooth",
               cursorSmoothCaretAnimation: "on",
             }}
@@ -298,7 +304,7 @@ export function CodeEditor({
 
       {/* Smart Fallback Editor (Active while Monaco loads or if offline) */}
       {(!mounted || !monacoLoaded || monacoFailed) && (
-        <div className="relative flex flex-1 w-full h-full overflow-hidden bg-surface">
+        <div className="relative flex flex-1 min-h-0 min-w-0 w-full h-full overflow-hidden bg-surface">
           {/* Line Numbers Gutter */}
           <div
             ref={lineNumbersRef}
@@ -312,7 +318,7 @@ export function CodeEditor({
           </div>
 
           {/* Code Textarea with Smart Auto-Indentation & Bracket Pairs */}
-          <div className="relative flex-1 h-full">
+          <div className="relative flex-1 min-h-0 min-w-0 h-full overflow-hidden">
             <textarea
               ref={textareaRef}
               value={value}
@@ -320,7 +326,7 @@ export function CodeEditor({
               onKeyDown={handleKeyDown}
               onScroll={handleScroll}
               readOnly={readOnly}
-              className="w-full h-full py-3 px-4 font-mono text-sm text-foreground bg-transparent resize-none focus:outline-none overflow-auto leading-6 whitespace-pre"
+              className="w-full h-full py-3 px-4 font-mono text-sm text-foreground bg-transparent resize-none focus:outline-none overflow-y-auto overflow-x-auto overscroll-contain leading-6 whitespace-pre"
               spellCheck={false}
               autoCapitalize="off"
               autoComplete="off"
