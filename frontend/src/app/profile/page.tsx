@@ -55,7 +55,7 @@ import {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isLoading, logout, refreshUser } = useAuth();
+  const { user, isLoading, logout, refreshUser, setStudentMode } = useAuth();
   const currentYear = new Date().getFullYear();
 
   // College context state
@@ -316,13 +316,15 @@ export default function ProfilePage() {
       setEditingStudentLink(false);
       await refreshUser();
       if (linked.isTenureExpired) {
+        setStudentMode(false);
         setLinkSuccess(
           `Your tenure (${linked.tenureStartYear ? `${linked.tenureStartYear}–` : ""}${linked.tenureEndYear}) has ended. Candidate profile works only during active tenure time.`
         );
         setExamDashboard(null);
       } else {
+        setStudentMode(true);
         setLinkSuccess(
-          `Registered as a student of ${linked.name} (${linked.collegeCode})! The Contests tab is now unlocked with your college's upcoming and past contests.`
+          `Registered as a student of ${linked.name} (${linked.collegeCode})! Student Mode is now ON and the Contests tab is unlocked.`
         );
         const dash = await getStudentExamDashboard();
         setExamDashboard(dash);

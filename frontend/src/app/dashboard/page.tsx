@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
 import { CollegeAdminDashboardView } from "@/components/college/CollegeAdminDashboardView";
+import { getStudentExamDashboard } from "@/lib/contest-api";
+import { StudentExamDashboardDto, ExamSummaryDto } from "@/types/contest";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -22,6 +24,9 @@ import {
   Activity,
   Flame,
   Check,
+  Trophy,
+  Building2,
+  Calendar,
 } from "lucide-react";
 
 interface SubmissionSummary {
@@ -165,9 +170,10 @@ function renderDifficultyBadge(difficulty?: string) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isStudentMode } = useAuth();
 
   const [dashboard, setDashboard] = useState<UserDashboardData | null>(null);
+  const [studentExamDash, setStudentExamDash] = useState<StudentExamDashboardDto | null>(null);
   const [loadingDashboard, setLoadingDashboard] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -182,7 +188,7 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  // Fetch real-time dashboard data for candidate users
+  // Fetch real-time dashboard data (Student Mode vs Normal User Mode)
   useEffect(() => {
     if (!user || isCollegeAdmin) return;
 
@@ -190,17 +196,25 @@ export default function DashboardPage() {
     async function fetchDashboard() {
       try {
         setLoadingDashboard(true);
-        const res = await apiClient<ApiResponse<UserDashboardData>>(
-          "/api/v1/users/me/dashboard",
-          { timeoutMs: 15000 }
-        );
-        if (isMounted && res && res.data) {
-          setDashboard(res.data);
-          setError(null);
+        if (isStudentMode) {
+          const sDash = await getStudentExamDashboard();
+          if (isMounted) {
+            setStudentExamDash(sDash);
+            setError(null);
+          }
+        } else {
+          const res = await apiClient<ApiResponse<UserDashboardData>>(
+            "/api/v1/users/me/dashboard",
+            { timeoutMs: 15000 }
+          );
+          if (isMounted && res && res.data) {
+            setDashboard(res.data);
+            setError(null);
+          }
         }
       } catch (err: any) {
         if (isMounted) {
-          console.error("Failed to load user dashboard:", err);
+          console.error("Failed to load dashboard:", err);
           setError(err?.message || "Failed to load dashboard progress.");
         }
       } finally {
@@ -214,7 +228,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [user, isCollegeAdmin]);
+  }, [user, isCollegeAdmin, isStudentMode]);
 
   if (isLoading || !user) {
     return (
@@ -232,6 +246,217 @@ export default function DashboardPage() {
     return (
       <AppShell>
         <CollegeAdminDashboardView />
+      </AppShell>
+    );
+  }
+
+  // Dedicated Student Dashboard when Student Toggle is ON
+  if (isStudentMode) {
+    const col = studentExamDash?.college;
+    const liveAndUpcoming: ExamSummaryDto[] = [
+      ...(studentExamDash?.active || []),
+      ...(studentExamDash?.upcoming || []),
+    ];
+    const pastExams: ExamSummaryDto[] = studentExamDash?.past || [];
+
+    return (
+      <AppShell>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+          {/* Student Header Card */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-600/15 via-brand-600/10 to-surface border border-emerald-500/30 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-extrabold">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  <span>Student Mode Active</span>
+                </span>
+                {col?.collegeCode && (
+                  <span className="px-2.5 py-1 rounded-full bg-surface border border-surface-border font-mono text-xs font-extrabold text-brand-400">
+                    College ID: {col.collegeCode}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                {col?.name || "Student"} — Candidate Dashboard
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400">
+                Student: <strong className="text-foreground">{user.name}</strong>
+                {user.collegeRollNumber ? (
+                  <>
+                    {" "}• Roll No / ID:{" "}
+                    <strong className="font-mono text-foreground">{user.collegeRollNumber}</strong>
+                  </>
+                ) : null}
+                {user.tenureEndYear ? (
+                  <>
+                    {" "}• Tenure:{" "}
+                    <strong className="text-foreground">
+                      {user.tenureStartYear ? `${user.tenureStartYear}–` : ""}
+                      {user.tenureEndYear}
+                    </strong>
+                  </>
+                ) : null}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <Link
+                href="/contests"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold transition shadow-lg shadow-brand-600/25"
+              >
+                <Trophy className="h-4 w-4" />
+                <span>Open School Contests</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* 3 Student KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl bg-surface border border-surface-border">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>School Contests Attempted</span>
+                <BookOpen className="h-4 w-4 text-brand-400" />
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-foreground">
+                {studentExamDash?.examsAttempted ?? 0}
+              </div>
+              <span className="text-[11px] text-slate-500">
+                {studentExamDash?.active.length ?? 0} live • {studentExamDash?.upcoming.length ?? 0} upcoming
+              </span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-surface border border-surface-border">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Best Contest Rank</span>
+                <Trophy className="h-4 w-4 text-amber-400" />
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-amber-400">
+                {studentExamDash?.bestRank ? `#${studentExamDash.bestRank}` : "—"}
+              </div>
+              <span className="text-[11px] text-slate-500">In completed college contests</span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-surface border border-surface-border">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Average Score</span>
+                <Award className="h-4 w-4 text-emerald-400" />
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-emerald-400">
+                {studentExamDash?.averageScorePercent ?? 0}%
+              </div>
+              <span className="text-[11px] text-slate-500">Across graded college assessments</span>
+            </div>
+          </div>
+
+          {/* Live & Upcoming School Examinations */}
+          <div className="rounded-3xl bg-surface border border-surface-border p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">
+                  Live &amp; Upcoming School Contests ({liveAndUpcoming.length})
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Examinations scheduled by your {col?.name || "college"} Admin.
+                </p>
+              </div>
+              <Link href="/contests" className="text-xs font-bold text-brand-400 hover:underline">
+                View All →
+              </Link>
+            </div>
+
+            {loadingDashboard ? (
+              <div className="py-10 flex justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+              </div>
+            ) : liveAndUpcoming.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-500">
+                No live or upcoming school contests at the moment.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {liveAndUpcoming.map((exam) => (
+                  <div
+                    key={exam.contestId}
+                    className="p-4 rounded-2xl bg-background border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            exam.status === "ACTIVE"
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              : "bg-blue-500/15 text-blue-400 border border-blue-500/30"
+                          }`}
+                        >
+                          {exam.status}
+                        </span>
+                        <span className="text-xs text-slate-400">{exam.collegeName}</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-foreground">{exam.title}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Duration: {exam.durationMinutes} mins • {exam.totalProblems} problems ({exam.maxScore} pts)
+                      </p>
+                    </div>
+                    <Link
+                      href={`/contests/${exam.slug}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition self-start sm:self-auto"
+                    >
+                      <span>{exam.status === "ACTIVE" ? "Enter Exam" : "Waiting Room"}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Past Results & Ranks */}
+          <div className="rounded-3xl bg-surface border border-surface-border p-6 space-y-4">
+            <h2 className="text-base font-extrabold text-foreground">
+              Past School Contests &amp; My Ranks ({pastExams.length})
+            </h2>
+            {pastExams.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-500">
+                No concluded school contests yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pastExams.map((exam) => (
+                  <div
+                    key={exam.contestId}
+                    className="p-4 rounded-2xl bg-background border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">{exam.title}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Concluded {new Date(exam.endTime).toLocaleDateString()} • Solved {exam.solvedProblems ?? 0}/
+                        {exam.totalProblems} problems
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {exam.rank && (
+                        <span className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-extrabold">
+                          Rank #{exam.rank} / {exam.totalParticipants || 1}
+                        </span>
+                      )}
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-extrabold">
+                        {exam.score ?? 0} / {exam.maxScore} pts
+                      </span>
+                      <Link
+                        href={`/contests/${exam.slug}`}
+                        className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-semibold text-foreground"
+                      >
+                        Leaderboard
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </AppShell>
     );
   }

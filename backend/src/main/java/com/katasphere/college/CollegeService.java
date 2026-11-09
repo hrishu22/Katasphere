@@ -134,10 +134,22 @@ public class CollegeService {
         return CollegeAdminDto.from(c, 0, 0);
     }
 
+    private College requireVerifiedCollegeAdmin(User admin) {
+        if (admin == null) {
+            throw new IllegalArgumentException("Authentication required for College Admin operations.");
+        }
+        College c = collegeRepository.findByAdminUserId(admin.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Admin access denied: No college registered with this account."));
+        if (!"COLLEGE_ADMIN".equalsIgnoreCase(admin.getRole()) && !"ADMIN".equalsIgnoreCase(admin.getRole())) {
+            admin.setRole("COLLEGE_ADMIN");
+            userRepository.save(admin);
+        }
+        return c;
+    }
+
     @Transactional
     public CollegeAdminDto update(User admin, RegisterCollegeRequest req) {
-        College c = collegeRepository.findByAdminUserId(admin.getId())
-            .orElseThrow(() -> new IllegalArgumentException("No college registered for this account"));
+        College c = requireVerifiedCollegeAdmin(admin);
         apply(c, req);
         if (req.planCode() != null && !req.planCode().isBlank()
                 && !"NONE".equalsIgnoreCase(req.planCode())
@@ -150,8 +162,7 @@ public class CollegeService {
 
     @Transactional
     public CollegeAdminDto selectOrExtendPlan(User admin, SelectCollegePlanRequest req) {
-        College c = collegeRepository.findByAdminUserId(admin.getId())
-            .orElseThrow(() -> new IllegalArgumentException("Please register your college first before selecting a plan."));
+        College c = requireVerifiedCollegeAdmin(admin);
         applyPlanSelection(c, req.planCode());
         c = collegeRepository.save(c);
         return toAdminDto(c);
@@ -159,8 +170,7 @@ public class CollegeService {
 
     @Transactional
     public CollegeAdminDto topUpContests(User admin, TopUpContestsRequest req) {
-        College c = collegeRepository.findByAdminUserId(admin.getId())
-            .orElseThrow(() -> new IllegalArgumentException("Please register your college first before purchasing contests."));
+        College c = requireVerifiedCollegeAdmin(admin);
         int add = req.additionalContests() != null ? req.additionalContests() : 0;
         if (add < 1) {
             throw new IllegalArgumentException("Please enter at least 1 contest to purchase.");

@@ -49,6 +49,10 @@ interface ApiResponse<T> {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  canUseStudentMode: boolean;
+  isStudentMode: boolean;
+  setStudentMode: (enabled: boolean) => void;
+  toggleStudentMode: () => void;
   login: (
     email: string,
     password: string,
@@ -71,10 +75,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [studentModeState, setStudentModeState] = useState<boolean>(true);
 
-  // Initialize cached user from localStorage immediately on mount
+  const canUseStudentMode = Boolean(
+    user &&
+      user.collegeId &&
+      !user.isTenureExpired &&
+      !user.isCollegeAdmin &&
+      user.role !== "COLLEGE_ADMIN" &&
+      user.role !== "ADMIN"
+  );
+  const isStudentMode = Boolean(canUseStudentMode && studentModeState);
+
+  const setStudentMode = useCallback((enabled: boolean) => {
+    setStudentModeState(enabled);
+    try {
+      localStorage.setItem("katasphere_student_mode", enabled ? "1" : "0");
+    } catch {}
+  }, []);
+
+  const toggleStudentMode = useCallback(() => {
+    setStudentModeState((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("katasphere_student_mode", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Initialize cached user and student mode toggle from localStorage immediately on mount
   useEffect(() => {
     try {
+      const savedMode = localStorage.getItem("katasphere_student_mode");
+      if (savedMode === "0") {
+        setStudentModeState(false);
+      } else if (savedMode === "1") {
+        setStudentModeState(true);
+      }
       const cached = localStorage.getItem("katasphere_user");
       if (cached) {
         const parsed = JSON.parse(cached);
@@ -141,11 +179,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loggedInUser = response.data.user;
     const token = response.data.token;
     setUser(loggedInUser);
+    const hasStudentCollege = Boolean(
+      loggedInUser?.collegeId && !loggedInUser?.isTenureExpired && !loggedInUser?.isCollegeAdmin
+    );
+    setStudentModeState(hasStudentCollege);
     try {
       if (token) {
         localStorage.setItem("katasphere_token", token);
       }
       localStorage.setItem("katasphere_user", JSON.stringify(loggedInUser));
+      localStorage.setItem("katasphere_student_mode", hasStudentCollege ? "1" : "0");
     } catch {}
     return loggedInUser;
   };
@@ -168,11 +211,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registeredUser = response.data.user;
     const token = response.data.token;
     setUser(registeredUser);
+    const hasStudentCollege = Boolean(
+      registeredUser?.collegeId && !registeredUser?.isTenureExpired && !registeredUser?.isCollegeAdmin
+    );
+    setStudentModeState(hasStudentCollege);
     try {
       if (token) {
         localStorage.setItem("katasphere_token", token);
       }
       localStorage.setItem("katasphere_user", JSON.stringify(registeredUser));
+      localStorage.setItem("katasphere_student_mode", hasStudentCollege ? "1" : "0");
     } catch {}
     return registeredUser;
   };
@@ -184,9 +232,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ignore network errors on logout
     } finally {
       setUser(null);
+      setStudentModeState(false);
       try {
         localStorage.removeItem("katasphere_token");
         localStorage.removeItem("katasphere_user");
+        localStorage.removeItem("katasphere_student_mode");
       } catch {}
     }
   };
@@ -216,7 +266,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser, upgradeToPremium, togglePremium }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        canUseStudentMode,
+        isStudentMode,
+        setStudentMode,
+        toggleStudentMode,
+        login,
+        register,
+        logout,
+        refreshUser,
+        upgradeToPremium,
+        togglePremium,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

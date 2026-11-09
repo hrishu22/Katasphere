@@ -25,7 +25,7 @@ import {
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, canUseStudentMode, isStudentMode, setStudentMode } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,27 +50,63 @@ export function Navbar() {
   const isCollegeAdminUser = Boolean(
     user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
   );
-  // Active student linked to a college within their tenure period
-  const hasActiveStudentCollege = Boolean(user && user.collegeId && !user.isTenureExpired);
-  // Normal user (not a College Admin and not a College Student)
-  const isNormalUser = Boolean(
-    user && !isCollegeAdminUser && !hasActiveStudentCollege && user.role !== "COLLEGE_STUDENT"
-  );
+  // A user operates as a Normal User when they are not a College Admin AND Student Mode is OFF
+  const isNormalUser = Boolean(user && !isCollegeAdminUser && !isStudentMode);
 
-  // 1. For College Admin: no need to show Problems, Companies, Interview Prep, or Plans.
-  //    Show only Dashboard (/dashboard) and Contests (/admin/contests).
-  // 2. For Registered Student (active tenure): unlock the dedicated Contests tab (/contests)
-  //    which shows only what has been given by the Admin of their school.
+  // Strict route isolation for College Admin and Student Mode
+  useEffect(() => {
+    if (!user || !pathname) return;
+    const isPracticeOrNormalTab =
+      pathname.startsWith("/problems") ||
+      pathname.startsWith("/companies") ||
+      pathname.startsWith("/interview-prep") ||
+      pathname.startsWith("/pricing");
+
+    if (isCollegeAdminUser && isPracticeOrNormalTab) {
+      router.replace("/dashboard");
+    } else if (isStudentMode && isPracticeOrNormalTab) {
+      router.replace("/contests");
+    } else if (!isCollegeAdminUser && !isStudentMode && pathname === "/contests") {
+      router.replace("/dashboard");
+    }
+  }, [user, pathname, isCollegeAdminUser, isStudentMode, router]);
+
+  const handleToggleStudentMode = () => {
+    const next = !isStudentMode;
+    setStudentMode(next);
+    if (next) {
+      // Turning Student toggle ON -> show only Contests & Student Dashboard
+      if (
+        pathname?.startsWith("/problems") ||
+        pathname?.startsWith("/companies") ||
+        pathname?.startsWith("/interview-prep") ||
+        pathname?.startsWith("/pricing")
+      ) {
+        router.push("/contests");
+      }
+    } else {
+      // Turning Student toggle OFF -> normal user mode
+      if (pathname?.startsWith("/contests")) {
+        router.push("/dashboard");
+      }
+    }
+  };
+
+  // 1. College Admin (Isolated Environment): Dashboard + Contests (/admin/contests)
+  // 2. Student Mode ON (only for users registered with a college): Contests + Dashboard only
+  // 3. Normal User (or Student Mode OFF): Problems, Companies, Interview Prep, Plans, Dashboard
   const navLinks = isCollegeAdminUser
     ? [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false },
         { href: "/admin/contests", label: "Contests", icon: Trophy, isPro: false },
       ]
+    : isStudentMode
+    ? [
+        { href: "/contests", label: "Contests", icon: Trophy, isPro: false },
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false },
+      ]
     : [
         { href: "/problems", label: "Problems", icon: BookOpen, isPro: false },
-        ...(hasActiveStudentCollege
-          ? [{ href: "/contests", label: "Contests", icon: Trophy, isPro: false }]
-          : []),
         { href: "/companies", label: "Companies", icon: Building2, isPro: true },
         { href: "/interview-prep", label: "Interview Prep", icon: GraduationCap, isPro: false },
         { href: "/pricing", label: "Plans", icon: Sparkles, isPro: false },
@@ -130,8 +166,41 @@ export function Navbar() {
             </nav>
           </div>
 
-          {/* Right Action: Theme Toggle + Auth */}
+          {/* Right Action: Student Toggle (if college registered) + Theme Toggle + Auth */}
           <div className="hidden md:flex items-center space-x-3">
+            {canUseStudentMode && (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isStudentMode}
+                onClick={handleToggleStudentMode}
+                title={
+                  isStudentMode
+                    ? "Student Mode is ON (Showing only Contests & Student Dashboard). Click to switch to Normal User mode."
+                    : "Student Mode is OFF (Normal User mode). Click to turn on Student Mode."
+                }
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition select-none ${
+                  isStudentMode
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-sm"
+                    : "bg-surface border-surface-border text-slate-400 hover:text-foreground"
+                }`}
+              >
+                <GraduationCap className={`h-3.5 w-3.5 ${isStudentMode ? "text-emerald-400" : "text-slate-400"}`} />
+                <span>Student</span>
+                <span
+                  className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                    isStudentMode ? "bg-emerald-500" : "bg-slate-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      isStudentMode ? "translate-x-3.5" : "translate-x-0.5"
+                    }`}
+                  />
+                </span>
+              </button>
+            )}
+
             <ThemeToggle />
 
             {user ? (
@@ -239,6 +308,32 @@ export function Navbar() {
 
           {/* Mobile menu button */}
           <div className="flex items-center space-x-2 md:hidden">
+            {canUseStudentMode && (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isStudentMode}
+                onClick={handleToggleStudentMode}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold transition ${
+                  isStudentMode
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                    : "bg-surface border-surface-border text-slate-400"
+                }`}
+              >
+                <span>Student</span>
+                <span
+                  className={`relative inline-flex h-3.5 w-6 items-center rounded-full transition-colors ${
+                    isStudentMode ? "bg-emerald-500" : "bg-slate-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${
+                      isStudentMode ? "translate-x-3" : "translate-x-0.5"
+                    }`}
+                  />
+                </span>
+              </button>
+            )}
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
