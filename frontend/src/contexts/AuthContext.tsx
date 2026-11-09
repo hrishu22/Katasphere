@@ -10,7 +10,23 @@ export interface User {
   avatarUrl?: string | null;
   role: string;
   isPremium?: boolean;
+  isCollegeAdmin?: boolean;
+  collegeId?: string | null;
+  collegeRollNumber?: string | null;
   createdAt?: string;
+}
+
+export interface RegisterOptions {
+  name: string;
+  email: string;
+  password: string;
+  accountType?: "USER" | "COLLEGE_ADMIN";
+  collegeName?: string;
+  officialCollegeEmail?: string;
+  expectedStudents?: number;
+  department?: string;
+  collegeCode?: string;
+  rollNumber?: string;
 }
 
 interface AuthResponse {
@@ -28,8 +44,17 @@ interface ApiResponse<T> {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<User>;
-  register: (name: string, email: string, password: string) => Promise<User>;
+  login: (
+    email: string,
+    password: string,
+    rememberMe?: boolean,
+    loginAs?: "USER" | "COLLEGE_ADMIN"
+  ) => Promise<User>;
+  register: (
+    nameOrOptions: string | RegisterOptions,
+    email?: string,
+    password?: string
+  ) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   upgradeToPremium: () => Promise<User>;
@@ -97,10 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, [refreshUser]);
 
-  const login = async (email: string, password: string, rememberMe = false): Promise<User> => {
+  const login = async (
+    email: string,
+    password: string,
+    rememberMe = false,
+    loginAs?: "USER" | "COLLEGE_ADMIN"
+  ): Promise<User> => {
     const response = await apiClient<ApiResponse<AuthResponse>>("/api/v1/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password, rememberMe }),
+      body: JSON.stringify({ email, password, rememberMe, loginAs }),
     });
 
     const loggedInUser = response.data.user;
@@ -115,10 +145,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loggedInUser;
   };
 
-  const register = async (name: string, email: string, password: string): Promise<User> => {
+  const register = async (
+    nameOrOptions: string | RegisterOptions,
+    email?: string,
+    password?: string
+  ): Promise<User> => {
+    const payload: RegisterOptions =
+      typeof nameOrOptions === "string"
+        ? { name: nameOrOptions, email: email || "", password: password || "", accountType: "USER" }
+        : nameOrOptions;
+
     const response = await apiClient<ApiResponse<AuthResponse>>("/api/v1/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(payload),
     });
 
     const registeredUser = response.data.user;

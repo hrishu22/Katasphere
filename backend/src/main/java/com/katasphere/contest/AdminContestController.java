@@ -41,6 +41,10 @@ public class AdminContestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
         }
+        if (user.getCollegeId() != null && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("College Admin access required"));
+        }
 
         College college = collegeService.findAdminCollege(user).orElse(null);
         List<ContestDto> contests = contestService.getFacultyContests(user, college);
@@ -84,6 +88,10 @@ public class AdminContestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
         }
+        if (user.getCollegeId() != null && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("College Admin access required"));
+        }
 
         try {
             contestService.requireManageable(slug, user); // tenant isolation
@@ -105,6 +113,10 @@ public class AdminContestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
         }
+        if (user.getCollegeId() != null && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("College Admin access required"));
+        }
 
         try {
             contestService.requireManageable(slug, user); // tenant isolation
@@ -125,6 +137,10 @@ public class AdminContestController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication required"));
+        }
+        if (user.getCollegeId() != null && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("College Admin access required"));
         }
 
         try {

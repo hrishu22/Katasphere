@@ -62,6 +62,11 @@ public class CollegeService {
         c.setAdminUserId(admin.getId());
         apply(c, req);
         c = collegeRepository.save(c);
+
+        if (!"ADMIN".equalsIgnoreCase(admin.getRole())) {
+            admin.setRole("COLLEGE_ADMIN");
+            userRepository.save(admin);
+        }
         return CollegeAdminDto.from(c, 0, 0);
     }
 

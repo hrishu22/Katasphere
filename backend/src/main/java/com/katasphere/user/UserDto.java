@@ -10,6 +10,9 @@ public record UserDto(
     String avatarUrl,
     String role,
     boolean isPremium,
+    boolean isCollegeAdmin,
+    UUID collegeId,
+    String collegeRollNumber,
     Instant createdAt
 ) {
     public UserDto(UUID id, String name, String email, String avatarUrl, String role, Instant createdAt) {
@@ -20,19 +23,27 @@ public record UserDto(
             avatarUrl,
             role,
             "PREMIUM".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role),
+            "COLLEGE_ADMIN".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role),
+            null,
+            null,
             createdAt
         );
     }
 
     public static UserDto fromEntity(User user) {
-        boolean premium = "PREMIUM".equalsIgnoreCase(user.getRole()) || "ADMIN".equalsIgnoreCase(user.getRole());
+        String r = user.getRole() != null ? user.getRole() : "USER";
+        boolean premium = "PREMIUM".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r);
+        boolean collegeAdmin = "COLLEGE_ADMIN".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r);
         return new UserDto(
             user.getId(),
             user.getName(),
             user.getEmail(),
             user.getAvatarUrl(),
-            user.getRole(),
+            r,
             premium,
+            collegeAdmin,
+            user.getCollegeId(),
+            user.getCollegeRollNumber(),
             user.getCreatedAt()
         );
     }

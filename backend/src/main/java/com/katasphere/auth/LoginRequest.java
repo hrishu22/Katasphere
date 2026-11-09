@@ -11,5 +11,12 @@ public record LoginRequest(
     @NotBlank(message = "Password is required")
     String password,
 
-    boolean rememberMe
-) {}
+    boolean rememberMe,
+
+    /** Optional portal guard: "USER" or "COLLEGE_ADMIN" */
+    String loginAs
+) {
+    public LoginRequest(String email, String password, boolean rememberMe) {
+        this(email, password, rememberMe, null);
+    }
+}

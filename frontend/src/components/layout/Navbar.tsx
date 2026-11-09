@@ -47,6 +47,9 @@ export function Navbar() {
   }, [userDropdownOpen]);
 
   const isPremiumUser = Boolean(user && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN"));
+  const isCollegeAdminUser = Boolean(
+    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
+  );
 
   // Requirement 1: Dashboard is only shown for authenticated users
   const navLinks = [
@@ -128,6 +131,11 @@ export function Navbar() {
                   <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
                     {user.name}
                   </span>
+                  {isCollegeAdminUser && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-500/20 text-brand-400 flex items-center gap-0.5">
+                      <ShieldCheck className="h-2.5 w-2.5" /> ADMIN
+                    </span>
+                  )}
                   {isPremiumUser && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500 flex items-center gap-0.5">
                       <Crown className="h-2.5 w-2.5" /> PRO
@@ -187,17 +195,19 @@ export function Navbar() {
                       className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
                     >
                       <User className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                      <span>Profile</span>
+                      <span>{isCollegeAdminUser ? "Profile & College ID" : "Profile & College Exams"}</span>
                     </Link>
 
-                    <Link
-                      href="/admin/contests"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
-                    >
-                      <ShieldCheck className="h-4 w-4 text-brand-500" />
-                      <span>Faculty Exam Console</span>
-                    </Link>
+                    {isCollegeAdminUser && (
+                      <Link
+                        href="/admin/contests"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center space-x-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface-subtle transition"
+                      >
+                        <ShieldCheck className="h-4 w-4 text-brand-500" />
+                        <span>Faculty Exam Console</span>
+                      </Link>
+                    )}
 
                     <div className="border-t border-surface-border my-1" />
 

@@ -6,14 +6,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBaseUrl } from "@/lib/api-client";
 import { AppShell } from "@/components/layout/AppShell";
-import { Code2, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import {
+  Code2,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertCircle,
+  GraduationCap,
+  Building2,
+} from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams?.get("redirect") || "/dashboard";
+  const explicitRedirect = searchParams?.get("redirect") || searchParams?.get("returnTo");
+  const initialRole = searchParams?.get("role") === "admin" ? "COLLEGE_ADMIN" : "USER";
 
   const { login } = useAuth();
+  const [loginAs, setLoginAs] = useState<"USER" | "COLLEGE_ADMIN">(initialRole);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,8 +38,18 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      await login(email, password, rememberMe);
-      router.push(redirect);
+      const loggedInUser = await login(email, password, rememberMe, loginAs);
+      if (explicitRedirect) {
+        router.push(explicitRedirect);
+      } else if (
+        loginAs === "COLLEGE_ADMIN" ||
+        loggedInUser.role === "COLLEGE_ADMIN" ||
+        loggedInUser.isCollegeAdmin
+      ) {
+        router.push("/admin/contests");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to sign in. Please verify your credentials.");
     } finally {
@@ -46,13 +67,48 @@ function LoginForm() {
           Sign in to Katasphere
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Welcome back! Enter your credentials to continue your practice.
+          Select your portal and enter your credentials to continue.
         </p>
       </div>
 
+      {/* Role Selector: Student / Candidate vs College Admin */}
+      <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-background border border-surface-border">
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setLoginAs("USER");
+          }}
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
+            loginAs === "USER"
+              ? "bg-brand-600 text-white shadow-sm"
+              : "text-slate-400 hover:text-foreground"
+          }`}
+        >
+          <GraduationCap className="h-4 w-4" />
+          <span>Student / Candidate</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setLoginAs("COLLEGE_ADMIN");
+          }}
+          className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
+            loginAs === "COLLEGE_ADMIN"
+              ? "bg-brand-600 text-white shadow-sm"
+              : "text-slate-400 hover:text-foreground"
+          }`}
+        >
+          <Building2 className="h-4 w-4" />
+          <span>College Admin</span>
+        </button>
+      </div>
+
       {error && (
-        <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-start space-x-2.5 text-rose-500 text-sm">
-          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-start space-x-2.5 text-rose-500 text-xs">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
@@ -60,14 +116,16 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-            Email Address
+            {loginAs === "COLLEGE_ADMIN" ? "Faculty / Admin Email" : "Email Address"}
           </label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="developer@katasphere.io"
+            placeholder={
+              loginAs === "COLLEGE_ADMIN" ? "dean.exams@college.edu.in" : "student@university.edu.in"
+            }
             className="w-full px-3.5 py-2.5 rounded-lg bg-surface-subtle border border-surface-border text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition"
           />
         </div>
@@ -113,7 +171,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-medium shadow-md shadow-brand-500/20 text-sm transition flex items-center justify-center space-x-2 disabled:opacity-50"
+          className="w-full py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold shadow-md shadow-brand-500/20 text-sm transition flex items-center justify-center space-x-2 disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -121,7 +179,11 @@ function LoginForm() {
               <span>Signing in...</span>
             </>
           ) : (
-            <span>Sign In</span>
+            <span>
+              {loginAs === "COLLEGE_ADMIN"
+                ? "Sign In as College Admin"
+                : "Sign In as Student / Candidate"}
+            </span>
           )}
         </button>
       </form>
@@ -166,8 +228,11 @@ function LoginForm() {
 
       <p className="text-center text-xs text-slate-500">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-brand-500 hover:text-brand-400 font-medium">
-          Create account
+        <Link
+          href={`/register${loginAs === "COLLEGE_ADMIN" ? "?role=admin" : ""}`}
+          className="text-brand-500 hover:text-brand-400 font-medium"
+        >
+          {loginAs === "COLLEGE_ADMIN" ? "Register your college" : "Create student account"}
         </Link>
       </p>
 
@@ -185,11 +250,13 @@ export default function LoginPage() {
   return (
     <AppShell>
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </div>
