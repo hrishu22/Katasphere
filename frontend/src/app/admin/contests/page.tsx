@@ -10,6 +10,8 @@ import {
   getAdminParticipants,
   getAdminSubmissions,
   getExportGradebookUrl,
+  getMyCollegeContext,
+  registerCollege,
 } from "@/lib/contest-api";
 import { apiClient, ApiResponse } from "@/lib/api-client";
 import {
@@ -17,6 +19,7 @@ import {
   ContestParticipantDto,
   ContestSubmissionDto,
   CreateContestPayload,
+  CollegeAdminDto,
 } from "@/types/contest";
 import {
   ShieldCheck,
@@ -56,6 +59,17 @@ export default function AdminContestsPage() {
   const [contests, setContests] = useState<ContestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [catalogProblems, setCatalogProblems] = useState<CatalogProblemSummary[]>([]);
+  const [adminCollege, setAdminCollege] = useState<CollegeAdminDto | null>(null);
+
+  // Inline College Registration state (if admin hasn't registered a college yet)
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regExpected, setRegExpected] = useState(100);
+  const [regDept, setRegDept] = useState("");
+  const [regCity, setRegCity] = useState("");
+  const [regWebsite, setRegWebsite] = useState("");
+  const [registeringCollege, setRegisteringCollege] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
 
   // Modal: Create Exam Wizard
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -98,12 +112,47 @@ export default function AdminContestsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await getFacultyContests();
+      const [data, ctx] = await Promise.all([
+        getFacultyContests(),
+        getMyCollegeContext().catch(() => ({ adminCollege: null, studentCollege: null })),
+      ]);
       setContests(data);
+      if (ctx.adminCollege) {
+        setAdminCollege(ctx.adminCollege);
+        setFormCollege(ctx.adminCollege.name);
+      } else if (user?.email) {
+        setRegEmail(user.email);
+      }
     } catch (err) {
       console.error("Failed to load faculty contests", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuickRegisterCollege = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError(null);
+    if (!regName.trim() || !regEmail.trim() || !regExpected || regExpected < 1) {
+      setRegError("College Name, Official Email, and Expected Students are required.");
+      return;
+    }
+    setRegisteringCollege(true);
+    try {
+      const created = await registerCollege({
+        name: regName.trim(),
+        officialEmail: regEmail.trim(),
+        expectedStudents: Number(regExpected),
+        department: regDept.trim() || undefined,
+        city: regCity.trim() || undefined,
+        website: regWebsite.trim() || undefined,
+      });
+      setAdminCollege(created);
+      setFormCollege(created.name);
+    } catch (err: any) {
+      setRegError(err.message || "Failed to register college.");
+    } finally {
+      setRegisteringCollege(false);
     }
   };
 
@@ -260,6 +309,11 @@ export default function AdminContestsPage() {
 
           <button
             onClick={() => {
+              if (!adminCollege) {
+                alert("Please register your college in the card below first so your exams are linked to your official College ID.");
+                return;
+              }
+              setFormCollege(adminCollege.name);
               generateSlugAndCode();
               setShowCreateModal(true);
             }}
@@ -269,6 +323,145 @@ export default function AdminContestsPage() {
             <span>Create New Examination</span>
           </button>
         </div>
+
+        {/* College Registration / Unique ID Banner */}
+        {adminCollege ? (
+          <div className="mb-8 p-6 rounded-3xl bg-gradient-to-r from-brand-600/15 via-purple-600/10 to-surface border border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-400">
+                <Building2 className="h-4 w-4" />
+                <span>Registered Institution • {adminCollege.officialEmail}</span>
+              </div>
+              <h2 className="text-xl font-extrabold text-foreground">{adminCollege.name}</h2>
+              <p className="text-xs text-slate-400">
+                Expected Capacity: <strong className="text-foreground">{adminCollege.expectedStudents} students</strong> • Verified Linked Students: <strong className="text-emerald-400">{adminCollege.linkedStudents}</strong>
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="px-4 py-2.5 rounded-2xl bg-background border border-brand-500/40 flex items-center gap-3">
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">
+                    College Unique ID (Share with Students)
+                  </span>
+                  <span className="font-mono text-lg font-extrabold text-brand-400 tracking-widest">
+                    {adminCollege.collegeCode}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(adminCollege.collegeCode)}
+                  className="p-2 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-foreground transition"
+                  title="Copy College Unique ID"
+                >
+                  {copiedCode === adminCollege.collegeCode ? (
+                    <Check className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-brand-400" />
+                  )}
+                </button>
+              </div>
+
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-bold text-foreground transition"
+              >
+                <span>Modify / Add College Details</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        ) : !loading && user ? (
+          <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-surface border-2 border-brand-500/40 shadow-xl">
+            <div className="flex items-center gap-2 text-brand-400 text-xs font-bold mb-1">
+              <Building2 className="h-4 w-4" />
+              <span>Step 1: Register Your College / University</span>
+            </div>
+            <h2 className="text-xl font-extrabold text-foreground">
+              Register Your Institution to Receive a Unique College ID
+            </h2>
+            <p className="text-xs text-slate-400 mt-1 mb-5">
+              Enter your college name, official email ID, and expected number of students. You can modify or add more campus details anytime from your Profile.
+            </p>
+
+            {regError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>{regError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleQuickRegisterCollege} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">College Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. IIT Delhi"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Official College Email ID *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. exams@iitd.ac.in"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">No. of Expected Students *</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100000}
+                  required
+                  value={regExpected}
+                  onChange={(e) => setRegExpected(parseInt(e.target.value) || 100)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Department</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Dept. of CSE"
+                  value={regDept}
+                  onChange={(e) => setRegDept(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">City</label>
+                <input
+                  type="text"
+                  placeholder="e.g. New Delhi"
+                  value={regCity}
+                  onChange={(e) => setRegCity(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={registeringCollege}
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition shadow-lg shadow-brand-600/25 disabled:opacity-50"
+                >
+                  {registeringCollege ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  <span>Register College &amp; Get ID</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
 
         {/* Stats Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
@@ -349,7 +542,7 @@ export default function AdminContestsPage() {
                         {/* Access Code */}
                         <td className="px-6 py-4">
                           <button
-                            onClick={() => copyToClipboard(c.accessCode)}
+                            onClick={() => copyToClipboard(c.accessCode || "")}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-surface-border font-mono font-bold text-foreground hover:border-brand-500 transition"
                             title="Click to copy access code"
                           >

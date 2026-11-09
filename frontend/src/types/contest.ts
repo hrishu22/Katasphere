@@ -4,7 +4,7 @@ export interface ContestDto {
   title: string;
   slug: string;
   description: string;
-  accessCode: string;
+  accessCode: string | null;
   startTime: string;
   endTime: string;
   durationMinutes: number;
@@ -14,7 +14,7 @@ export interface ContestDto {
   isPublished: boolean;
   totalProblems: number;
   totalParticipants: number;
-  status: "UPCOMING" | "ACTIVE" | "CONCLUDED";
+  status: "UPCOMING" | "ACTIVE" | "CONCLUDED" | "PAST";
 }
 
 export interface ContestSampleTestCaseDto {
@@ -58,17 +58,20 @@ export interface ContestParticipantDto {
 
 export interface ContestSubmissionDto {
   id: string;
-  contestId: string;
+  contestId?: string;
   problemId: string;
+  problemSlug?: string;
   problemTitle: string;
-  studentId: string;
+  studentId?: string;
   studentName: string;
   language: string;
   verdict: string;
   passedTestCases: number;
   totalTestCases: number;
   scoreAwarded: number;
+  pointsAwarded?: number;
   runtimeMs: number;
+  executionTimeMs?: number;
   memoryKb: number;
   createdAt: string;
   compileOutput?: string | null;
@@ -79,7 +82,7 @@ export interface ContestLeaderboardEntryDto {
   rank: number;
   participantId: string;
   studentName: string;
-  studentEmail: string;
+  studentEmail: string | null;
   totalScore: number;
   penaltySeconds: number;
   status: string;
@@ -93,7 +96,7 @@ export interface CreateContestProblemItem {
 }
 
 export interface CreateContestPayload {
-  collegeName: string;
+  collegeName?: string;
   title: string;
   slug: string;
   description?: string;
@@ -106,4 +109,87 @@ export interface CreateContestPayload {
   maxTabSwitches: number;
   isPublished?: boolean;
   problems: CreateContestProblemItem[];
+}
+
+// ======================== COLLEGE & STUDENT AFFILIATION ========================
+
+export interface RegisterCollegePayload {
+  name: string;
+  officialEmail: string;
+  expectedStudents: number;
+  department?: string;
+  website?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
+
+export interface LinkCollegePayload {
+  collegeName: string;
+  collegeCode: string;
+  rollNumber?: string;
+}
+
+export interface CollegeAdminDto {
+  id: string;
+  collegeCode: string;
+  name: string;
+  officialEmail: string;
+  expectedStudents: number;
+  department?: string | null;
+  website?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country: string;
+  linkedStudents: number;
+  totalContests: number;
+  createdAt: string;
+}
+
+export interface StudentCollegeDto {
+  id: string;
+  collegeCode: string;
+  name: string;
+  department?: string | null;
+  city?: string | null;
+  state?: string | null;
+  rollNumber?: string | null;
+}
+
+export interface CollegeContextDto {
+  adminCollege: CollegeAdminDto | null;
+  studentCollege: StudentCollegeDto | null;
+}
+
+export interface ExamSummaryDto {
+  contestId: string;
+  slug: string;
+  title: string;
+  collegeName: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  status: "UPCOMING" | "ACTIVE" | "PAST";
+  totalProblems: number;
+  maxScore: number;
+  participationStatus?: string | null;
+  score?: number | null;
+  rank?: number | null;
+  totalParticipants?: number | null;
+  tabSwitchCount?: number | null;
+  solvedProblems?: number | null;
+}
+
+export interface StudentExamDashboardDto {
+  college: StudentCollegeDto | null;
+  upcoming: ExamSummaryDto[];
+  active: ExamSummaryDto[];
+  past: ExamSummaryDto[];
+  examsAttempted: number;
+  bestRank: number | null;
+  averageScorePercent: number;
 }

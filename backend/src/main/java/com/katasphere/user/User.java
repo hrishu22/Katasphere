@@ -24,6 +24,13 @@ public class User {
     @Column(nullable = false)
     private String role = "USER";
 
+    /** College the student is affiliated with (nullable for practice-only users). */
+    @Column(name = "college_id")
+    private UUID collegeId;
+
+    @Column(name = "college_roll_number", length = 64)
+    private String collegeRollNumber;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -55,6 +62,12 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public UUID getCollegeId() { return collegeId; }
+    public void setCollegeId(UUID collegeId) { this.collegeId = collegeId; }
+
+    public String getCollegeRollNumber() { return collegeRollNumber; }
+    public void setCollegeRollNumber(String collegeRollNumber) { this.collegeRollNumber = collegeRollNumber; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

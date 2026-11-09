@@ -22,6 +22,17 @@ public interface ContestRepository extends JpaRepository<Contest, UUID> {
 
     List<Contest> findAllByOrderByStartTimeDesc();
 
+    List<Contest> findByTenantIdOrderByStartTimeDesc(UUID tenantId);
+
+    @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND c.tenantId = :tenantId ORDER BY c.startTime DESC")
+    List<Contest> findPublishedByTenant(@Param("tenantId") UUID tenantId);
+
+    long countByTenantId(UUID tenantId);
+
+    /** Public catalogue: open contests plus (optionally) the viewer's own college contests. */
+    @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND (c.tenantId IS NULL OR c.tenantId = :tenantId) ORDER BY c.startTime DESC")
+    List<Contest> findVisiblePublished(@Param("tenantId") UUID tenantId);
+
     @Query("SELECT c FROM Contest c WHERE c.isPublished = true AND c.startTime <= :now AND c.endTime >= :now ORDER BY c.endTime ASC")
     List<Contest> findActiveContests(@Param("now") Instant now);
 

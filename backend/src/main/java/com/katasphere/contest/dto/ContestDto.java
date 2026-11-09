@@ -22,6 +22,13 @@ public record ContestDto(
     long totalParticipants,
     String status // "UPCOMING", "ACTIVE", "PAST"
 ) {
+    /** Public views must never carry the access code. */
+    public ContestDto withoutAccessCode() {
+        return new ContestDto(id, collegeName, title, slug, description, null, startTime, endTime,
+            durationMinutes, scoringSystem, allowTabSwitch, maxTabSwitches, isPublished,
+            totalProblems, totalParticipants, status);
+    }
+
     public static ContestDto fromEntity(Contest c, int problemCount, long participantCount) {
         Instant now = Instant.now();
         String status;

@@ -1,5 +1,7 @@
 package com.katasphere.contest;
 
+import com.katasphere.college.College;
+import com.katasphere.college.CollegeRepository;
 import com.katasphere.contest.dto.*;
 import com.katasphere.problem.Problem;
 import com.katasphere.problem.ProblemRepository;
@@ -23,6 +25,7 @@ public class ContestService {
     private final ContestSubmissionRepository contestSubmissionRepository;
     private final ProblemRepository problemRepository;
     private final TestCaseRepository testCaseRepository;
+    private final CollegeRepository collegeRepository;
 
     public ContestService(
         ContestRepository contestRepository,
@@ -30,7 +33,8 @@ public class ContestService {
         ContestParticipantRepository contestParticipantRepository,
         ContestSubmissionRepository contestSubmissionRepository,
         ProblemRepository problemRepository,
-        TestCaseRepository testCaseRepository
+        TestCaseRepository testCaseRepository,
+        CollegeRepository collegeRepository
     ) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
@@ -38,10 +42,11 @@ public class ContestService {
         this.contestSubmissionRepository = contestSubmissionRepository;
         this.problemRepository = problemRepository;
         this.testCaseRepository = testCaseRepository;
+        this.collegeRepository = collegeRepository;
     }
 
     @Transactional
-    public ContestDto createContest(CreateContestRequest req, User admin) {
+    public ContestDto createContest(CreateContestRequest req, User admin, College college) {
         String slug = req.slug();
         if (slug == null || slug.isBlank()) {
             slug = req.title().toLowerCase()
@@ -58,7 +63,8 @@ public class ContestService {
         }
 
         Contest contest = new Contest(
-            req.collegeName(),
+            // College name always comes from the registered college, never from the client
+            college != null ? college.getName() : req.collegeName(),
             req.title(),
             slug,
             req.description(),
@@ -72,6 +78,9 @@ public class ContestService {
             req.isPublished() != null ? req.isPublished() : true,
             admin
         );
+        if (college != null) {
+            contest.setTenantId(college.getId());
+        }
 
         contest = contestRepository.save(contest);
 
@@ -84,7 +93,7 @@ public class ContestService {
                 ContestProblem cp = new ContestProblem(
                     contest,
                     problem,
-                    pConfig.order() > 0 ? pConfig.order() : order++,
+                    pConfig.resolvedOrder(order++),
                     pConfig.points() > 0 ? pConfig.points() : 100
                 );
                 contestProblemRepository.save(cp);
@@ -94,41 +103,85 @@ public class ContestService {
         return ContestDto.fromEntity(contest, req.problems() != null ? req.problems().size() : 0, 0);
     }
 
+    // ------------------------------------------------------------ tenant access rules
+
+    /** Open contests are visible to all; college contests only to that college's students and admin. */
+    public boolean canView(Contest c, User viewer) {
+        if (c.getTenantId() == null) return true;
+        if (viewer == null) return false;
+        if (c.getTenantId().equals(viewer.getCollegeId())) return true;
+        return isAdminOfTenant(c, viewer);
+    }
+
+    public boolean canManage(Contest c, User user) {
+        if (user == null) return false;
+        if (c.getCreatedBy() != null && user.getId().equals(c.getCreatedBy().getId())) return true;
+        return isAdminOfTenant(c, user);
+    }
+
+    private boolean isAdminOfTenant(Contest c, User user) {
+        return c.getTenantId() != null && collegeRepository.findByAdminUserId(user.getId())
+            .map(col -> col.getId().equals(c.getTenantId()))
+            .orElse(false);
+    }
+
+    /** Same "not found" message for missing and forbidden, so slugs of other colleges can't be probed. */
     @Transactional(readOnly = true)
-    public List<ContestDto> getAllPublishedContests() {
-        return contestRepository.findAllByOrderByStartTimeDesc().stream()
-            .filter(Contest::isPublished)
-            .map(c -> {
-                int pCount = contestProblemRepository.findByContestWithProblemOrderByProblemOrderAsc(c).size();
-                long partCount = contestParticipantRepository.countByContest(c);
-                return ContestDto.fromEntity(c, pCount, partCount);
-            })
+    public Contest requireManageable(String slug, User user) {
+        Contest c = contestRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("Contest not found"));
+        if (!canManage(c, user)) throw new IllegalArgumentException("Contest not found");
+        return c;
+    }
+
+    private Contest requireVisible(String slug, User viewer) {
+        Contest c = contestRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("Contest not found"));
+        if (!canView(c, viewer)) throw new IllegalArgumentException("Contest not found");
+        return c;
+    }
+
+    private ContestDto toDto(Contest c) {
+        return ContestDto.fromEntity(c, (int) contestProblemRepository.countByContest(c), contestParticipantRepository.countByContest(c));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContestDto> getAllPublishedContests(User viewer) {
+        UUID tenant = viewer != null ? viewer.getCollegeId() : null;
+        return contestRepository.findVisiblePublished(tenant).stream()
+            .map(c -> toDto(c).withoutAccessCode())
             .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ContestDto> getFacultyContests(User admin) {
-        return contestRepository.findByCreatedByOrderByCreatedAtDesc(admin).stream()
-            .map(c -> {
-                int pCount = contestProblemRepository.findByContestWithProblemOrderByProblemOrderAsc(c).size();
-                long partCount = contestParticipantRepository.countByContest(c);
-                return ContestDto.fromEntity(c, pCount, partCount);
-            })
-            .toList();
+    public List<ContestDto> getFacultyContests(User admin, College college) {
+        List<Contest> list = college != null
+            ? contestRepository.findByTenantIdOrderByStartTimeDesc(college.getId())
+            : contestRepository.findByCreatedByOrderByCreatedAtDesc(admin);
+        return list.stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
-    public ContestDetailDto getContestDetail(String slug) {
-        Contest contest = contestRepository.findBySlug(slug)
-            .orElseThrow(() -> new IllegalArgumentException("Contest not found with slug: " + slug));
+    public ContestDetailDto getContestDetail(String slug, User viewer) {
+        Contest contest = requireVisible(slug, viewer);
+
+        // Problem statements are only revealed to enrolled candidates once the exam has started
+        // (or to the managing faculty). Everyone else sees only difficulty + points.
+        boolean started = !Instant.now().isBefore(contest.getStartTime());
+        boolean enrolled = viewer != null && contestParticipantRepository.existsByContestAndUser(contest, viewer);
+        boolean reveal = canManage(contest, viewer) || (started && enrolled);
 
         List<ContestProblem> cpList = contestProblemRepository.findByContestWithProblemOrderByProblemOrderAsc(contest);
-        List<ContestProblemDto> problemDtos = cpList.stream()
-            .map(cp -> {
-                List<TestCase> publicCases = testCaseRepository.findByProblemOrderByPositionAsc(cp.getProblem());
-                return ContestProblemDto.fromEntity(cp, publicCases);
-            })
-            .toList();
+        List<ContestProblemDto> problemDtos = new ArrayList<>();
+        for (int i = 0; i < cpList.size(); i++) {
+            ContestProblem cp = cpList.get(i);
+            if (reveal) {
+                List<TestCase> cases = testCaseRepository.findByProblemOrderByPositionAsc(cp.getProblem());
+                problemDtos.add(ContestProblemDto.fromEntity(cp, cases));
+            } else {
+                problemDtos.add(ContestProblemDto.redacted(cp, i));
+            }
+        }
 
         return ContestDetailDto.fromEntity(contest, problemDtos);
     }
@@ -137,6 +190,11 @@ public class ContestService {
     public ContestParticipantDto joinContest(String slug, JoinContestRequest req, User student) {
         Contest contest = contestRepository.findBySlug(slug)
             .orElseThrow(() -> new IllegalArgumentException("Contest not found with slug: " + slug));
+
+        if (contest.getTenantId() != null && !contest.getTenantId().equals(student.getCollegeId())) {
+            throw new IllegalStateException("This examination is restricted to students of " + contest.getCollegeName()
+                + ". Link your college (name + College ID) in your profile first.");
+        }
 
         if (!contest.isPublished()) {
             throw new IllegalStateException("This examination is not published yet.");
@@ -209,6 +267,13 @@ public class ContestService {
 
         participant = contestParticipantRepository.save(participant);
         return ContestParticipantDto.fromEntity(participant);
+    }
+
+    /** Public leaderboard: tenant-scoped and with student emails masked. */
+    @Transactional(readOnly = true)
+    public List<ContestLeaderboardEntryDto> getPublicLeaderboard(String slug, User viewer) {
+        requireVisible(slug, viewer);
+        return getLeaderboard(slug).stream().map(ContestLeaderboardEntryDto::withoutEmail).toList();
     }
 
     @Transactional(readOnly = true)

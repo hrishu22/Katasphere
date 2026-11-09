@@ -23,4 +23,11 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
 
     @Query("SELECT cp FROM ContestParticipant cp JOIN FETCH cp.user WHERE cp.contest = :contest ORDER BY cp.totalScore DESC, cp.penaltySeconds ASC")
     List<ContestParticipant> findLeaderboardByContest(@Param("contest") Contest contest);
+
+    @Query("SELECT cp FROM ContestParticipant cp JOIN FETCH cp.contest WHERE cp.user = :user")
+    List<ContestParticipant> findByUserWithContest(@Param("user") User user);
+
+    /** Rank = 1 + number of participants strictly ahead (score desc, penalty asc). */
+    @Query("SELECT COUNT(cp) FROM ContestParticipant cp WHERE cp.contest = :contest AND (cp.totalScore > :score OR (cp.totalScore = :score AND cp.penaltySeconds < :penalty))")
+    long countAhead(@Param("contest") Contest contest, @Param("score") int score, @Param("penalty") int penalty);
 }

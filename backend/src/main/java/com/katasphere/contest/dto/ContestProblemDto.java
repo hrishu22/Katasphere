@@ -26,6 +26,14 @@ public record ContestProblemDto(
         String expectedOutput
     ) {}
 
+    /** Pre-exam placeholder: reveals only difficulty and points, never the problem identity. */
+    public static ContestProblemDto redacted(ContestProblem cp, int index) {
+        return new ContestProblemDto(
+            null, null, "Problem " + (char) ('A' + index), cp.getProblem().getDifficulty(),
+            null, null, null, null, null, cp.getPoints(), cp.getProblemOrder(), List.of()
+        );
+    }
+
     public static ContestProblemDto fromEntity(ContestProblem cp, List<TestCase> publicCases) {
         var p = cp.getProblem();
         List<PublicTestCaseDto> sampleDtos = publicCases != null

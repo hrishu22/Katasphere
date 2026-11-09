@@ -31,7 +31,9 @@ public record ContestParticipantDto(
         Instant effectiveExpiry = durationExpiry.isBefore(hardExpiry) ? durationExpiry : hardExpiry;
 
         long remainingSec = 0;
-        if ("IN_PROGRESS".equalsIgnoreCase(cp.getStatus()) && now.isBefore(effectiveExpiry)) {
+        // A flagged candidate keeps writing; the flag is for faculty review, not an ejection.
+        boolean live = "IN_PROGRESS".equalsIgnoreCase(cp.getStatus()) || "FLAGGED_VIOLATION".equalsIgnoreCase(cp.getStatus());
+        if (live && now.isBefore(effectiveExpiry)) {
             remainingSec = Duration.between(now, effectiveExpiry).getSeconds();
         }
 

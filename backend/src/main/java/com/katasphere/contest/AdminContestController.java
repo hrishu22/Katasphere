@@ -1,5 +1,7 @@
 package com.katasphere.contest;
 
+import com.katasphere.college.College;
+import com.katasphere.college.CollegeService;
 import com.katasphere.common.ApiResponse;
 import com.katasphere.contest.dto.*;
 import com.katasphere.user.User;
@@ -20,13 +22,16 @@ public class AdminContestController {
 
     private final ContestService contestService;
     private final UserRepository userRepository;
+    private final CollegeService collegeService;
 
     public AdminContestController(
         ContestService contestService,
-        UserRepository userRepository
+        UserRepository userRepository,
+        CollegeService collegeService
     ) {
         this.contestService = contestService;
         this.userRepository = userRepository;
+        this.collegeService = collegeService;
     }
 
     @GetMapping
@@ -37,7 +42,8 @@ public class AdminContestController {
                 .body(ApiResponse.error("Authentication required"));
         }
 
-        List<ContestDto> contests = contestService.getFacultyContests(user);
+        College college = collegeService.findAdminCollege(user).orElse(null);
+        List<ContestDto> contests = contestService.getFacultyContests(user, college);
         return ResponseEntity.ok(ApiResponse.ok("Faculty contests retrieved", contests));
     }
 
@@ -52,8 +58,14 @@ public class AdminContestController {
                 .body(ApiResponse.error("Authentication required to create examination"));
         }
 
+        College college = collegeService.findAdminCollege(user).orElse(null);
+        if (college == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("Register your college before creating examinations."));
+        }
+
         try {
-            ContestDto contest = contestService.createContest(request, user);
+            ContestDto contest = contestService.createContest(request, user, college);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Contest created successfully", contest));
         } catch (IllegalArgumentException e) {
@@ -74,6 +86,7 @@ public class AdminContestController {
         }
 
         try {
+            contestService.requireManageable(slug, user); // tenant isolation
             List<ContestSubmissionDto> submissions = contestService.getRecentContestSubmissions(slug);
             return ResponseEntity.ok(ApiResponse.ok("Contest submissions retrieved", submissions));
         } catch (IllegalArgumentException e) {
@@ -94,6 +107,7 @@ public class AdminContestController {
         }
 
         try {
+            contestService.requireManageable(slug, user); // tenant isolation
             List<ContestLeaderboardEntryDto> leaderboard = contestService.getLeaderboard(slug);
             return ResponseEntity.ok(ApiResponse.ok("Contest leaderboard retrieved", leaderboard));
         } catch (IllegalArgumentException e) {
@@ -114,6 +128,7 @@ public class AdminContestController {
         }
 
         try {
+            contestService.requireManageable(slug, user); // tenant isolation
             List<ContestParticipantDto> participants = contestService.getParticipants(slug);
             return ResponseEntity.ok(ApiResponse.ok("Contest participants retrieved", participants));
         } catch (IllegalArgumentException e) {
@@ -133,6 +148,7 @@ public class AdminContestController {
         }
 
         try {
+            contestService.requireManageable(slug, user); // tenant isolation
             String csvContent = contestService.generateGradebookCsv(slug);
             return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"gradebook-" + slug + ".csv\"")

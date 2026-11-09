@@ -39,15 +39,15 @@ public class ContestController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ContestDto>>> getPublishedContests() {
-        List<ContestDto> contests = contestService.getAllPublishedContests();
+    public ResponseEntity<ApiResponse<List<ContestDto>>> getPublishedContests(HttpServletRequest httpRequest) {
+        List<ContestDto> contests = contestService.getAllPublishedContests(resolveCurrentUser(httpRequest));
         return ResponseEntity.ok(ApiResponse.ok("Contests retrieved", contests));
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<ApiResponse<ContestDetailDto>> getContestDetail(@PathVariable String slug) {
+    public ResponseEntity<ApiResponse<ContestDetailDto>> getContestDetail(@PathVariable String slug, HttpServletRequest httpRequest) {
         try {
-            ContestDetailDto detail = contestService.getContestDetail(slug);
+            ContestDetailDto detail = contestService.getContestDetail(slug, resolveCurrentUser(httpRequest));
             return ResponseEntity.ok(ApiResponse.ok("Contest details retrieved", detail));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -191,9 +191,9 @@ public class ContestController {
     }
 
     @GetMapping("/{slug}/leaderboard")
-    public ResponseEntity<ApiResponse<List<ContestLeaderboardEntryDto>>> getLeaderboard(@PathVariable String slug) {
+    public ResponseEntity<ApiResponse<List<ContestLeaderboardEntryDto>>> getLeaderboard(@PathVariable String slug, HttpServletRequest httpRequest) {
         try {
-            List<ContestLeaderboardEntryDto> leaderboard = contestService.getLeaderboard(slug);
+            List<ContestLeaderboardEntryDto> leaderboard = contestService.getPublicLeaderboard(slug, resolveCurrentUser(httpRequest));
             return ResponseEntity.ok(ApiResponse.ok("Leaderboard retrieved", leaderboard));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

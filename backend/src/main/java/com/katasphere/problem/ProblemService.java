@@ -10,7 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
+import com.katasphere.config.CacheConfig;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public class ProblemService {
         this.tagRepository = tagRepository;
     }
 
+    @Cacheable(cacheNames = CacheConfig.PROBLEM_LIST,
+        key = "T(java.util.Objects).hash(#difficulty, #tagSlug, #search, #page, #size, #sortBy, #sortDir)")
     @Transactional(readOnly = true)
     public Page<ProblemSummaryDto> getProblems(
         String difficulty,
@@ -66,6 +70,7 @@ public class ProblemService {
         return problemRepository.findAll(spec, pageable).map(ProblemSummaryDto::fromEntity);
     }
 
+    @Cacheable(cacheNames = CacheConfig.PROBLEM_DETAIL, key = "#slug")
     @Transactional(readOnly = true)
     public ProblemDetailDto getProblemBySlug(String slug) {
         Problem problem = problemRepository.findBySlug(slug)
@@ -74,6 +79,7 @@ public class ProblemService {
         return ProblemDetailDto.fromEntity(problem);
     }
 
+    @Cacheable(cacheNames = CacheConfig.TAGS, key = "'all'")
     @Transactional(readOnly = true)
     public List<TagDto> getAllTags() {
         return tagRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()

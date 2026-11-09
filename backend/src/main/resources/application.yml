@@ -23,6 +23,10 @@ spring:
 
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: application/json,text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,text/csv
   servlet:
     session:
       cookie:

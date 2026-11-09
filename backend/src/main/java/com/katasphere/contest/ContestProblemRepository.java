@@ -19,4 +19,9 @@ public interface ContestProblemRepository extends JpaRepository<ContestProblem, 
     Optional<ContestProblem> findByContestAndProblem(Contest contest, Problem problem);
 
     void deleteByContest(Contest contest);
+
+    long countByContest(Contest contest);
+
+    @Query("SELECT COALESCE(SUM(cp.points), 0) FROM ContestProblem cp WHERE cp.contest = :contest")
+    int sumPointsByContest(@Param("contest") Contest contest);
 }

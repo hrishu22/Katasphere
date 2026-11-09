@@ -1,0 +1,78 @@
+package com.katasphere.college;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "colleges")
+public class College {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Column(name = "college_code", nullable = false, unique = true, length = 20)
+    private String collegeCode;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(name = "official_email", nullable = false)
+    private String officialEmail;
+
+    @Column(name = "expected_students", nullable = false)
+    private int expectedStudents = 100;
+
+    private String department;
+    private String website;
+    private String phone;
+    private String address;
+    private String city;
+    private String state;
+
+    @Column(nullable = false)
+    private String country = "India";
+
+    @Column(name = "admin_user_id", nullable = false, unique = true)
+    private UUID adminUserId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt = Instant.now();
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
+    public UUID getId() { return id; }
+    public String getCollegeCode() { return collegeCode; }
+    public void setCollegeCode(String collegeCode) { this.collegeCode = collegeCode; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getOfficialEmail() { return officialEmail; }
+    public void setOfficialEmail(String officialEmail) { this.officialEmail = officialEmail; }
+    public int getExpectedStudents() { return expectedStudents; }
+    public void setExpectedStudents(int expectedStudents) { this.expectedStudents = expectedStudents; }
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
+    public UUID getAdminUserId() { return adminUserId; }
+    public void setAdminUserId(UUID adminUserId) { this.adminUserId = adminUserId; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+}

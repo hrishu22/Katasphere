@@ -13,6 +13,11 @@ public record ContestLeaderboardEntryDto(
     String status,
     int tabSwitchCount
 ) {
+    public ContestLeaderboardEntryDto withoutEmail() {
+        return new ContestLeaderboardEntryDto(rank, participantId, studentName, null, totalScore,
+            penaltySeconds, status, tabSwitchCount);
+    }
+
     public static ContestLeaderboardEntryDto fromEntity(ContestParticipant cp, int rank) {
         return new ContestLeaderboardEntryDto(
             rank,

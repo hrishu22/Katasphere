@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record CreateContestRequest(
-    @NotBlank(message = "College name is required")
     @Size(max = 255)
     String collegeName,
 
@@ -46,6 +45,13 @@ public record CreateContestRequest(
     public record ProblemConfig(
         @NotNull UUID problemId,
         int points,
-        int order
-    ) {}
+        int order,
+        Integer orderIndex
+    ) {
+        public int resolvedOrder(int fallback) {
+            if (order > 0) return order;
+            if (orderIndex != null && orderIndex >= 0) return orderIndex + 1;
+            return fallback;
+        }
+    }
 }

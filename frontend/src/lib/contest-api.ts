@@ -1,26 +1,101 @@
-import { apiClient, ApiResponse, getApiBaseUrl } from "./api-client";
+import { apiClient, ApiResponse, getApiBaseUrl, invalidateApiCache } from "./api-client";
 import {
   ContestDto,
   ContestDetailDto,
+  ContestProblemDto,
   ContestParticipantDto,
   ContestSubmissionDto,
   ContestLeaderboardEntryDto,
   CreateContestPayload,
+  RegisterCollegePayload,
+  LinkCollegePayload,
+  CollegeAdminDto,
+  StudentCollegeDto,
+  CollegeContextDto,
+  StudentExamDashboardDto,
 } from "@/types/contest";
 
+function normalizeStatus(status: string): "UPCOMING" | "ACTIVE" | "CONCLUDED" {
+  if (status === "PAST" || status === "CONCLUDED") return "CONCLUDED";
+  if (status === "UPCOMING") return "UPCOMING";
+  return "ACTIVE";
+}
+
+function normalizeContestDto(raw: any): ContestDto {
+  return {
+    ...raw,
+    status: normalizeStatus(raw?.status || "ACTIVE"),
+  };
+}
+
+function parseStarterCode(rawStarter: any): Record<string, string> {
+  if (!rawStarter) return {};
+  if (typeof rawStarter === "object") return rawStarter as Record<string, string>;
+  if (typeof rawStarter === "string") {
+    try {
+      const parsed = JSON.parse(rawStarter);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch {
+      return { JAVA: rawStarter };
+    }
+  }
+  return {};
+}
+
+function normalizeProblemDto(raw: any, index: number): ContestProblemDto {
+  const sampleCases = raw?.sampleTestCases || raw?.publicTestCases || [];
+  return {
+    id: raw?.id || raw?.problemId || `prob-${index}`,
+    problemId: raw?.problemId || raw?.id || "",
+    title: raw?.title || `Problem ${String.fromCharCode(65 + index)}`,
+    slug: raw?.slug || "",
+    difficulty: (raw?.difficulty || "EASY") as "EASY" | "MEDIUM" | "HARD",
+    orderIndex: raw?.orderIndex ?? raw?.problemOrder ?? index,
+    points: raw?.points ?? 100,
+    description: raw?.description || "",
+    starterCode: parseStarterCode(raw?.starterCode),
+    sampleTestCases: sampleCases.map((tc: any, i: number) => ({
+      caseNumber: tc?.caseNumber ?? i + 1,
+      input: tc?.input ?? "",
+      expectedOutput: tc?.expectedOutput ?? "",
+    })),
+  };
+}
+
+function normalizeSubmissionDto(raw: any): ContestSubmissionDto {
+  return {
+    ...raw,
+    scoreAwarded: raw?.scoreAwarded ?? raw?.pointsAwarded ?? 0,
+    runtimeMs: raw?.runtimeMs ?? raw?.executionTimeMs ?? 0,
+    compileOutput: raw?.compileOutput ?? raw?.errorMessage ?? null,
+  };
+}
+
 export async function getContests(): Promise<ContestDto[]> {
-  const res = await apiClient<ApiResponse<ContestDto[]>>("/api/v1/contests");
-  return res.data || [];
+  const res = await apiClient<ApiResponse<any[]>>("/api/v1/contests", { cacheTtlMs: 10000 });
+  return (res.data || []).map(normalizeContestDto);
 }
 
 export async function getContestDetail(slug: string): Promise<ContestDetailDto> {
-  const res = await apiClient<ApiResponse<ContestDetailDto>>(`/api/v1/contests/${slug}`);
-  return res.data;
+  const res = await apiClient<ApiResponse<any>>(`/api/v1/contests/${slug}`, { cacheTtlMs: 5000 });
+  const raw = res.data;
+  const rawContest = raw?.contest || raw;
+  const rawProblems: any[] = raw?.problems || [];
+  return {
+    contest: normalizeContestDto({
+      ...rawContest,
+      totalProblems: rawContest?.totalProblems ?? rawProblems.length,
+      totalParticipants: rawContest?.totalParticipants ?? 0,
+    }),
+    problems: rawProblems.map(normalizeProblemDto),
+  };
 }
 
 export async function getParticipantState(slug: string): Promise<ContestParticipantDto | null> {
   try {
-    const res = await apiClient<ApiResponse<ContestParticipantDto>>(`/api/v1/contests/${slug}/status`);
+    const res = await apiClient<ApiResponse<ContestParticipantDto>>(`/api/v1/contests/${slug}/status`, {
+      cacheTtlMs: 0,
+    });
     return res.data;
   } catch (err: any) {
     if (err?.status === 404 || err?.status === 401) {
@@ -35,6 +110,7 @@ export async function joinContest(slug: string, accessCode: string): Promise<Con
     method: "POST",
     body: JSON.stringify({ accessCode }),
   });
+  invalidateApiCache();
   return res.data;
 }
 
@@ -76,12 +152,13 @@ export async function submitContestCode(
   slug: string,
   payload: { problemId: string; language: string; sourceCode: string }
 ): Promise<ContestSubmissionDto> {
-  const res = await apiClient<ApiResponse<ContestSubmissionDto>>(`/api/v1/contests/${slug}/submit`, {
+  const res = await apiClient<ApiResponse<any>>(`/api/v1/contests/${slug}/submit`, {
     method: "POST",
     body: JSON.stringify(payload),
     timeoutMs: 35000,
   });
-  return res.data;
+  invalidateApiCache();
+  return normalizeSubmissionDto(res.data);
 }
 
 export async function recordTabSwitch(slug: string): Promise<ContestParticipantDto> {
@@ -95,44 +172,105 @@ export async function finishExam(slug: string): Promise<ContestParticipantDto> {
   const res = await apiClient<ApiResponse<ContestParticipantDto>>(`/api/v1/contests/${slug}/finish`, {
     method: "POST",
   });
+  invalidateApiCache();
   return res.data;
 }
 
 export async function getContestLeaderboard(slug: string): Promise<ContestLeaderboardEntryDto[]> {
-  const res = await apiClient<ApiResponse<ContestLeaderboardEntryDto[]>>(`/api/v1/contests/${slug}/leaderboard`);
+  const res = await apiClient<ApiResponse<ContestLeaderboardEntryDto[]>>(`/api/v1/contests/${slug}/leaderboard`, {
+    cacheTtlMs: 8000,
+  });
   return res.data || [];
 }
 
 export async function getMyContestSubmissions(slug: string): Promise<ContestSubmissionDto[]> {
-  const res = await apiClient<ApiResponse<ContestSubmissionDto[]>>(`/api/v1/contests/${slug}/submissions/me`);
-  return res.data || [];
+  const res = await apiClient<ApiResponse<any[]>>(`/api/v1/contests/${slug}/submissions/me`, {
+    cacheTtlMs: 0,
+  });
+  return (res.data || []).map(normalizeSubmissionDto);
 }
 
 // ======================== FACULTY / ADMIN APIS ========================
 
 export async function getFacultyContests(): Promise<ContestDto[]> {
-  const res = await apiClient<ApiResponse<ContestDto[]>>("/api/v1/admin/contests");
-  return res.data || [];
+  const res = await apiClient<ApiResponse<any[]>>("/api/v1/admin/contests", { cacheTtlMs: 5000 });
+  return (res.data || []).map(normalizeContestDto);
 }
 
 export async function createFacultyContest(payload: CreateContestPayload): Promise<ContestDto> {
-  const res = await apiClient<ApiResponse<ContestDto>>("/api/v1/admin/contests", {
+  const res = await apiClient<ApiResponse<any>>("/api/v1/admin/contests", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      problems: payload.problems.map((p, idx) => ({
+        problemId: p.problemId,
+        points: p.points,
+        order: p.orderIndex + 1,
+        orderIndex: p.orderIndex,
+      })),
+    }),
   });
-  return res.data;
+  invalidateApiCache();
+  return normalizeContestDto(res.data);
 }
 
 export async function getAdminParticipants(slug: string): Promise<ContestParticipantDto[]> {
-  const res = await apiClient<ApiResponse<ContestParticipantDto[]>>(`/api/v1/admin/contests/${slug}/participants`);
+  const res = await apiClient<ApiResponse<ContestParticipantDto[]>>(`/api/v1/admin/contests/${slug}/participants`, {
+    cacheTtlMs: 0,
+  });
   return res.data || [];
 }
 
 export async function getAdminSubmissions(slug: string): Promise<ContestSubmissionDto[]> {
-  const res = await apiClient<ApiResponse<ContestSubmissionDto[]>>(`/api/v1/admin/contests/${slug}/submissions`);
-  return res.data || [];
+  const res = await apiClient<ApiResponse<any[]>>(`/api/v1/admin/contests/${slug}/submissions`, {
+    cacheTtlMs: 0,
+  });
+  return (res.data || []).map(normalizeSubmissionDto);
 }
 
 export function getExportGradebookUrl(slug: string): string {
   return `${getApiBaseUrl()}/api/v1/admin/contests/${slug}/export-csv`;
+}
+
+// ======================== COLLEGE & STUDENT AFFILIATION APIS ========================
+
+export async function getMyCollegeContext(): Promise<CollegeContextDto> {
+  const res = await apiClient<ApiResponse<CollegeContextDto>>("/api/v1/colleges/me/context", {
+    cacheTtlMs: 10000,
+  });
+  return res.data;
+}
+
+export async function registerCollege(payload: RegisterCollegePayload): Promise<CollegeAdminDto> {
+  const res = await apiClient<ApiResponse<CollegeAdminDto>>("/api/v1/colleges", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  invalidateApiCache();
+  return res.data;
+}
+
+export async function updateMyCollege(payload: RegisterCollegePayload): Promise<CollegeAdminDto> {
+  const res = await apiClient<ApiResponse<CollegeAdminDto>>("/api/v1/colleges/mine", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  invalidateApiCache();
+  return res.data;
+}
+
+export async function linkStudentCollege(payload: LinkCollegePayload): Promise<StudentCollegeDto> {
+  const res = await apiClient<ApiResponse<StudentCollegeDto>>("/api/v1/colleges/me/link", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  invalidateApiCache();
+  return res.data;
+}
+
+export async function getStudentExamDashboard(): Promise<StudentExamDashboardDto> {
+  const res = await apiClient<ApiResponse<StudentExamDashboardDto>>("/api/v1/colleges/me/exams", {
+    cacheTtlMs: 8000,
+  });
+  return res.data;
 }

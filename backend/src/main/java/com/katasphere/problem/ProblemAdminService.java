@@ -13,6 +13,8 @@ import java.util.*;
 @Service
 public class ProblemAdminService {
 
+    // Any catalogue write invalidates the read caches so users never see stale problems
+
     private final ProblemRepository problemRepository;
     private final TagRepository tagRepository;
     private final TestCaseRepository testCaseRepository;
@@ -31,6 +33,11 @@ public class ProblemAdminService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.PROBLEM_LIST, allEntries = true),
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.PROBLEM_DETAIL, allEntries = true),
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.TAGS, allEntries = true)
+    })
     public ProblemDetailDto createOrUpdateProblem(CreateProblemRequest request) {
         String slug = (request.slug() != null && !request.slug().isBlank())
             ? toKebabCase(request.slug())
@@ -110,6 +117,11 @@ public class ProblemAdminService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.PROBLEM_LIST, allEntries = true),
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.PROBLEM_DETAIL, allEntries = true),
+        @org.springframework.cache.annotation.CacheEvict(cacheNames = com.katasphere.config.CacheConfig.TAGS, allEntries = true)
+    })
     public List<ProblemDetailDto> importProblemsBatch(List<CreateProblemRequest> requests) {
         List<ProblemDetailDto> results = new ArrayList<>();
         for (CreateProblemRequest req : requests) {

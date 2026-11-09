@@ -40,7 +40,7 @@ public record ContestDetailDto(
             c.getTitle(),
             c.getSlug(),
             c.getDescription(),
-            c.getAccessCode(),
+            null, // access code is never sent to clients in the detail view
             c.getStartTime(),
             c.getEndTime(),
             c.getDurationMinutes(),

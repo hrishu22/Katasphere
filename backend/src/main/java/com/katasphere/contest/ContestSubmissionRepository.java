@@ -27,4 +27,7 @@ public interface ContestSubmissionRepository extends JpaRepository<ContestSubmis
     long countByContest(Contest contest);
 
     long countByContestAndVerdict(Contest contest, String verdict);
+
+    @Query("SELECT COUNT(DISTINCT cs.problem) FROM ContestSubmission cs WHERE cs.participant = :participant AND cs.verdict = 'ACCEPTED'")
+    long countSolvedProblems(@Param("participant") ContestParticipant participant);
 }
