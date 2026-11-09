@@ -205,7 +205,24 @@ export async function createFacultyContest(payload: CreateContestPayload): Promi
     method: "POST",
     body: JSON.stringify({
       ...payload,
-      problems: payload.problems.map((p, idx) => ({
+      problems: payload.problems.map((p) => ({
+        problemId: p.problemId,
+        points: p.points,
+        order: p.orderIndex + 1,
+        orderIndex: p.orderIndex,
+      })),
+    }),
+  });
+  invalidateApiCache();
+  return normalizeContestDto(res.data);
+}
+
+export async function updateFacultyContest(slug: string, payload: CreateContestPayload): Promise<ContestDto> {
+  const res = await apiClient<ApiResponse<any>>(`/api/v1/admin/contests/${slug}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      ...payload,
+      problems: payload.problems.map((p) => ({
         problemId: p.problemId,
         points: p.points,
         order: p.orderIndex + 1,

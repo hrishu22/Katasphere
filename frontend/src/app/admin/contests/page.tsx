@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   getFacultyContests,
   createFacultyContest,
+  updateFacultyContest,
+  getContestDetail,
   getAdminParticipants,
   getAdminSubmissions,
   getExportGradebookUrl,
@@ -21,6 +23,7 @@ import {
 import { apiClient, ApiResponse } from "@/lib/api-client";
 import {
   ContestDto,
+  ContestProblemDto,
   ContestParticipantDto,
   ContestSubmissionDto,
   CreateContestPayload,
@@ -52,6 +55,7 @@ import {
   Sparkles,
   ArrowRight,
   GraduationCap,
+  Edit3,
 } from "lucide-react";
 
 interface CatalogProblemSummary {
@@ -94,11 +98,17 @@ export default function AdminContestsPage() {
   const [registeringCollege, setRegisteringCollege] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
 
-  // Modal: Create Exam Wizard
+  // Modal: Create or Edit/Reschedule Exam Wizard
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingContestSlug, setEditingContestSlug] = useState<string | null>(null);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  // Modal: Contest Details View (opened when Admin clicks on the contest name)
+  const [selectedContestForDetail, setSelectedContestForDetail] = useState<ContestDto | null>(null);
+  const [detailProblems, setDetailProblems] = useState<ContestProblemDto[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Form State
   const [formCollege, setFormCollege] = useState("IIT Delhi - Dept. of Computer Science");
@@ -289,6 +299,78 @@ export default function AdminContestsPage() {
     fetchCatalog();
   }, [authLoading, isCollegeAdmin]);
 
+  // Open Contest Details modal when Admin clicks on the name of a contest
+  const openContestDetails = async (c: ContestDto) => {
+    setSelectedContestForDetail(c);
+    setDetailProblems([]);
+    setDetailLoading(true);
+    try {
+      const detail = await getContestDetail(c.slug);
+      if (detail?.contest) {
+        setSelectedContestForDetail({
+          ...c,
+          ...detail.contest,
+          accessCode: c.accessCode || detail.contest.accessCode,
+        });
+      }
+      setDetailProblems(detail?.problems || []);
+    } catch (err) {
+      console.error("Failed to fetch contest details", err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const toLocalDateTimeInput = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      const offsetMs = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16);
+    } catch {
+      return "";
+    }
+  };
+
+  // Open the Reschedule / Edit modal (only allowed before examination start time)
+  const openEditOrRescheduleContest = async (c: ContestDto) => {
+    if (new Date(c.startTime).getTime() <= Date.now()) {
+      alert("This examination has already started or concluded. Editing and rescheduling are only allowed before the start time of the examination.");
+      return;
+    }
+
+    setSelectedContestForDetail(null);
+    setEditingContestSlug(c.slug);
+    setFormCollege(c.collegeName || adminCollege?.name || "");
+    setFormTitle(c.title);
+    setFormSlug(c.slug);
+    setFormDesc(c.description || "");
+    setFormCode(c.accessCode || "");
+    setFormDuration(c.durationMinutes || 90);
+    setFormStartTime(toLocalDateTimeInput(c.startTime));
+    setFormEndTime(toLocalDateTimeInput(c.endTime));
+    setFormAllowTabSwitch(c.allowTabSwitch ?? true);
+    setFormMaxTabSwitches(c.maxTabSwitches ?? 3);
+    setWizardStep(1);
+    setCreateError(null);
+    setShowCreateModal(true);
+
+    try {
+      const detail = await getContestDetail(c.slug);
+      if (detail?.problems && detail.problems.length > 0) {
+        setSelectedProblems(
+          detail.problems.map((p) => ({
+            id: p.problemId || p.id,
+            title: p.title,
+            difficulty: p.difficulty,
+            points: p.points || 100,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load problems for editing contest", err);
+    }
+  };
+
   // Open monitor drawer
   const openMonitor = async (c: ContestDto) => {
     setSelectedContestForMonitor(c);
@@ -369,18 +451,23 @@ export default function AdminContestsPage() {
     };
 
     try {
-      await createFacultyContest(payload);
+      if (editingContestSlug) {
+        await updateFacultyContest(editingContestSlug, payload);
+      } else {
+        await createFacultyContest(payload);
+      }
       setShowCreateModal(false);
       resetForm();
       loadData();
     } catch (err: any) {
-      setCreateError(err.message || "Failed to create contest.");
+      setCreateError(err.message || (editingContestSlug ? "Failed to reschedule/update contest." : "Failed to create contest."));
     } finally {
       setCreating(false);
     }
   };
 
   const resetForm = () => {
+    setEditingContestSlug(null);
     setFormTitle("");
     setFormSlug("");
     setFormDesc("");
@@ -462,8 +549,14 @@ export default function AdminContestsPage() {
                   });
                   return;
                 }
+                setEditingContestSlug(null);
+                resetForm();
                 setFormCollege(adminCollege.name);
                 generateSlugAndCode();
+                const now = new Date();
+                const end = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+                setFormStartTime(toLocalDateTimeInput(now.toISOString()));
+                setFormEndTime(toLocalDateTimeInput(end.toISOString()));
                 setShowCreateModal(true);
               }}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition shadow-lg shadow-brand-600/20"
@@ -860,11 +953,19 @@ export default function AdminContestsPage() {
                 <tbody className="divide-y divide-surface-border">
                   {contests.map((c) => {
                     const isCopied = copiedCode === c.accessCode;
+                    const isBeforeStartTime = new Date(c.startTime).getTime() > Date.now();
                     return (
                       <tr key={c.id} className="hover:bg-surface-subtle/50 transition">
-                        {/* Title & College */}
+                        {/* Title & College (Clickable Contest Name to open Contest Details) */}
                         <td className="px-6 py-4">
-                          <p className="font-bold text-foreground text-sm">{c.title}</p>
+                          <button
+                            type="button"
+                            onClick={() => openContestDetails(c)}
+                            className="font-bold text-foreground hover:text-brand-400 text-sm text-left underline-offset-2 hover:underline transition flex items-center gap-1.5"
+                            title="Click to view full contest details and reschedule/edit options"
+                          >
+                            <span>{c.title}</span>
+                          </button>
                           <div className="flex items-center gap-1.5 text-slate-400 text-[11px] mt-0.5">
                             <Building2 className="h-3 w-3 text-brand-400" />
                             <span>{c.collegeName}</span>
@@ -893,7 +994,12 @@ export default function AdminContestsPage() {
                         <td className="px-6 py-4 text-slate-300">
                           <div>{c.durationMinutes} minutes</div>
                           <div className="text-[11px] text-slate-500">
-                            {new Date(c.startTime).toLocaleDateString([], { month: "short", day: "numeric" })}
+                            {new Date(c.startTime).toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </div>
                         </td>
 
@@ -932,6 +1038,18 @@ export default function AdminContestsPage() {
 
                         {/* Actions */}
                         <td className="px-6 py-4 text-right space-x-2">
+                          {isBeforeStartTime && (
+                            <button
+                              type="button"
+                              onClick={() => openEditOrRescheduleContest(c)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold transition"
+                              title="Reschedule or Edit Examination (available before start time)"
+                            >
+                              <Edit3 className="h-3.5 w-3.5 text-amber-400" />
+                              <span>Edit / Reschedule</span>
+                            </button>
+                          )}
+
                           <button
                             onClick={() => openMonitor(c)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-border text-foreground font-semibold transition"
@@ -1152,18 +1270,236 @@ export default function AdminContestsPage() {
           </div>
         )}
 
-        {/* Modal: Create Examination Wizard */}
+        {/* Modal: Contest Details View (Opened when Admin clicks on the name of a contest) */}
+        {selectedContestForDetail && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+            <div className="max-w-2xl w-full bg-surface border border-surface-border rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-surface-border pb-4 mb-5 shrink-0 gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-400">
+                      <Trophy className="h-3.5 w-3.5" />
+                      <span>Examination Details</span>
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        selectedContestForDetail.status === "ACTIVE"
+                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                          : selectedContestForDetail.status === "UPCOMING"
+                          ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                          : "bg-slate-500/15 text-slate-300 border-slate-500/30"
+                      }`}
+                    >
+                      {selectedContestForDetail.status}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-foreground">
+                    {selectedContestForDetail.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {selectedContestForDetail.collegeName} •{" "}
+                    <span className="font-mono text-slate-500">/{selectedContestForDetail.slug}</span>
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSelectedContestForDetail(null)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-foreground hover:bg-surface-subtle transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto space-y-5 pr-1 text-xs">
+                {/* Key Schedule & Access Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="p-4 rounded-2xl bg-background border border-surface-border space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <KeyRound className="h-3.5 w-3.5 text-brand-400" />
+                      <span>Student Access Code</span>
+                    </span>
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="font-mono text-base font-extrabold text-emerald-400 tracking-wider">
+                        {selectedContestForDetail.accessCode || "—"}
+                      </span>
+                      {selectedContestForDetail.accessCode && (
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(selectedContestForDetail.accessCode || "")}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-subtle border border-surface-border text-[11px] font-semibold text-foreground transition"
+                        >
+                          {copiedCode === selectedContestForDetail.accessCode ? (
+                            <>
+                              <Check className="h-3 w-3 text-emerald-400" />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 text-brand-400" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-background border border-surface-border space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Duration &amp; Anti-Cheat Proctoring</span>
+                    </span>
+                    <div className="text-sm font-extrabold text-foreground pt-0.5">
+                      {selectedContestForDetail.durationMinutes} Minutes
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      Max Tab Switches Allowed:{" "}
+                      <strong className="text-foreground">
+                        {selectedContestForDetail.maxTabSwitches ?? 3}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-background border border-surface-border space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-blue-400" />
+                      <span>Scheduled Start Time</span>
+                    </span>
+                    <div className="text-sm font-bold text-foreground pt-0.5">
+                      {new Date(selectedContestForDetail.startTime).toLocaleString([], {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-background border border-surface-border space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-purple-400" />
+                      <span>Scheduled End Time</span>
+                    </span>
+                    <div className="text-sm font-bold text-foreground pt-0.5">
+                      {new Date(selectedContestForDetail.endTime).toLocaleString([], {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assigned Challenges List */}
+                <div className="rounded-2xl bg-background border border-surface-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-foreground flex items-center gap-1.5">
+                      <FileCode2 className="h-4 w-4 text-brand-400" />
+                      <span>
+                        Assigned Examination Problems ({detailProblems.length || selectedContestForDetail.totalProblems})
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {selectedContestForDetail.totalParticipants} Enrolled Students
+                    </span>
+                  </div>
+
+                  {detailLoading ? (
+                    <div className="py-6 flex items-center justify-center gap-2 text-slate-400">
+                      <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+                      <span>Loading assigned problems...</span>
+                    </div>
+                  ) : detailProblems.length === 0 ? (
+                    <div className="py-4 text-center text-slate-500">
+                      {selectedContestForDetail.totalProblems} challenge(s) configured for this examination.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {detailProblems.map((prob, idx) => (
+                        <div
+                          key={prob.id || idx}
+                          className="p-3 rounded-xl bg-surface border border-surface-border flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="h-6 w-6 rounded-lg bg-brand-500/15 border border-brand-500/30 text-brand-400 font-extrabold flex items-center justify-center shrink-0">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="font-bold text-foreground truncate">{prob.title}</div>
+                              <div className="text-[10px] font-mono text-slate-400">{prob.difficulty}</div>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-extrabold shrink-0">
+                            {prob.points} pts
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer: Edit / Reschedule button shown ONLY before the start time of the examination */}
+              <div className="border-t border-surface-border pt-4 mt-5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                {new Date(selectedContestForDetail.startTime).getTime() > Date.now() ? (
+                  <button
+                    type="button"
+                    onClick={() => openEditOrRescheduleContest(selectedContestForDetail)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition shadow-lg shadow-amber-500/20"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Reschedule / Edit Examination</span>
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-slate-400">
+                    Editing &amp; rescheduling are locked once the examination start time has passed.
+                  </span>
+                )}
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = selectedContestForDetail;
+                      setSelectedContestForDetail(null);
+                      openMonitor(c);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-subtle hover:bg-surface-border border border-surface-border text-xs font-bold text-foreground transition"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-brand-400" />
+                    <span>Open Proctoring Monitor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedContestForDetail(null)}
+                    className="px-4 py-2 rounded-xl bg-surface-subtle hover:bg-surface-border text-xs font-semibold text-slate-300 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Create or Reschedule/Edit Examination Wizard */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="max-w-2xl w-full bg-surface border border-surface-border rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Wizard Header */}
               <div className="flex items-center justify-between border-b border-surface-border pb-4 mb-6 shrink-0">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Create New Examination</h3>
-                  <p className="text-xs text-slate-400">Step {wizardStep} of 3</p>
+                  <h3 className="text-lg font-bold text-foreground">
+                    {editingContestSlug ? "Reschedule / Edit Examination" : "Create New Examination"}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Step {wizardStep} of 3{editingContestSlug ? ` • Editing /${editingContestSlug}` : ""}
+                  </p>
                 </div>
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingContestSlug(null);
+                  }}
                   className="p-1 rounded-lg text-slate-400 hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
@@ -1225,9 +1561,10 @@ export default function AdminContestsPage() {
                         <input
                           type="text"
                           value={formSlug}
+                          disabled={Boolean(editingContestSlug)}
                           onChange={(e) => setFormSlug(e.target.value)}
                           placeholder="e.g. iitd-cs201-midsem-2026"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
                         />
                       </div>
 
@@ -1454,46 +1791,64 @@ export default function AdminContestsPage() {
                   <div />
                 )}
 
-                {wizardStep < 3 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (wizardStep === 1 && (!formTitle || !formSlug || !formCode)) {
-                        setCreateError("Please complete the required details.");
-                        return;
-                      }
-                      if (wizardStep === 2 && selectedProblems.length === 0) {
-                        setCreateError("Please pick at least 1 problem.");
-                        return;
-                      }
-                      setCreateError(null);
-                      setWizardStep((prev) => (prev + 1) as any);
-                    }}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-sm"
-                  >
-                    <span>Next</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={creating}
-                    onClick={handleCreateContest}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-lg shadow-brand-600/25 disabled:opacity-50"
-                  >
-                    {creating ? (
-                      <>
+                <div className="flex items-center gap-2">
+                  {editingContestSlug && wizardStep < 3 && (
+                    <button
+                      type="button"
+                      disabled={creating}
+                      onClick={handleCreateContest}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition shadow-sm disabled:opacity-50"
+                    >
+                      {creating ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Publishing Examination...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        <span>Publish & Launch Exam</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
+                      <span>Save &amp; Reschedule Now</span>
+                    </button>
+                  )}
+
+                  {wizardStep < 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (wizardStep === 1 && (!formTitle || !formSlug || !formCode)) {
+                          setCreateError("Please complete the required details.");
+                          return;
+                        }
+                        if (wizardStep === 2 && selectedProblems.length === 0) {
+                          setCreateError("Please pick at least 1 problem.");
+                          return;
+                        }
+                        setCreateError(null);
+                        setWizardStep((prev) => (prev + 1) as any);
+                      }}
+                      className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-sm"
+                    >
+                      <span>Next</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={creating}
+                      onClick={handleCreateContest}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-lg shadow-brand-600/25 disabled:opacity-50"
+                    >
+                      {creating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>{editingContestSlug ? "Saving Changes..." : "Publishing Examination..."}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          <span>{editingContestSlug ? "Save & Reschedule Examination" : "Publish & Launch Exam"}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -136,6 +136,68 @@ public class ContestService {
         return ContestDto.fromEntity(contest, req.problems() != null ? req.problems().size() : 0, 0);
     }
 
+    @Transactional
+    public ContestDto updateOrRescheduleContest(String slug, CreateContestRequest req, User admin, College college) {
+        if (admin == null || (!"COLLEGE_ADMIN".equalsIgnoreCase(admin.getRole()) && !"ADMIN".equalsIgnoreCase(admin.getRole()))) {
+            throw new IllegalStateException("Only a registered College Admin can edit or reschedule a contest.");
+        }
+
+        Contest contest = requireManageable(slug, admin);
+
+        if (!Instant.now().isBefore(contest.getStartTime())) {
+            throw new IllegalStateException(
+                "This examination has already started or concluded. A contest can only be edited or rescheduled before its start time."
+            );
+        }
+
+        if (req.endTime().isBefore(req.startTime()) || req.endTime().equals(req.startTime())) {
+            throw new IllegalArgumentException("Contest end time must be after start time");
+        }
+
+        contest.setTitle(req.title().trim());
+        contest.setDescription(req.description());
+        contest.setAccessCode(req.accessCode().trim());
+        contest.setStartTime(req.startTime());
+        contest.setEndTime(req.endTime());
+        if (req.durationMinutes() > 0) {
+            contest.setDurationMinutes(req.durationMinutes());
+        }
+        if (req.scoringSystem() != null && !req.scoringSystem().isBlank()) {
+            contest.setScoringSystem(req.scoringSystem());
+        }
+        if (req.allowTabSwitch() != null) {
+            contest.setAllowTabSwitch(req.allowTabSwitch());
+        }
+        if (req.maxTabSwitches() != null) {
+            contest.setMaxTabSwitches(req.maxTabSwitches());
+        }
+        if (req.isPublished() != null) {
+            contest.setPublished(req.isPublished());
+        }
+        contest.setUpdatedAt(Instant.now());
+        contest = contestRepository.save(contest);
+
+        if (req.problems() != null && !req.problems().isEmpty()) {
+            contestProblemRepository.deleteByContest(contest);
+            contestProblemRepository.flush();
+            int order = 1;
+            for (var pConfig : req.problems()) {
+                Problem problem = problemRepository.findById(pConfig.problemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Problem not found: " + pConfig.problemId()));
+
+                ContestProblem cp = new ContestProblem(
+                    contest,
+                    problem,
+                    pConfig.resolvedOrder(order++),
+                    pConfig.points() > 0 ? pConfig.points() : 100
+                );
+                contestProblemRepository.save(cp);
+            }
+        }
+
+        return toDto(contest);
+    }
+
     // ------------------------------------------------------------ tenant access rules
 
     /**

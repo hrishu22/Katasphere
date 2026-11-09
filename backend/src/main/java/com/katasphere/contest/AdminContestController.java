@@ -78,6 +78,33 @@ public class AdminContestController {
         }
     }
 
+    @PutMapping("/{slug}")
+    public ResponseEntity<ApiResponse<ContestDto>> updateOrRescheduleContest(
+        @PathVariable String slug,
+        @Valid @RequestBody CreateContestRequest request,
+        HttpServletRequest httpRequest
+    ) {
+        User user = resolveCurrentUser(httpRequest);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required to edit or reschedule examination"));
+        }
+
+        College college = collegeService.findAdminCollege(user).orElse(null);
+        if (college == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("College Admin access required"));
+        }
+
+        try {
+            ContestDto updated = contestService.updateOrRescheduleContest(slug, request, user, college);
+            return ResponseEntity.ok(ApiResponse.ok("Contest updated and rescheduled successfully", updated));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @GetMapping("/{slug}/submissions")
     public ResponseEntity<ApiResponse<List<ContestSubmissionDto>>> getLiveSubmissions(
         @PathVariable String slug,
