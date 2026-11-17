@@ -70,6 +70,11 @@ public class ContestExecutionService {
             sampleCases = testCaseRepository.findByProblemOrderByPositionAsc(problem)
                 .stream().limit(3).toList();
         }
+        if (sampleCases.isEmpty() && problem.getExamples() != null && !problem.getExamples().isEmpty()) {
+            sampleCases = problem.getExamples().stream()
+                .map(ex -> new TestCase(problem, ex.getPosition(), ex.getInput(), ex.getExpectedOutput(), false))
+                .toList();
+        }
 
         return executionEngine.execute(
             request.language().toUpperCase(),
@@ -99,6 +104,11 @@ public class ContestExecutionService {
 
         // Load all test cases (public + hidden)
         List<TestCase> allCases = testCaseRepository.findByProblemOrderByPositionAsc(problem);
+        if (allCases.isEmpty() && problem.getExamples() != null && !problem.getExamples().isEmpty()) {
+            allCases = problem.getExamples().stream()
+                .map(ex -> new TestCase(problem, ex.getPosition(), ex.getInput(), ex.getExpectedOutput(), false))
+                .toList();
+        }
 
         ExecutionResultDto execResult = executionEngine.execute(
             request.language().toUpperCase(),
@@ -149,6 +159,10 @@ public class ContestExecutionService {
 
     private void validateTimeWindowNotExpired(Contest contest, ContestParticipant participant) {
         Instant now = Instant.now();
+
+        if (now.isBefore(contest.getStartTime())) {
+            throw new IllegalStateException("This examination has not started yet. Please wait for the scheduled start time.");
+        }
 
         if ("SUBMITTED".equalsIgnoreCase(participant.getStatus())) {
             throw new IllegalStateException("Your examination has already been completed and submitted.");

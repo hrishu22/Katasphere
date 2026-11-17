@@ -10,11 +10,13 @@ import {
   getParticipantState,
   joinContest,
   getContestLeaderboard,
+  getMyContestSubmissions,
 } from "@/lib/contest-api";
 import {
   ContestDetailDto,
   ContestParticipantDto,
   ContestLeaderboardEntryDto,
+  ContestSubmissionDto,
 } from "@/types/contest";
 import {
   Clock,
@@ -43,6 +45,7 @@ export default function ContestWaitingRoomPage() {
 
   const [detail, setDetail] = useState<ContestDetailDto | null>(null);
   const [participant, setParticipant] = useState<ContestParticipantDto | null>(null);
+  const [mySubmissions, setMySubmissions] = useState<ContestSubmissionDto[]>([]);
   const [leaderboard, setLeaderboard] = useState<ContestLeaderboardEntryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessCode, setAccessCode] = useState("");
@@ -66,10 +69,14 @@ export default function ContestWaitingRoomPage() {
         // Fetch leaderboard in parallel
         getContestLeaderboard(slug).then(setLeaderboard).catch(console.error);
 
-        // If user is authenticated, check their participant status
+        // If user is authenticated, check their participant status & submissions
         if (user) {
-          const part = await getParticipantState(slug);
+          const [part, subs] = await Promise.all([
+            getParticipantState(slug),
+            getMyContestSubmissions(slug).catch(() => []),
+          ]);
           setParticipant(part);
+          setMySubmissions(subs);
           if (part) {
             setParticipantRemainingSec(part.timeRemainingSeconds);
           }
@@ -176,9 +183,29 @@ export default function ContestWaitingRoomPage() {
   }
 
   const { contest, problems } = detail;
-  const isStarted = secondsUntilStart !== null && secondsUntilStart === 0;
-  const isEnded = secondsUntilEnd !== null && secondsUntilEnd === 0;
+  const isStarted = secondsUntilStart !== null ? secondsUntilStart === 0 : new Date(contest.startTime).getTime() <= Date.now();
+  const isEnded = secondsUntilEnd !== null ? secondsUntilEnd === 0 : new Date(contest.endTime).getTime() <= Date.now();
   const isInSession = isStarted && !isEnded;
+
+  const totalProblemsCount = problems.length || contest.totalProblems || 0;
+  const solvedProblemIds = new Set(
+    mySubmissions.filter((s) => s.verdict === "ACCEPTED").map((s) => s.problemId)
+  );
+  const solvedCount = solvedProblemIds.size;
+  const unsolvedCount = Math.max(0, totalProblemsCount - solvedCount);
+  const maxPossiblePoints = problems.reduce((acc, p) => acc + (p.points || 0), 0);
+
+  const formatTimeTaken = (startedAt?: string | null, endedAt?: string | null) => {
+    if (!startedAt) return "0m 0s";
+    const startMs = new Date(startedAt).getTime();
+    const endMs = endedAt ? new Date(endedAt).getTime() : Date.now();
+    const diffSec = Math.max(0, Math.floor((endMs - startMs) / 1000));
+    const hrs = Math.floor(diffSec / 3600);
+    const mins = Math.floor((diffSec % 3600) / 60);
+    const secs = diffSec % 60;
+    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+    return `${mins}m ${secs}s`;
+  };
 
   return (
     <AppShell>
@@ -221,10 +248,12 @@ export default function ContestWaitingRoomPage() {
                   <FileCode2 className="h-3.5 w-3.5 text-purple-400" />
                   <span>Problems: <strong className="font-semibold">{contest.totalProblems} challenges</strong></span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background border border-surface-border text-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Proctoring: <strong className="font-semibold">{contest.allowTabSwitch ? `Max ${contest.maxTabSwitches} tab switches` : "Locked tabs"}</strong></span>
-                </div>
+                {isEnded && !participant && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                    <span>You haven&apos;t participated in this contest</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -367,19 +396,17 @@ export default function ContestWaitingRoomPage() {
                   </div>
                 ))}
 
-                {/* Anti-cheat guidelines */}
-                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25">
-                  <div className="flex items-center gap-2 text-amber-400 font-semibold text-sm mb-2">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>Important Anti-Cheat & Examination Regulations</span>
+                {/* Examination Instructions */}
+                <div className="p-5 rounded-2xl bg-brand-500/10 border border-brand-500/25">
+                  <div className="flex items-center gap-2 text-brand-400 font-semibold text-sm mb-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Examination Guidelines</span>
                   </div>
                   <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                    <li>Once you enter the workspace, your personal timer will tick down continuously.</li>
-                    <li>
-                      Tab-switches and window minimizes are recorded live. Faculty is alerted when violations exceed {contest.maxTabSwitches}.
-                    </li>
-                    <li>Code is verified against strict hidden edge cases on submit. Public network tampering is prohibited.</li>
-                    <li>When your timer expires, remaining solutions are automatically submitted.</li>
+                    <li>All candidates can start the examination once the scheduled start time arrives.</li>
+                    <li>Your personal countdown timer ({contest.durationMinutes} minutes) starts after entering the access code.</li>
+                    <li>You can run sample test cases anytime and submit your solution for full grading.</li>
+                    <li>Once you end and submit your examination, re-entering the examination is not permitted.</li>
                   </ul>
                 </div>
               </div>
@@ -388,7 +415,7 @@ export default function ContestWaitingRoomPage() {
               <div className="rounded-2xl bg-surface border border-surface-border overflow-hidden">
                 <div className="p-4 border-b border-surface-border bg-surface-subtle font-semibold text-xs text-slate-400 flex justify-between">
                   <span>Candidate</span>
-                  <span>Score / Tab Switches</span>
+                  <span>Points / Time</span>
                 </div>
                 {leaderboard.length === 0 ? (
                   <div className="p-8 text-center text-xs text-slate-500">
@@ -417,16 +444,18 @@ export default function ContestWaitingRoomPage() {
                           </span>
                           <div>
                             <p className="font-bold text-foreground">{entry.studentName}</p>
-                            <p className="text-[11px] text-slate-500">{entry.studentEmail}</p>
+                            {entry.studentEmail && (
+                              <p className="text-[11px] text-slate-500">{entry.studentEmail}</p>
+                            )}
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <span className="font-extrabold text-foreground text-sm">
+                          <span className="font-extrabold text-emerald-400 text-sm">
                             {entry.totalScore} pts
                           </span>
                           <p className="text-[10px] text-slate-400">
-                            {entry.tabSwitchCount} tab switch{entry.tabSwitchCount === 1 ? "" : "es"}
+                            {Math.floor((entry.penaltySeconds || 0) / 60)}m {(entry.penaltySeconds || 0) % 60}s
                           </p>
                         </div>
                       </div>
@@ -437,7 +466,7 @@ export default function ContestWaitingRoomPage() {
             )}
           </div>
 
-          {/* Right Column: Admission Gate */}
+          {/* Right Column: Admission Gate & Candidate Summary */}
           <div className="space-y-6">
             {!user ? (
               <div className="p-6 rounded-2xl bg-surface border border-surface-border text-center">
@@ -466,44 +495,55 @@ export default function ContestWaitingRoomPage() {
               <div className="p-6 rounded-2xl bg-surface border border-surface-border">
                 <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 mb-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Enrolled Candidate</span>
+                  <span>
+                    {participant.status === "SUBMITTED"
+                      ? "Examination Completed"
+                      : "Enrolled Candidate"}
+                  </span>
                 </div>
-                <h3 className="text-base font-bold text-foreground">Candidate Status</h3>
+                <h3 className="text-base font-bold text-foreground">Candidate Performance Summary</h3>
                 <div className="mt-4 space-y-2.5 text-xs">
                   <div className="flex justify-between text-slate-400">
-                    <span>Name:</span>
+                    <span>Candidate:</span>
                     <strong className="text-foreground">{participant.studentName}</strong>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Current Score:</span>
-                    <strong className="text-emerald-400 font-bold">{participant.totalScore} pts</strong>
+                    <span>Points Scored:</span>
+                    <strong className="text-emerald-400 font-extrabold">
+                      {participant.totalScore}
+                      {maxPossiblePoints > 0 ? ` / ${maxPossiblePoints}` : ""} pts
+                    </strong>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Proctor Status:</span>
-                    <span
-                      className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
-                        participant.status === "SUBMITTED"
-                          ? "bg-blue-500/10 text-blue-400"
-                          : participant.status === "FLAGGED_VIOLATION"
-                          ? "bg-rose-500/10 text-rose-400"
-                          : "bg-emerald-500/10 text-emerald-400"
-                      }`}
-                    >
-                      {participant.status}
-                    </span>
+                    <span>Time Taken:</span>
+                    <strong className="font-mono text-foreground">
+                      {formatTimeTaken(participant.startedAt, participant.submittedAt)}
+                    </strong>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Tab Switches:</span>
-                    <strong className={participant.tabSwitchCount > contest.maxTabSwitches ? "text-rose-400" : "text-foreground"}>
-                      {participant.tabSwitchCount} / {contest.maxTabSwitches}
+                    <span>Questions Solved:</span>
+                    <strong className="text-emerald-400 font-bold">
+                      {solvedCount} / {totalProblemsCount}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Questions Unsolved:</span>
+                    <strong className="text-amber-400 font-bold">
+                      {unsolvedCount} / {totalProblemsCount}
                     </strong>
                   </div>
                 </div>
 
                 <div className="mt-6">
-                  {participant.status === "SUBMITTED" ? (
-                    <div className="p-3 rounded-xl bg-surface-subtle text-center text-xs text-slate-400">
-                      Your examination has been submitted. Check the leaderboard for your final rank.
+                  {participant.status === "SUBMITTED" || isEnded ? (
+                    <div className="p-3.5 rounded-xl bg-surface-subtle border border-surface-border text-center text-xs text-slate-400">
+                      <Lock className="h-4 w-4 text-slate-400 mx-auto mb-1" />
+                      <span className="font-semibold text-foreground block">
+                        Examination Submitted &amp; Locked
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        You have completed this examination. Re-entering is not permitted.
+                      </span>
                     </div>
                   ) : (
                     <Link
@@ -516,12 +556,37 @@ export default function ContestWaitingRoomPage() {
                   )}
                 </div>
               </div>
+            ) : !isStarted ? (
+              <div className="p-6 rounded-2xl bg-surface border border-blue-500/30 text-center space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 mx-auto">
+                  <Timer className="h-6 w-6" />
+                </div>
+                <h3 className="text-base font-bold text-foreground">
+                  Waiting for Scheduled Start Time
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Candidates cannot start the contest before the scheduled start time. The access code gate will unlock for all candidates simultaneously when the countdown reaches zero.
+                </p>
+                <div className="p-3 rounded-xl bg-background border border-surface-border text-xs">
+                  <span className="text-slate-400 block text-[11px]">Scheduled Start Time:</span>
+                  <strong className="text-brand-400 font-bold">
+                    {new Date(contest.startTime).toLocaleString([], {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </strong>
+                </div>
+              </div>
             ) : isEnded ? (
-              <div className="p-6 rounded-2xl bg-surface border border-surface-border text-center">
-                <CheckCircle2 className="h-10 w-10 text-slate-500 mx-auto mb-3" />
+              <div className="p-6 rounded-2xl bg-surface border border-surface-border text-center space-y-3">
+                <CheckCircle2 className="h-10 w-10 text-slate-500 mx-auto" />
                 <h3 className="text-base font-bold text-foreground">Examination Closed</h3>
-                <p className="mt-1 text-xs text-slate-400">
-                  The official window for this examination has concluded. New candidates can no longer register.
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                  <span>You haven&apos;t participated in this contest</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  The official window for this examination has concluded.
                 </p>
               </div>
             ) : (

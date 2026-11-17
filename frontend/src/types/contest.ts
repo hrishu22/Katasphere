@@ -15,6 +15,8 @@ export interface ContestDto {
   totalProblems: number;
   totalParticipants: number;
   status: "UPCOMING" | "ACTIVE" | "CONCLUDED" | "PAST";
+  participated?: boolean | null;
+  participantStatus?: string | null;
 }
 
 export interface ContestSampleTestCaseDto {
@@ -348,4 +350,134 @@ export interface CollegeAdminDashboardDto {
   participantsAndRankings: AdminParticipantDetailDto[];
   cheatIncidents: AdminCheatIncidentDto[];
   enrolledStudents: AdminEnrolledStudentDto[];
+}
+
+// ======================== POWER USER (OWNER) PORTAL ========================
+
+export interface SystemHealthDto {
+  status: string;
+  databaseStatus: string;
+  executionEngineStatus: string;
+  javaVersion: string;
+  osName: string;
+  uptimeSeconds: number;
+  memoryUsedMb: number;
+  memoryTotalMb: number;
+  memoryMaxMb: number;
+  availableProcessors: number;
+  totalProblemsInCatalog: number;
+  totalTestCasesInDb: number;
+  totalPracticeSubmissions: number;
+  totalContestSubmissions: number;
+  checkedAt: string;
+}
+
+export interface PowerCollegeDetailDto {
+  id: string;
+  collegeCode: string;
+  name: string;
+  officialEmail: string;
+  adminUserId?: string | null;
+  adminName: string;
+  adminEmail: string;
+  department?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  address?: string | null;
+  website?: string | null;
+  phone?: string | null;
+  expectedStudents?: number | null;
+  registeredStudentsCount: number;
+  activeTenureStudentsCount: number;
+  expiredTenureStudentsCount: number;
+  planCode: string;
+  planName: string;
+  contestQuotaTotal: number;
+  contestsUsed: number;
+  contestsLeft: number;
+  planExpiresAt?: string | null;
+  totalContestsCreated: number;
+  contestsHappenedCount: number;
+  activeContestsCount: number;
+  upcomingContestsCount: number;
+  totalStudentParticipations: number;
+  createdAt: string;
+}
+
+export interface PowerStudentDetailDto {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  collegeId: string;
+  collegeName: string;
+  collegeCode: string;
+  rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired: boolean;
+  contestsParticipated: number;
+  contestsSubmitted: number;
+  totalScoreEarned: number;
+  practiceProblemsSolved: number;
+  createdAt: string;
+}
+
+export interface PowerUserDetailDto {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  isAlsoStudent: boolean;
+  isCollegeAdmin: boolean;
+  isPowerUser: boolean;
+  collegeId?: string | null;
+  collegeName?: string | null;
+  collegeCode?: string | null;
+  rollNumber?: string | null;
+  tenureStartYear?: number | null;
+  tenureEndYear?: number | null;
+  isTenureExpired: boolean;
+  ownedCollegeName?: string | null;
+  ownedCollegeCode?: string | null;
+  practiceProblemsSolved: number;
+  practiceSubmissionsCount: number;
+  contestParticipationsCount: number;
+  createdAt: string;
+}
+
+export interface PowerContestDetailDto {
+  contestId: string;
+  title: string;
+  slug: string;
+  collegeId?: string | null;
+  collegeName: string;
+  collegeCode: string;
+  status: "UPCOMING" | "ACTIVE" | "CONCLUDED";
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  totalProblems: number;
+  totalParticipants: number;
+  submittedParticipants: number;
+  createdAt: string;
+}
+
+export interface PowerAdminOverviewDto {
+  systemHealth: SystemHealthDto;
+  totalRegisteredColleges: number;
+  totalRegisteredStudents: number;
+  totalRegisteredUsers: number;
+  totalUsersWhoAreAlsoStudents: number;
+  totalContestsHappened: number;
+  totalContestsScheduled: number;
+  totalActiveContests: number;
+  totalUpcomingContests: number;
+  totalContestParticipations: number;
+  totalContestSubmissions: number;
+  colleges: PowerCollegeDetailDto[];
+  students: PowerStudentDetailDto[];
+  users: PowerUserDetailDto[];
+  contests: PowerContestDetailDto[];
 }

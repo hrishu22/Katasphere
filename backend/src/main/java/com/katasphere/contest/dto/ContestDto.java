@@ -20,13 +20,21 @@ public record ContestDto(
     boolean isPublished,
     int totalProblems,
     long totalParticipants,
-    String status // "UPCOMING", "ACTIVE", "PAST"
+    String status, // "UPCOMING", "ACTIVE", "PAST"
+    Boolean participated,
+    String participantStatus
 ) {
     /** Public views must never carry the access code. */
     public ContestDto withoutAccessCode() {
         return new ContestDto(id, collegeName, title, slug, description, null, startTime, endTime,
             durationMinutes, scoringSystem, allowTabSwitch, maxTabSwitches, isPublished,
-            totalProblems, totalParticipants, status);
+            totalProblems, totalParticipants, status, participated, participantStatus);
+    }
+
+    public ContestDto withParticipation(boolean participated, String participantStatus) {
+        return new ContestDto(id, collegeName, title, slug, description, accessCode, startTime, endTime,
+            durationMinutes, scoringSystem, allowTabSwitch, maxTabSwitches, isPublished,
+            totalProblems, totalParticipants, status, participated, participantStatus);
     }
 
     public static ContestDto fromEntity(Contest c, int problemCount, long participantCount) {
@@ -56,7 +64,9 @@ public record ContestDto(
             c.isPublished(),
             problemCount,
             participantCount,
-            status
+            status,
+            null,
+            null
         );
     }
 }

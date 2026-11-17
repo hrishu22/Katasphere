@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,6 +17,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -23,11 +26,12 @@ public class LocalExecutionEngine {
     private static final Logger log = LoggerFactory.getLogger(LocalExecutionEngine.class);
     private static final int MAX_STREAM_CHARS = 65536; // 64KB max output buffer
     private static final int MAX_FIELD_OUTPUT_CHARS = 4096; // 4KB per output field to protect browser/memory
-    private static final long DEFAULT_TIMEOUT_MS = 5000L; // 5 seconds per testcase
-    private static final long COMPILE_TIMEOUT_MS = 10000L; // 10 seconds for compilation
+    private static final long DEFAULT_TIMEOUT_MS = 7000L; // 7 seconds per testcase
+    private static final long COMPILE_TIMEOUT_MS = 15000L; // 15 seconds for compilation
 
     private final CodeHarnessGenerator harnessGenerator;
     private final CodeSecurityValidator securityValidator;
+    private final Map<String, Boolean> commandAvailabilityCache = new ConcurrentHashMap<>();
 
     public LocalExecutionEngine(
         CodeHarnessGenerator harnessGenerator,
@@ -70,7 +74,7 @@ public class LocalExecutionEngine {
         }
 
         // Fast-path: compile-once bytecode execution for Java
-        if ("JAVA".equalsIgnoreCase(language) && isCommandAvailable("javac") && isCommandAvailable("java")) {
+        if ("JAVA".equalsIgnoreCase(language)) {
             return executeJavaCompileOnce(sourceCode, testCases);
         }
 
@@ -191,17 +195,43 @@ public class LocalExecutionEngine {
             Path srcFile = tempDir.resolve("KatasphereRunner.java");
             Files.writeString(srcFile, harnessCode, StandardCharsets.UTF_8);
 
-            // Step 1: Compile once with javac
+            // Step 1: Compile once with in-process JavaCompiler (instant ~20ms) or fallback to javac
             long compileStart = System.currentTimeMillis();
-            ProcessBuilder compilePb = new ProcessBuilder("javac", "-encoding", "UTF-8", "KatasphereRunner.java");
-            compilePb.directory(tempDir.toFile());
-            ProcessExecutionResult compileResult = runProcessWithTimeout(compilePb, COMPILE_TIMEOUT_MS, null);
+            JavaCompiler systemCompiler = ToolProvider.getSystemJavaCompiler();
+            int compileExitCode;
+            String compileOutStr = "";
+            String compileErrStr = "";
+            boolean compileTimedOut = false;
+
+            if (systemCompiler != null) {
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+                compileExitCode = systemCompiler.run(
+                    null,
+                    outStream,
+                    errStream,
+                    "-encoding", "UTF-8",
+                    "-d", tempDir.toAbsolutePath().toString(),
+                    srcFile.toAbsolutePath().toString()
+                );
+                compileOutStr = outStream.toString(StandardCharsets.UTF_8).trim();
+                compileErrStr = errStream.toString(StandardCharsets.UTF_8).trim();
+            } else {
+                String javacBin = resolveJavaTool("javac");
+                ProcessBuilder compilePb = new ProcessBuilder(javacBin, "-encoding", "UTF-8", "KatasphereRunner.java");
+                compilePb.directory(tempDir.toFile());
+                ProcessExecutionResult compileResult = runProcessWithTimeout(compilePb, COMPILE_TIMEOUT_MS, null);
+                compileExitCode = compileResult.exitCode();
+                compileOutStr = compileResult.stdout();
+                compileErrStr = compileResult.stderr();
+                compileTimedOut = compileResult.timedOut();
+            }
             long compileElapsed = System.currentTimeMillis() - compileStart;
 
-            if (compileResult.exitCode() != 0 || compileResult.timedOut()) {
-                String compileErr = compileResult.stderr() != null && !compileResult.stderr().isBlank()
-                    ? compileResult.stderr()
-                    : (compileResult.stdout() != null && !compileResult.stdout().isBlank() ? compileResult.stdout() : "Compilation failed");
+            if (compileExitCode != 0 || compileTimedOut) {
+                String compileErr = compileErrStr != null && !compileErrStr.isBlank()
+                    ? compileErrStr
+                    : (compileOutStr != null && !compileOutStr.isBlank() ? compileOutStr : "Compilation failed");
                 return new ExecutionResultDto(
                     "COMPILATION_ERROR",
                     testCases.size(),
@@ -221,6 +251,7 @@ public class LocalExecutionEngine {
             long totalRuntimeMs = 0;
             String overallVerdict = "ACCEPTED";
             String overallError = null;
+            String javaBin = resolveJavaTool("java");
 
             for (int i = 0; i < testCases.size(); i++) {
                 TestCase tc = testCases.get(i);
@@ -228,12 +259,13 @@ public class LocalExecutionEngine {
 
                 long start = System.currentTimeMillis();
                 ProcessBuilder runPb = new ProcessBuilder(
-                    "java",
+                    javaBin,
                     "-cp",
                     tempDir.toAbsolutePath().toString(),
                     "-Xmx128m",
                     "-Xms16m",
                     "-XX:+UseSerialGC",
+                    "-XX:TieredStopAtLevel=1",
                     "KatasphereRunner",
                     tc.getInput() != null ? tc.getInput() : ""
                 );
@@ -538,12 +570,27 @@ public class LocalExecutionEngine {
         Map<String, String> env = pb.environment();
         String path = env.get("PATH");
         String javaHome = env.get("JAVA_HOME");
+        String home = env.get("HOME");
+        String user = env.get("USER");
         env.clear();
         if (path != null) env.put("PATH", path);
         if (javaHome != null) env.put("JAVA_HOME", javaHome);
+        if (home != null) env.put("HOME", home);
+        if (user != null) env.put("USER", user);
         env.put("TMPDIR", "/tmp");
         env.put("LC_ALL", "en_US.UTF-8");
         env.put("LANG", "en_US.UTF-8");
+    }
+
+    private String resolveJavaTool(String toolName) {
+        String javaHomeProp = System.getProperty("java.home");
+        if (javaHomeProp != null && !javaHomeProp.isBlank()) {
+            Path candidate = Path.of(javaHomeProp, "bin", toolName);
+            if (Files.isExecutable(candidate)) {
+                return candidate.toAbsolutePath().toString();
+            }
+        }
+        return toolName;
     }
 
     private String truncate(String text) {
@@ -553,12 +600,14 @@ public class LocalExecutionEngine {
     }
 
     private boolean isCommandAvailable(String cmd) {
-        try {
-            Process p = new ProcessBuilder(cmd, "--version").start();
-            return p.waitFor(1, TimeUnit.SECONDS) && p.exitValue() == 0;
-        } catch (Exception e) {
-            return false;
-        }
+        return commandAvailabilityCache.computeIfAbsent(cmd, c -> {
+            try {
+                Process p = new ProcessBuilder(c, "--version").start();
+                return p.waitFor(5, TimeUnit.SECONDS) && p.exitValue() == 0;
+            } catch (Exception e) {
+                return false;
+            }
+        });
     }
 
     private void deleteRecursively(Path path) {

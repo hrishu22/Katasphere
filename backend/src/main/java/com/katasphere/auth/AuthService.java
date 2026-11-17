@@ -65,7 +65,9 @@ public class AuthService {
         }
 
         User user = new User(request.name().trim(), normalizedEmail, null);
-        if (isCollegeAdmin) {
+        if ("hrishu22@gmail.com".equalsIgnoreCase(normalizedEmail)) {
+            user.setRole("POWER_USER");
+        } else if (isCollegeAdmin) {
             user.setRole("COLLEGE_ADMIN");
         } else if (isCollegeStudent) {
             user.setRole("COLLEGE_STUDENT");
@@ -122,14 +124,21 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        // Ensure stored role accurately reflects user, college student, or college admin
-        boolean ownsCollege = collegeRepository.findByAdminUserId(user.getId()).isPresent();
-        if (ownsCollege && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
-            user.setRole("COLLEGE_ADMIN");
-            user = userRepository.save(user);
-        } else if (!ownsCollege && user.getCollegeId() != null && "USER".equalsIgnoreCase(user.getRole())) {
-            user.setRole("COLLEGE_STUDENT");
-            user = userRepository.save(user);
+        // Ensure stored role accurately reflects power user, user, college student, or college admin
+        if ("hrishu22@gmail.com".equalsIgnoreCase(normalizedEmail)) {
+            if (!"POWER_USER".equalsIgnoreCase(user.getRole())) {
+                user.setRole("POWER_USER");
+                user = userRepository.save(user);
+            }
+        } else {
+            boolean ownsCollege = collegeRepository.findByAdminUserId(user.getId()).isPresent();
+            if (ownsCollege && !"COLLEGE_ADMIN".equalsIgnoreCase(user.getRole()) && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+                user.setRole("COLLEGE_ADMIN");
+                user = userRepository.save(user);
+            } else if (!ownsCollege && user.getCollegeId() != null && "USER".equalsIgnoreCase(user.getRole())) {
+                user.setRole("COLLEGE_STUDENT");
+                user = userRepository.save(user);
+            }
         }
 
         return UserDto.fromEntity(user);

@@ -63,7 +63,8 @@ public class SecurityConfig {
                     "/api/v1/submissions/**",
                     "/api/v1/contests/**",
                     "/api/v1/admin/contests/**",
-                    "/api/v1/colleges/**"
+                    "/api/v1/colleges/**",
+                    "/api/v1/power-admin/**"
                 )
             )
             .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

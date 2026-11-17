@@ -177,16 +177,24 @@ export default function DashboardPage() {
   const [loadingDashboard, setLoadingDashboard] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isPowerUser = Boolean(
+    user &&
+      (user.isPowerUser ||
+        user.role === "POWER_USER" ||
+        user.email?.toLowerCase() === "hrishu22@gmail.com")
+  );
   const isCollegeAdmin = Boolean(
-    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN")
+    user && !isPowerUser && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN")
   );
 
   // Requirement: Developer dashboard comes after login only
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login?redirect=/dashboard");
+    } else if (!isLoading && isPowerUser) {
+      router.replace("/power-admin");
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isPowerUser, router]);
 
   // Fetch real-time dashboard data (Student Mode vs Normal User Mode)
   useEffect(() => {
@@ -423,36 +431,56 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {pastExams.map((exam) => (
-                  <div
-                    key={exam.contestId}
-                    className="p-4 rounded-2xl bg-background border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">{exam.title}</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Concluded {new Date(exam.endTime).toLocaleDateString()} • Solved {exam.solvedProblems ?? 0}/
-                        {exam.totalProblems} problems
-                      </p>
+                {pastExams.map((exam) => {
+                  const hasParticipated =
+                    exam.participationStatus && exam.participationStatus !== "ABSENT";
+                  return (
+                    <div
+                      key={exam.contestId}
+                      className="p-4 rounded-2xl bg-background border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-bold text-foreground">{exam.title}</h3>
+                          {!hasParticipated && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                              You haven&apos;t participated in this contest
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Concluded {new Date(exam.endTime).toLocaleDateString()}
+                          {hasParticipated ? (
+                            <>
+                              {" "}• Solved {exam.solvedProblems ?? 0}/{exam.totalProblems} problems • Unsolved{" "}
+                              {Math.max(0, (exam.totalProblems || 0) - (exam.solvedProblems ?? 0))}
+                            </>
+                          ) : null}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {hasParticipated ? (
+                          <>
+                            {exam.rank && (
+                              <span className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-extrabold">
+                                Rank #{exam.rank} / {exam.totalParticipants || 1}
+                              </span>
+                            )}
+                            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-extrabold">
+                              {exam.score ?? 0} / {exam.maxScore} pts
+                            </span>
+                          </>
+                        ) : null}
+                        <Link
+                          href={`/contests/${exam.slug}`}
+                          className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-semibold text-foreground"
+                        >
+                          Leaderboard
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {exam.rank && (
-                        <span className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-extrabold">
-                          Rank #{exam.rank} / {exam.totalParticipants || 1}
-                        </span>
-                      )}
-                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-extrabold">
-                        {exam.score ?? 0} / {exam.maxScore} pts
-                      </span>
-                      <Link
-                        href={`/contests/${exam.slug}`}
-                        className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-xs font-semibold text-foreground"
-                      >
-                        Leaderboard
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

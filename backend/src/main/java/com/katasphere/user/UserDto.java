@@ -11,6 +11,7 @@ public record UserDto(
     String role,
     boolean isPremium,
     boolean isCollegeAdmin,
+    boolean isPowerUser,
     UUID collegeId,
     String collegeRollNumber,
     Integer tenureStartYear,
@@ -25,8 +26,9 @@ public record UserDto(
             email,
             avatarUrl,
             role,
-            "PREMIUM".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role),
+            "PREMIUM".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role) || "POWER_USER".equalsIgnoreCase(role),
             "COLLEGE_ADMIN".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role),
+            "POWER_USER".equalsIgnoreCase(role) || (email != null && "hrishu22@gmail.com".equalsIgnoreCase(email.trim())),
             null,
             null,
             null,
@@ -37,8 +39,11 @@ public record UserDto(
     }
 
     public static UserDto fromEntity(User user) {
-        String r = user.getRole() != null ? user.getRole() : "USER";
-        boolean premium = "PREMIUM".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r);
+        String email = user.getEmail();
+        boolean powerUser = "POWER_USER".equalsIgnoreCase(user.getRole())
+            || (email != null && "hrishu22@gmail.com".equalsIgnoreCase(email.trim()));
+        String r = powerUser ? "POWER_USER" : (user.getRole() != null ? user.getRole() : "USER");
+        boolean premium = "PREMIUM".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r) || powerUser;
         boolean collegeAdmin = "COLLEGE_ADMIN".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r);
         return new UserDto(
             user.getId(),
@@ -48,6 +53,7 @@ public record UserDto(
             r,
             premium,
             collegeAdmin,
+            powerUser,
             user.getCollegeId(),
             user.getCollegeRollNumber(),
             user.getTenureStartYear(),

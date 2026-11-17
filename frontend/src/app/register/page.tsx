@@ -48,8 +48,10 @@ function RegisterForm() {
   const [collegeName, setCollegeName] = useState("");
 
   // "Are you a student?" (COLLEGE_STUDENT) mandatory fields:
-  // Name, Email, College Unique ID, Passwords, Roll No, Tenure
+  // Name, Email, School/College Name (with min-3-char name-only suggestions), College Unique ID, Passwords, Roll No, Tenure
   const currentYear = new Date().getFullYear();
+  const [studentCollegeName, setStudentCollegeName] = useState("");
+  const [showStudentCollegeDropdown, setShowStudentCollegeDropdown] = useState(false);
   const [studentCollegeCode, setStudentCollegeCode] = useState("");
   const [studentRollNumber, setStudentRollNumber] = useState("");
   const [tenureStartYear, setTenureStartYear] = useState<number>(currentYear - 2);
@@ -61,6 +63,12 @@ function RegisterForm() {
       .then(setCollegeSuggestions)
       .catch(() => {});
   }, []);
+
+  const filteredStudentCollegeSuggestions = collegeSuggestions.filter((c) => {
+    const q = studentCollegeName.toLowerCase().trim();
+    if (q.length < 3) return false;
+    return c.name.toLowerCase().includes(q);
+  });
 
   const matchedCollegeByCode = collegeSuggestions.find(
     (c) => c.collegeCode.toUpperCase() === studentCollegeCode.trim().toUpperCase()
@@ -119,7 +127,7 @@ function RegisterForm() {
           : accountType === "COLLEGE_STUDENT"
           ? {
               collegeCode: studentCollegeCode.trim().toUpperCase(),
-              collegeName: matchedCollegeByCode?.name || undefined,
+              collegeName: studentCollegeName.trim() || matchedCollegeByCode?.name || undefined,
               rollNumber: studentRollNumber.trim(),
               tenureStartYear: Number(tenureStartYear),
               tenureEndYear: Number(tenureEndYear),
@@ -127,7 +135,13 @@ function RegisterForm() {
           : {}),
       });
 
-      if (explicitRedirect) {
+      if (
+        registeredUser.isPowerUser ||
+        registeredUser.role === "POWER_USER" ||
+        registeredUser.email?.toLowerCase() === "hrishu22@gmail.com"
+      ) {
+        router.push("/power-admin");
+      } else if (explicitRedirect) {
         router.push(explicitRedirect);
       } else if (accountType === "COLLEGE_ADMIN" || registeredUser.role === "COLLEGE_ADMIN") {
         // Redirect straight to the Admin Portal (/admin/contests?onboarding=1) where the new Unique College ID is shown
@@ -336,6 +350,46 @@ function RegisterForm() {
               </Link>
             </div>
 
+            <div className="relative">
+              <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                College / School Name *{" "}
+                <span className="font-normal text-slate-400">(Type at least 3 characters for suggestions)</span>
+              </label>
+              <input
+                type="text"
+                value={studentCollegeName}
+                onFocus={() => setShowStudentCollegeDropdown(true)}
+                onBlur={() => setTimeout(() => setShowStudentCollegeDropdown(false), 180)}
+                onChange={(e) => {
+                  setStudentCollegeName(e.target.value);
+                  setShowStudentCollegeDropdown(true);
+                }}
+                placeholder="Type your school / college name..."
+                autoComplete="off"
+                className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              {showStudentCollegeDropdown &&
+                studentCollegeName.trim().length >= 3 &&
+                filteredStudentCollegeSuggestions.length > 0 && (
+                  <div className="absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
+                    {filteredStudentCollegeSuggestions.slice(0, 8).map((col) => (
+                      <button
+                        key={col.id}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setStudentCollegeName(col.name);
+                          setShowStudentCollegeDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center text-xs"
+                      >
+                        <span className="font-semibold text-foreground truncate">{col.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[10px] font-semibold text-slate-300 mb-1">
@@ -347,7 +401,16 @@ function RegisterForm() {
                     type="text"
                     required
                     value={studentCollegeCode}
-                    onChange={(e) => setStudentCollegeCode(e.target.value.toUpperCase())}
+                    onChange={(e) => {
+                      const code = e.target.value.toUpperCase();
+                      setStudentCollegeCode(code);
+                      const found = collegeSuggestions.find(
+                        (c) => c.collegeCode.toUpperCase() === code.trim()
+                      );
+                      if (found && !studentCollegeName.trim()) {
+                        setStudentCollegeName(found.name);
+                      }
+                    }}
                     placeholder="e.g. KS-57BMQ9"
                     autoComplete="off"
                     className="w-full pl-8 pr-3 py-2 rounded-lg bg-background border border-surface-border text-foreground font-mono uppercase text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"

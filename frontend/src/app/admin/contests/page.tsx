@@ -56,6 +56,7 @@ import {
   ArrowRight,
   GraduationCap,
   Edit3,
+  RefreshCw,
 } from "lucide-react";
 
 interface CatalogProblemSummary {
@@ -123,12 +124,19 @@ export default function AdminContestsPage() {
   const [formMaxTabSwitches, setFormMaxTabSwitches] = useState(3);
   const [selectedProblems, setSelectedProblems] = useState<Array<{ id: string; title: string; difficulty: string; points: number }>>([]);
   const [problemSearch, setProblemSearch] = useState("");
+  const [targetQuestionCount, setTargetQuestionCount] = useState<number>(3);
+  const [problemDifficultyFilter, setProblemDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
+  const [easyCountNeeded, setEasyCountNeeded] = useState<number>(1);
+  const [mediumCountNeeded, setMediumCountNeeded] = useState<number>(1);
+  const [hardCountNeeded, setHardCountNeeded] = useState<number>(1);
 
   // Drawer / Modal: Live Proctoring Monitor
   const [selectedContestForMonitor, setSelectedContestForMonitor] = useState<ContestDto | null>(null);
   const [monitorParticipants, setMonitorParticipants] = useState<ContestParticipantDto[]>([]);
   const [monitorSubmissions, setMonitorSubmissions] = useState<ContestSubmissionDto[]>([]);
   const [monitorLoading, setMonitorLoading] = useState(false);
+  const [monitorRefreshing, setMonitorRefreshing] = useState(false);
+  const [monitorLastUpdated, setMonitorLastUpdated] = useState<string>("");
   const [monitorTab, setMonitorTab] = useState<"PARTICIPANTS" | "SUBMISSIONS">("PARTICIPANTS");
 
   // Copy code feedback
@@ -371,22 +379,80 @@ export default function AdminContestsPage() {
     }
   };
 
-  // Open monitor drawer
-  const openMonitor = async (c: ContestDto) => {
-    setSelectedContestForMonitor(c);
-    setMonitorLoading(true);
+  // Fetch/Refresh monitor data (used on open, manual Refresh button click, and 10s auto-poll)
+  const refreshMonitorData = async (slugToFetch: string, isBackgroundRefresh = false) => {
+    if (isBackgroundRefresh) {
+      setMonitorRefreshing(true);
+    } else {
+      setMonitorLoading(true);
+    }
     try {
       const [parts, subs] = await Promise.all([
-        getAdminParticipants(c.slug),
-        getAdminSubmissions(c.slug),
+        getAdminParticipants(slugToFetch),
+        getAdminSubmissions(slugToFetch),
       ]);
       setMonitorParticipants(parts);
       setMonitorSubmissions(subs);
+      setMonitorLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
       console.error("Failed to fetch monitor data", err);
     } finally {
       setMonitorLoading(false);
+      setMonitorRefreshing(false);
     }
+  };
+
+  // Open monitor drawer
+  const openMonitor = async (c: ContestDto) => {
+    setSelectedContestForMonitor(c);
+    await refreshMonitorData(c.slug, false);
+  };
+
+  // Automatically fetch latest monitor data every 10 seconds while the Monitor sidebar is open
+  useEffect(() => {
+    if (!selectedContestForMonitor) return;
+    const intervalId = setInterval(() => {
+      refreshMonitorData(selectedContestForMonitor.slug, true);
+    }, 10000);
+    return () => clearInterval(intervalId);
+  }, [selectedContestForMonitor]);
+
+  const handleAutoSelectQuestions = () => {
+    const pickRandom = (list: CatalogProblemSummary[], count: number) => {
+      const shuffled = [...list].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, Math.max(0, count));
+    };
+
+    const easyPool = catalogProblems.filter((p) => p.difficulty === "EASY");
+    const mediumPool = catalogProblems.filter((p) => p.difficulty === "MEDIUM");
+    const hardPool = catalogProblems.filter((p) => p.difficulty === "HARD");
+
+    const totalByDifficultyMix = easyCountNeeded + mediumCountNeeded + hardCountNeeded;
+    let chosen: CatalogProblemSummary[] = [];
+
+    if (totalByDifficultyMix > 0) {
+      chosen = [
+        ...pickRandom(easyPool, easyCountNeeded),
+        ...pickRandom(mediumPool, mediumCountNeeded),
+        ...pickRandom(hardPool, hardCountNeeded),
+      ];
+      setTargetQuestionCount(chosen.length);
+    } else if (targetQuestionCount > 0) {
+      const pool =
+        problemDifficultyFilter === "ALL"
+          ? catalogProblems
+          : catalogProblems.filter((p) => p.difficulty === problemDifficultyFilter);
+      chosen = pickRandom(pool, targetQuestionCount);
+    }
+
+    setSelectedProblems(
+      chosen.map((p) => ({
+        id: p.id,
+        title: p.title,
+        difficulty: p.difficulty,
+        points: p.difficulty === "EASY" ? 100 : p.difficulty === "MEDIUM" ? 200 : 300,
+      }))
+    );
   };
 
   const generateSlugAndCode = () => {
@@ -1090,11 +1156,14 @@ export default function AdminContestsPage() {
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex justify-end animate-in fade-in">
             <div className="w-full max-w-2xl bg-surface border-l border-surface-border h-full flex flex-col shadow-2xl">
               {/* Drawer Header */}
-              <div className="p-6 border-b border-surface-border flex items-center justify-between shrink-0">
+              <div className="p-6 border-b border-surface-border flex items-center justify-between shrink-0 gap-3">
                 <div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-brand-400">
                     <ShieldCheck className="h-4 w-4" />
                     <span>Live Proctoring Monitor</span>
+                    <span className="text-[10px] font-normal text-slate-400">
+                      • Auto-updates every 10s{monitorLastUpdated ? ` (Last: ${monitorLastUpdated})` : ""}
+                    </span>
                   </div>
                   <h3 className="text-lg font-bold text-foreground mt-0.5">
                     {selectedContestForMonitor.title}
@@ -1104,7 +1173,17 @@ export default function AdminContestsPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={monitorRefreshing || monitorLoading}
+                    onClick={() => refreshMonitorData(selectedContestForMonitor.slug, true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-surface-border border border-surface-border text-foreground font-semibold text-xs transition disabled:opacity-50"
+                    title="Refresh live monitor data now"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 text-brand-400 ${monitorRefreshing ? "animate-spin" : ""}`} />
+                    <span>{monitorRefreshing ? "Refreshing..." : "Refresh"}</span>
+                  </button>
                   <a
                     href={getExportGradebookUrl(selectedContestForMonitor.slug)}
                     download
@@ -1626,15 +1705,140 @@ export default function AdminContestsPage() {
 
                 {wizardStep === 2 && (
                   <div className="space-y-4 text-xs">
-                    <p className="text-slate-400">
-                      Select challenges from the Katasphere catalog and assign points for each challenge.
-                    </p>
+                    {/* Question Selection Options: Total Questions Needed + Easy / Medium / Hard */}
+                    <div className="p-4 rounded-2xl bg-background border border-brand-500/30 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-foreground">
+                            Question Selection &amp; Difficulty Configuration
+                          </div>
+                          <p className="text-[11px] text-slate-400">
+                            Set how many questions are needed and configure Easy, Medium, and Hard counts (or pick manually below).
+                          </p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-brand-500/15 border border-brand-500/30 text-brand-300 font-extrabold text-[11px]">
+                          Selected: {selectedProblems.length} / {targetQuestionCount} Questions
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Total Questions Needed
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={targetQuestionCount}
+                            onChange={(e) => {
+                              const val = Math.max(1, parseInt(e.target.value) || 1);
+                              setTargetQuestionCount(val);
+                            }}
+                            className="w-full px-3 py-1.5 rounded-xl bg-surface border border-surface-border text-foreground font-extrabold text-center"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-emerald-400 mb-1">
+                            Easy Questions
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={easyCountNeeded}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              setEasyCountNeeded(val);
+                              setTargetQuestionCount(Math.max(1, val + mediumCountNeeded + hardCountNeeded));
+                            }}
+                            className="w-full px-3 py-1.5 rounded-xl bg-surface border border-emerald-500/30 text-emerald-400 font-extrabold text-center"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-amber-400 mb-1">
+                            Medium Questions
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={mediumCountNeeded}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              setMediumCountNeeded(val);
+                              setTargetQuestionCount(Math.max(1, easyCountNeeded + val + hardCountNeeded));
+                            }}
+                            className="w-full px-3 py-1.5 rounded-xl bg-surface border border-amber-500/30 text-amber-400 font-extrabold text-center"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-rose-400 mb-1">
+                            Hard Questions
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={hardCountNeeded}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              setHardCountNeeded(val);
+                              setTargetQuestionCount(Math.max(1, easyCountNeeded + mediumCountNeeded + val));
+                            }}
+                            className="w-full px-3 py-1.5 rounded-xl bg-surface border border-rose-500/30 text-rose-400 font-extrabold text-center"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-surface-border">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                          <span>Current Mix:</span>
+                          <span className="text-emerald-400 font-bold">
+                            Easy: {selectedProblems.filter((p) => p.difficulty === "EASY").length}
+                          </span>
+                          <span>•</span>
+                          <span className="text-amber-400 font-bold">
+                            Medium: {selectedProblems.filter((p) => p.difficulty === "MEDIUM").length}
+                          </span>
+                          <span>•</span>
+                          <span className="text-rose-400 font-bold">
+                            Hard: {selectedProblems.filter((p) => p.difficulty === "HARD").length}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {selectedProblems.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedProblems([])}
+                              className="px-2.5 py-1.5 rounded-xl bg-surface hover:bg-surface-subtle border border-surface-border text-slate-400 hover:text-foreground font-semibold text-[11px] transition"
+                            >
+                              Clear Selected
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleAutoSelectQuestions}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[11px] transition shadow-sm"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>
+                              Auto-Select ({easyCountNeeded} Easy, {mediumCountNeeded} Medium, {hardCountNeeded} Hard)
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Selected Problems List */}
                     {selectedProblems.length > 0 && (
                       <div className="space-y-2 p-3 rounded-2xl bg-background border border-surface-border">
                         <div className="font-semibold text-foreground">
-                          Chosen Challenges ({selectedProblems.length}):
+                          Chosen Challenges ({selectedProblems.length} of {targetQuestionCount} needed):
                         </div>
                         {selectedProblems.map((p, idx) => (
                           <div
@@ -1646,7 +1850,17 @@ export default function AdminContestsPage() {
                                 {String.fromCharCode(65 + idx)}.
                               </span>
                               <span className="font-semibold text-foreground">{p.title}</span>
-                              <span className="text-[10px] text-slate-500">({p.difficulty})</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                  p.difficulty === "EASY"
+                                    ? "bg-emerald-500/10 text-emerald-400"
+                                    : p.difficulty === "MEDIUM"
+                                    ? "bg-amber-500/10 text-amber-400"
+                                    : "bg-rose-500/10 text-rose-400"
+                                }`}
+                              >
+                                {p.difficulty}
+                              </span>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -1671,25 +1885,52 @@ export default function AdminContestsPage() {
                       </div>
                     )}
 
-                    {/* Problem Catalog Picker */}
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
-                        <input
-                          type="text"
-                          placeholder="Search available catalog problems..."
-                          value={problemSearch}
-                          onChange={(e) => setProblemSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-background border border-surface-border text-foreground"
-                        />
+                    {/* Problem Catalog Picker with Difficulty Filter Tabs */}
+                    <div className="space-y-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 p-1 rounded-xl bg-background border border-surface-border w-fit">
+                          {(["ALL", "EASY", "MEDIUM", "HARD"] as const).map((diff) => (
+                            <button
+                              key={diff}
+                              type="button"
+                              onClick={() => setProblemDifficultyFilter(diff)}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                                problemDifficultyFilter === diff
+                                  ? diff === "EASY"
+                                    ? "bg-emerald-600 text-white"
+                                    : diff === "MEDIUM"
+                                    ? "bg-amber-500 text-slate-950"
+                                    : diff === "HARD"
+                                    ? "bg-rose-600 text-white"
+                                    : "bg-brand-600 text-white"
+                                  : "text-slate-400 hover:text-foreground"
+                              }`}
+                            >
+                              {diff === "ALL" ? "All Difficulties" : diff}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                          <input
+                            type="text"
+                            placeholder="Search available catalog problems..."
+                            value={problemSearch}
+                            onChange={(e) => setProblemSearch(e.target.value)}
+                            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-background border border-surface-border text-foreground"
+                          />
+                        </div>
                       </div>
 
-                      <div className="max-h-48 overflow-y-auto space-y-1 divide-y divide-surface-border">
+                      <div className="max-h-52 overflow-y-auto space-y-1 divide-y divide-surface-border rounded-xl border border-surface-border bg-background p-2">
                         {catalogProblems
-                          .filter((p) =>
-                            p.title.toLowerCase().includes(problemSearch.toLowerCase())
-                          )
-                          .slice(0, 15)
+                          .filter((p) => {
+                            if (problemDifficultyFilter !== "ALL" && p.difficulty !== problemDifficultyFilter) {
+                              return false;
+                            }
+                            return p.title.toLowerCase().includes(problemSearch.toLowerCase());
+                          })
                           .map((p) => {
                             const isAdded = selectedProblems.some((x) => x.id === p.id);
                             return (
@@ -1697,9 +1938,17 @@ export default function AdminContestsPage() {
                                 key={p.id}
                                 className="pt-1.5 pb-1.5 flex items-center justify-between text-xs hover:bg-surface-subtle px-2 rounded"
                               >
-                                <div>
+                                <div className="flex items-center gap-2">
                                   <span className="font-semibold text-foreground">{p.title}</span>
-                                  <span className="ml-2 text-[10px] text-slate-500 font-mono">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                      p.difficulty === "EASY"
+                                        ? "bg-emerald-500/10 text-emerald-400"
+                                        : p.difficulty === "MEDIUM"
+                                        ? "bg-amber-500/10 text-amber-400"
+                                        : "bg-rose-500/10 text-rose-400"
+                                    }`}
+                                  >
                                     {p.difficulty}
                                   </span>
                                 </div>

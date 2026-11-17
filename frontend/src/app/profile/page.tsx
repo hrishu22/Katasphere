@@ -110,13 +110,8 @@ export default function ProfilePage() {
 
   const filteredCollegeSuggestions = collegeSuggestions.filter((c) => {
     const q = linkName.toLowerCase().trim();
-    if (!q) return false;
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.collegeCode.toLowerCase().includes(q) ||
-      (c.city && c.city.toLowerCase().includes(q)) ||
-      (c.department && c.department.toLowerCase().includes(q))
-    );
+    if (q.length < 3) return false;
+    return c.name.toLowerCase().includes(q);
   });
 
   useEffect(() => {
@@ -1107,7 +1102,7 @@ export default function ProfilePage() {
                         className="w-full px-3.5 py-2 rounded-xl bg-background border border-surface-border text-foreground"
                       />
 
-                      {showCollegeDropdown && linkName.trim().length > 0 && filteredCollegeSuggestions.length > 0 && (
+                      {showCollegeDropdown && linkName.trim().length >= 3 && filteredCollegeSuggestions.length > 0 && (
                         <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
                           {filteredCollegeSuggestions.slice(0, 8).map((col) => (
                             <button
@@ -1116,20 +1111,11 @@ export default function ProfilePage() {
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 setLinkName(col.name);
-                                setLinkCode(col.collegeCode);
                                 setShowCollegeDropdown(false);
                               }}
-                              className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-2 text-xs"
+                              className="w-full px-3 py-2 text-left hover:bg-surface-subtle transition flex items-center text-xs"
                             >
-                              <div className="min-w-0">
-                                <div className="font-semibold text-foreground truncate">{col.name}</div>
-                                {col.city && (
-                                  <div className="text-[10px] text-slate-400 truncate">{col.city}</div>
-                                )}
-                              </div>
-                              <span className="shrink-0 font-mono text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 font-bold">
-                                {col.collegeCode}
-                              </span>
+                              <div className="font-semibold text-foreground truncate">{col.name}</div>
                             </button>
                           ))}
                         </div>
@@ -1474,24 +1460,16 @@ export default function ProfilePage() {
                               <h4 className="text-base font-bold text-foreground">{exam.title}</h4>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
                                 <span>
-                                  Problems Solved:{" "}
-                                  <strong className="text-foreground">
+                                  Questions Solved:{" "}
+                                  <strong className="text-emerald-400">
                                     {exam.solvedProblems ?? 0} / {exam.totalProblems}
                                   </strong>
                                 </span>
                                 <span>•</span>
                                 <span>
-                                  Status:{" "}
-                                  <strong
-                                    className={
-                                      exam.participationStatus === "FLAGGED_VIOLATION"
-                                        ? "text-rose-400"
-                                        : attended
-                                        ? "text-emerald-400"
-                                        : "text-slate-500"
-                                    }
-                                  >
-                                    {exam.participationStatus || "ABSENT"}
+                                  Questions Unsolved:{" "}
+                                  <strong className="text-amber-400">
+                                    {Math.max(0, (exam.totalProblems || 0) - (exam.solvedProblems ?? 0))} / {exam.totalProblems}
                                   </strong>
                                 </span>
                               </div>
@@ -1525,8 +1503,8 @@ export default function ProfilePage() {
                                   </div>
                                 </>
                               ) : (
-                                <span className="px-3 py-1.5 rounded-xl bg-surface text-xs text-slate-500 border border-surface-border">
-                                  Did Not Attend
+                                <span className="px-3 py-1.5 rounded-xl bg-amber-500/15 text-xs font-bold text-amber-300 border border-amber-500/30">
+                                  You haven&apos;t participated in this contest
                                 </span>
                               )}
 
@@ -1619,7 +1597,7 @@ export default function ProfilePage() {
                         className="w-full px-4 py-2.5 rounded-xl bg-background border border-surface-border text-foreground placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
 
-                      {showCollegeDropdown && linkName.trim().length > 0 && filteredCollegeSuggestions.length > 0 && (
+                      {showCollegeDropdown && linkName.trim().length >= 3 && filteredCollegeSuggestions.length > 0 && (
                         <div className="absolute z-30 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-xl bg-surface border border-surface-border shadow-2xl divide-y divide-surface-border">
                           {filteredCollegeSuggestions.slice(0, 8).map((col) => (
                             <button
@@ -1628,21 +1606,11 @@ export default function ProfilePage() {
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 setLinkName(col.name);
-                                setLinkCode(col.collegeCode);
                                 setShowCollegeDropdown(false);
                               }}
-                              className="w-full px-4 py-2.5 text-left hover:bg-surface-subtle transition flex items-center justify-between gap-3 text-xs"
+                              className="w-full px-4 py-2.5 text-left hover:bg-surface-subtle transition flex items-center text-xs"
                             >
-                              <div className="min-w-0">
-                                <div className="font-bold text-foreground truncate">{col.name}</div>
-                                <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                                  {[col.department, col.city, col.state].filter(Boolean).join(" • ") ||
-                                    `${col.linkedStudents} students • ${col.totalContests} contests`}
-                                </div>
-                              </div>
-                              <span className="shrink-0 font-mono text-xs px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-400 font-extrabold border border-brand-500/30">
-                                {col.collegeCode}
-                              </span>
+                              <div className="font-bold text-foreground truncate">{col.name}</div>
                             </button>
                           ))}
                         </div>
@@ -1736,7 +1704,7 @@ export default function ProfilePage() {
                     ) : (
                       <>
                         <CheckCircle2 className="h-4 w-4" />
-                        <span>Register as Student &amp; Unlock Contests</span>
+                        <span>Register as student</span>
                       </>
                     )}
                   </button>

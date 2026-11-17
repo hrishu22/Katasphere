@@ -39,13 +39,22 @@ function LoginForm() {
 
     try {
       const loggedInUser = await login(email, password, rememberMe);
+      const isPowerUser =
+        loggedInUser.isPowerUser ||
+        loggedInUser.role === "POWER_USER" ||
+        loggedInUser.email?.toLowerCase() === "hrishu22@gmail.com";
       const isAdmin =
         loggedInUser.role === "COLLEGE_ADMIN" ||
         loggedInUser.role === "ADMIN" ||
         Boolean(loggedInUser.isCollegeAdmin);
       const isCollegeStudent =
         loggedInUser.role === "COLLEGE_STUDENT" ||
-        Boolean(loggedInUser.collegeId && !isAdmin);
+        Boolean(loggedInUser.collegeId && !isAdmin && !isPowerUser);
+
+      if (isPowerUser) {
+        router.push("/power-admin");
+        return;
+      }
 
       // If the user clicked "Faculty Console" (/admin/contests), require a College Admin account
       if (isAdminPortalRequested && !isAdmin) {

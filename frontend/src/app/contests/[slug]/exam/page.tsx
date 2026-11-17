@@ -136,6 +136,12 @@ export default function ContestExamWorkspacePage() {
           return;
         }
 
+        // Candidate cannot start the contest before the scheduled start time
+        if (new Date(data.contest.startTime).getTime() > Date.now()) {
+          router.replace(`/contests/${slug}`);
+          return;
+        }
+
         const part = await getParticipantState(slug);
         if (!part) {
           router.replace(`/contests/${slug}`);
@@ -208,7 +214,7 @@ export default function ContestExamWorkspacePage() {
     }
   }, [slug]);
 
-  // Anti-cheat Proctoring: Tab-Switch Detection
+  // Silent background telemetry for admin monitor (never shown to the candidate)
   useEffect(() => {
     if (examSubmittedCompleted || !detail?.contest.allowTabSwitch) return;
 
@@ -217,7 +223,6 @@ export default function ContestExamWorkspacePage() {
         try {
           const updated = await recordTabSwitch(slug);
           setParticipant(updated);
-          setTabSwitchWarning(updated.tabSwitchCount);
         } catch (err) {
           console.error("Failed to record tab switch", err);
         }
@@ -340,11 +345,30 @@ export default function ContestExamWorkspacePage() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const formatTimeTaken = (startedAt?: string | null, endedAt?: string | null) => {
+    if (!startedAt) return "0m 0s";
+    const startMs = new Date(startedAt).getTime();
+    const endMs = endedAt ? new Date(endedAt).getTime() : Date.now();
+    const diffSec = Math.max(0, Math.floor((endMs - startMs) / 1000));
+    const hrs = Math.floor(diffSec / 3600);
+    const mins = Math.floor((diffSec % 3600) / 60);
+    const secs = diffSec % 60;
+    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+    return `${mins}m ${secs}s`;
+  };
+
+  const totalProblemsCount = detail?.problems?.length || detail?.contest?.totalProblems || 0;
+  const solvedProblemsCount = (detail?.problems || []).filter((prob) =>
+    submissions.some((s) => s.problemId === prob.problemId && s.verdict === "ACCEPTED")
+  ).length;
+  const unsolvedProblemsCount = Math.max(0, totalProblemsCount - solvedProblemsCount);
+  const maxPossiblePoints = (detail?.problems || []).reduce((acc, p) => acc + (p.points || 0), 0);
+
   if (loading || authLoading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
         <Loader2 className="h-10 w-10 text-brand-500 animate-spin mb-4" />
-        <p className="text-sm text-slate-400 font-medium">Entering locked examination hall...</p>
+        <p className="text-sm text-slate-400 font-medium">Entering examination workspace...</p>
       </div>
     );
   }
@@ -358,21 +382,42 @@ export default function ContestExamWorkspacePage() {
           </div>
           <h2 className="text-2xl font-extrabold text-foreground">Examination Completed</h2>
           <p className="mt-2 text-xs text-slate-400">
-            Your solutions have been securely finalized and submitted for academic evaluation.
+            Your examination has ended and your solutions are permanently finalized. Re-entering the examination is locked.
           </p>
 
-          <div className="mt-6 p-4 rounded-2xl bg-background border border-surface-border text-left space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Total Score:</span>
-              <strong className="text-emerald-400 font-bold text-sm">{participant?.totalScore || 0} pts</strong>
+          <div className="mt-6 p-4 rounded-2xl bg-background border border-surface-border text-left space-y-2.5 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Points Scored:</span>
+              <strong className="text-emerald-400 font-extrabold text-sm">
+                {participant?.totalScore || 0}
+                {maxPossiblePoints > 0 ? ` / ${maxPossiblePoints}` : ""} pts
+              </strong>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Tab Switch Alerts:</span>
-              <span className="font-semibold text-foreground">{participant?.tabSwitchCount || 0} recorded</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Time Taken:</span>
+              <strong className="font-mono text-foreground font-bold">
+                {formatTimeTaken(participant?.startedAt, participant?.submittedAt)}
+              </strong>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Submission Time:</span>
-              <span className="text-slate-400">{new Date().toLocaleTimeString()}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Questions Solved:</span>
+              <strong className="text-emerald-400 font-bold">
+                {solvedProblemsCount} / {totalProblemsCount}
+              </strong>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Questions Unsolved:</span>
+              <strong className="text-amber-400 font-bold">
+                {unsolvedProblemsCount} / {totalProblemsCount}
+              </strong>
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-surface-border">
+              <span className="text-slate-400">Submitted At:</span>
+              <span className="text-slate-400">
+                {participant?.submittedAt
+                  ? new Date(participant.submittedAt).toLocaleTimeString()
+                  : new Date().toLocaleTimeString()}
+              </span>
             </div>
           </div>
 
@@ -381,7 +426,7 @@ export default function ContestExamWorkspacePage() {
               href={`/contests/${slug}`}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition"
             >
-              <span>View Contest Standings</span>
+              <span>View Contest Summary &amp; Standings</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -438,25 +483,14 @@ export default function ContestExamWorkspacePage() {
           </div>
         </div>
 
-        {/* Right: Timer & Proctoring Status & Finish */}
-        <div className="flex items-center gap-3">
-          {/* Proctoring Badge */}
-          {detail?.contest.allowTabSwitch && (
-            <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                (participant?.tabSwitchCount || 0) > detail.contest.maxTabSwitches
-                  ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                  : "bg-surface-border/50 text-slate-400"
-              }`}
-              title="Monitored Tab Switch Alerts"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Alerts:</span>
-              <span>
-                {participant?.tabSwitchCount || 0}/{detail.contest.maxTabSwitches}
-              </span>
-            </div>
-          )}
+        {/* Right: Solved/Unsolved + Points + Timer + Finish */}
+        <div className="flex items-center gap-2.5">
+          {/* Questions Solved / Unsolved Pill */}
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-subtle border border-surface-border text-xs font-bold">
+            <span className="text-emerald-400">Solved: {solvedProblemsCount}</span>
+            <span className="text-slate-500">•</span>
+            <span className="text-amber-400">Unsolved: {unsolvedProblemsCount}</span>
+          </div>
 
           {/* Server-Authoritative Timer */}
           <div
@@ -473,7 +507,7 @@ export default function ContestExamWorkspacePage() {
           </div>
 
           {/* Score Counter */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-subtle text-xs font-bold text-foreground">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-subtle text-xs font-bold text-foreground">
             <Trophy className="h-3.5 w-3.5 text-amber-500" />
             <span>{participant?.totalScore || 0} pts</span>
           </div>
@@ -496,13 +530,8 @@ export default function ContestExamWorkspacePage() {
       >
         {/* Left Panel: Question / Problem Statement Window */}
         <div
-          style={{ width: undefined }}
-          className="w-full lg:w-(--left-panel-width) min-h-[340px] lg:min-h-0 min-w-0 flex flex-col border-b lg:border-b-0 lg:border-r border-surface-border overflow-hidden bg-background shrink-0"
-          ref={(el) => {
-            if (el) {
-              el.style.setProperty("--left-panel-width", `${leftPanelWidthPct}%`);
-            }
-          }}
+          style={{ "--left-panel-width": `${leftPanelWidthPct}%` } as React.CSSProperties}
+          className="w-full lg:w-[var(--left-panel-width)] min-h-[340px] lg:min-h-0 min-w-0 flex flex-col border-b lg:border-b-0 lg:border-r border-surface-border overflow-hidden bg-background shrink-0"
         >
           {/* Problem Statement Header */}
           <div className="p-4 border-b border-surface-border bg-surface flex items-center justify-between shrink-0">
@@ -840,38 +869,6 @@ export default function ContestExamWorkspacePage() {
           </div>
         </div>
       </div>
-
-      {/* Proctoring Tab Switch Alert Modal */}
-      {tabSwitchWarning !== null && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="max-w-md w-full p-6 rounded-3xl bg-surface border border-rose-500/40 shadow-2xl text-center">
-            <div className="h-14 w-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 mx-auto mb-4">
-              <AlertTriangle className="h-7 w-7" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground">Proctoring Alert: Tab Switch Detected</h3>
-            <p className="mt-2 text-xs text-slate-300 leading-relaxed">
-              You left or minimized the examination environment. This violation has been logged to your college faculty proctoring dashboard.
-            </p>
-            <div className="mt-4 p-3 rounded-xl bg-background border border-surface-border text-xs">
-              <span className="text-slate-400">Total Alerts Recorded: </span>
-              <strong className="text-rose-400 font-bold">
-                {tabSwitchWarning} of {detail?.contest.maxTabSwitches} permitted
-              </strong>
-            </div>
-            {tabSwitchWarning > (detail?.contest.maxTabSwitches || 3) && (
-              <p className="mt-2 text-[11px] text-rose-400 font-semibold">
-                Warning: You have exceeded the permitted threshold. Your submission may be flagged for academic review.
-              </p>
-            )}
-            <button
-              onClick={() => setTabSwitchWarning(null)}
-              className="mt-6 w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition"
-            >
-              I Understand & Return to Examination
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Submission Result Modal */}
       {submissionSuccessModal && (

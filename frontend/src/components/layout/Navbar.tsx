@@ -20,6 +20,8 @@ import {
   ChevronDown,
   Trophy,
   ShieldCheck,
+  Users,
+  Activity,
 } from "lucide-react";
 
 export function Navbar() {
@@ -47,14 +49,22 @@ export function Navbar() {
     };
   }, [userDropdownOpen]);
 
-  const isPremiumUser = Boolean(user && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN"));
-  const isCollegeAdminUser = Boolean(
-    user && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
+  const isPowerUser = Boolean(
+    user &&
+      (user.isPowerUser ||
+        user.role === "POWER_USER" ||
+        user.email?.toLowerCase() === "hrishu22@gmail.com")
   );
-  // A user operates as a Normal User when they are not a College Admin AND Student Mode is OFF
-  const isNormalUser = Boolean(user && !isCollegeAdminUser && !isStudentMode);
+  const isPremiumUser = Boolean(
+    user && !isPowerUser && (user.isPremium || user.role === "PREMIUM" || user.role === "ADMIN")
+  );
+  const isCollegeAdminUser = Boolean(
+    user && !isPowerUser && (user.isCollegeAdmin || user.role === "COLLEGE_ADMIN" || user.role === "ADMIN")
+  );
+  // A user operates as a Normal User when they are not a Power User, not a College Admin, AND Student Mode is OFF
+  const isNormalUser = Boolean(user && !isPowerUser && !isCollegeAdminUser && !isStudentMode);
 
-  // Strict route isolation for College Admin and Student Mode
+  // Strict route isolation for Power User, College Admin, and Student Mode
   useEffect(() => {
     if (!user || !pathname || redirectingToKatasphere) return;
     const isPracticeOrNormalTab =
@@ -64,14 +74,18 @@ export function Navbar() {
       pathname.startsWith("/interview-prep") ||
       pathname.startsWith("/pricing");
 
-    if (isCollegeAdminUser && isPracticeOrNormalTab) {
+    if (isPowerUser) {
+      if (isPracticeOrNormalTab || pathname === "/dashboard" || pathname === "/contests") {
+        router.replace("/power-admin");
+      }
+    } else if (isCollegeAdminUser && isPracticeOrNormalTab) {
       router.replace("/dashboard");
     } else if (isStudentMode && isPracticeOrNormalTab) {
       router.replace("/contests");
     } else if (!isCollegeAdminUser && !isStudentMode && pathname === "/contests") {
       router.replace("/");
     }
-  }, [user, pathname, isCollegeAdminUser, isStudentMode, redirectingToKatasphere, router]);
+  }, [user, pathname, isPowerUser, isCollegeAdminUser, isStudentMode, redirectingToKatasphere, router]);
 
   const handleToggleStudentMode = () => {
     const next = !isStudentMode;
@@ -98,10 +112,20 @@ export function Navbar() {
     }
   };
 
+  // 0. Power User (Platform Owner hrishu22@gmail.com): Only Power User tabs
   // 1. College Admin (Isolated Environment): Dashboard + Contests (/admin/contests)
   // 2. Student Mode ON (only for users registered with a college): Contests + Dashboard only
   // 3. Normal User (or Student Mode OFF): Problems, Companies, Interview Prep, Plans, Dashboard
-  const navLinks = isCollegeAdminUser
+  const navLinks = isPowerUser
+    ? [
+        { href: "/power-admin?tab=dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false, tabKey: "dashboard" },
+        { href: "/power-admin?tab=colleges", label: "Registered Colleges", icon: Building2, isPro: false, tabKey: "colleges" },
+        { href: "/power-admin?tab=students", label: "Registered Students", icon: GraduationCap, isPro: false, tabKey: "students" },
+        { href: "/power-admin?tab=users", label: "Registered Users", icon: Users, isPro: false, tabKey: "users" },
+        { href: "/power-admin?tab=contests", label: "Contests & Quota", icon: Trophy, isPro: false, tabKey: "contests" },
+        { href: "/power-admin?tab=health", label: "System Health", icon: Activity, isPro: false, tabKey: "health" },
+      ]
+    : isCollegeAdminUser
     ? [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false },
         { href: "/admin/contests", label: "Contests", icon: Trophy, isPro: false },
@@ -119,7 +143,12 @@ export function Navbar() {
         ...(user ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isPro: false }] : []),
       ];
 
-  const isActive = (path: string) => pathname === path || (path !== "/" && pathname?.startsWith(path));
+  const isActive = (path: string, tabKey?: string) => {
+    if (tabKey) {
+      return pathname === "/power-admin" && tabKey === "dashboard";
+    }
+    return pathname === path || (path !== "/" && !path.includes("?") && pathname?.startsWith(path));
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -150,7 +179,7 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center space-x-8">
             <Link
-              href={isCollegeAdminUser ? "/dashboard" : isStudentMode ? "/contests" : "/"}
+              href={isPowerUser ? "/power-admin" : isCollegeAdminUser ? "/dashboard" : isStudentMode ? "/contests" : "/"}
               className="flex items-center space-x-3 group"
             >
               <div className="h-9 w-9 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-500 group-hover:bg-brand-500/20 group-hover:border-brand-500/50 transition-all">
@@ -165,9 +194,9 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
-              {navLinks.map((link) => {
+              {navLinks.map((link: any) => {
                 const Icon = link.icon;
-                const active = isActive(link.href);
+                const active = isActive(link.href, link.tabKey);
                 return (
                   <Link
                     key={link.href}
@@ -241,6 +270,11 @@ export function Navbar() {
                   <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
                     {user.name}
                   </span>
+                  {isPowerUser && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-0.5">
+                      <Crown className="h-2.5 w-2.5" /> OWNER
+                    </span>
+                  )}
                   {isCollegeAdminUser && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-500/20 text-brand-400 flex items-center gap-0.5">
                       <ShieldCheck className="h-2.5 w-2.5" /> ADMIN

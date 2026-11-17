@@ -11,6 +11,7 @@ export interface User {
   role: string;
   isPremium?: boolean;
   isCollegeAdmin?: boolean;
+  isPowerUser?: boolean;
   collegeId?: string | null;
   collegeRollNumber?: string | null;
   tenureStartYear?: number | null;
@@ -82,8 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user.collegeId &&
       !user.isTenureExpired &&
       !user.isCollegeAdmin &&
+      !user.isPowerUser &&
       user.role !== "COLLEGE_ADMIN" &&
-      user.role !== "ADMIN"
+      user.role !== "ADMIN" &&
+      user.role !== "POWER_USER" &&
+      user.email?.toLowerCase() !== "hrishu22@gmail.com"
   );
   const isStudentMode = Boolean(canUseStudentMode && studentModeState);
 

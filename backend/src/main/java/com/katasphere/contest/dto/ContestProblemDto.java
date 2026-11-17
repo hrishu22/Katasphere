@@ -43,6 +43,12 @@ public record ContestProblemDto(
                 .toList()
             : List.of();
 
+        if (sampleDtos.isEmpty() && p.getExamples() != null && !p.getExamples().isEmpty()) {
+            sampleDtos = p.getExamples().stream()
+                .map(ex -> new PublicTestCaseDto(ex.getPosition(), ex.getInput(), ex.getExpectedOutput()))
+                .toList();
+        }
+
         return new ContestProblemDto(
             p.getId(),
             p.getSlug(),

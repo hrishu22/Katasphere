@@ -370,10 +370,15 @@ export default function ContestsPage() {
               const startDate = new Date(contest.startTime);
               const endDate = new Date(contest.endTime);
               const mySummary = myExamSummaryByContestId.get(contest.id);
-              const hasAttended =
-                mySummary &&
-                mySummary.participationStatus &&
-                mySummary.participationStatus !== "ABSENT";
+              const hasAttended = Boolean(
+                contest.participated ||
+                  (mySummary &&
+                    mySummary.participationStatus &&
+                    mySummary.participationStatus !== "ABSENT")
+              );
+              const isSubmittedByMe =
+                contest.participantStatus === "SUBMITTED" ||
+                mySummary?.participationStatus === "SUBMITTED";
 
               return (
                 <div
@@ -420,17 +425,28 @@ export default function ContestsPage() {
                       </p>
                     )}
 
-                    {/* Student's Own Result Badge (if attended) */}
-                    {hasAttended && (
+                    {/* Student's Own Result Badge (if attended) or Not Participated Tag (for past contests) */}
+                    {hasAttended ? (
                       <div className="mt-4 p-3 rounded-xl bg-brand-500/10 border border-brand-500/25 flex items-center justify-between text-xs">
                         <div>
                           <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
                             Your Score
                           </span>
                           <span className="font-extrabold text-emerald-400">
-                            {mySummary?.score ?? 0} / {mySummary?.maxScore ?? 0} pts
+                            {mySummary?.score ?? 0}
+                            {mySummary?.maxScore ? ` / ${mySummary.maxScore}` : ""} pts
                           </span>
                         </div>
+                        {mySummary?.solvedProblems !== undefined && mySummary?.solvedProblems !== null && (
+                          <div className="text-center">
+                            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                              Solved
+                            </span>
+                            <span className="font-extrabold text-foreground">
+                              {mySummary.solvedProblems} / {mySummary.totalProblems || contest.totalProblems}
+                            </span>
+                          </div>
+                        )}
                         {mySummary?.rank && (
                           <div className="text-right">
                             <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
@@ -442,7 +458,12 @@ export default function ContestsPage() {
                           </div>
                         )}
                       </div>
-                    )}
+                    ) : contest.status === "CONCLUDED" ? (
+                      <div className="mt-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-bold text-amber-300">
+                        <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+                        <span>You haven&apos;t participated in this contest</span>
+                      </div>
+                    ) : null}
 
                     {/* Exam Metadata */}
                     <div className="mt-5 space-y-2 border-t border-surface-border/70 pt-4 text-xs text-slate-400">
@@ -493,7 +514,15 @@ export default function ContestsPage() {
                       href={`/contests/${contest.slug}`}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white transition shadow-sm"
                     >
-                      <span>{contest.status === "CONCLUDED" ? "View Results & Rank" : "Enter Exam"}</span>
+                      <span>
+                        {contest.status === "CONCLUDED"
+                          ? "View Results & Rank"
+                          : contest.status === "UPCOMING"
+                          ? "Waiting Room"
+                          : isSubmittedByMe
+                          ? "Completed • View Summary"
+                          : "Enter Exam"}
+                      </span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>

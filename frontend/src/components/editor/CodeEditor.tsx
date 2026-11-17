@@ -46,6 +46,15 @@ export function CodeEditor({
 
   useEffect(() => {
     setMounted(true);
+    const fallbackTimer = setTimeout(() => {
+      setMonacoLoaded((loaded) => {
+        if (!loaded) {
+          setMonacoFailed(true);
+        }
+        return loaded;
+      });
+    }, 4000);
+    return () => clearTimeout(fallbackTimer);
   }, []);
 
   // Map Katasphere language string to Monaco language ID
@@ -248,10 +257,14 @@ export function CodeEditor({
   }, [value]);
 
   return (
-    <div className={`relative flex flex-col w-full h-full min-h-0 min-w-0 rounded-xl overflow-hidden border border-surface-border bg-surface shadow-xs ${className}`}>
+    <div className={`relative w-full h-full min-h-[240px] min-w-0 rounded-xl overflow-hidden border border-surface-border bg-surface shadow-xs ${className}`}>
       {/* Monaco Editor Canvas (Primary IDE engine) */}
       {mounted && !monacoFailed && (
-        <div className={`w-full h-full flex-1 min-h-0 min-w-0 ${monacoLoaded ? "opacity-100" : "opacity-0 absolute pointer-events-none"} transition-opacity duration-200`}>
+        <div
+          className={`absolute inset-0 w-full h-full ${
+            monacoLoaded ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+          } transition-opacity duration-200`}
+        >
           <MonacoEditor
             height="100%"
             width="100%"
@@ -302,13 +315,13 @@ export function CodeEditor({
         </div>
       )}
 
-      {/* Smart Fallback Editor (Active while Monaco loads or if offline) */}
+      {/* Smart Fallback Editor (Immediately usable while Monaco loads or if offline) */}
       {(!mounted || !monacoLoaded || monacoFailed) && (
-        <div className="relative flex flex-1 min-h-0 min-w-0 w-full h-full overflow-hidden bg-surface">
+        <div className="absolute inset-0 flex w-full h-full overflow-hidden bg-surface z-5">
           {/* Line Numbers Gutter */}
           <div
             ref={lineNumbersRef}
-            className="w-12 py-3 px-1 text-right select-none font-mono text-xs text-slate-400 dark:text-slate-600 bg-surface-subtle border-r border-surface-border overflow-hidden leading-relaxed shrink-0"
+            className="w-12 py-3 px-2 text-right select-none font-mono text-xs text-slate-400 dark:text-slate-500 bg-surface-subtle border-r border-surface-border overflow-hidden leading-6 shrink-0"
           >
             {Array.from({ length: lineCount }).map((_, idx) => (
               <div key={idx} className="h-6 leading-6">
@@ -326,7 +339,7 @@ export function CodeEditor({
               onKeyDown={handleKeyDown}
               onScroll={handleScroll}
               readOnly={readOnly}
-              className="w-full h-full py-3 px-4 font-mono text-sm text-foreground bg-transparent resize-none focus:outline-none overflow-y-auto overflow-x-auto overscroll-contain leading-6 whitespace-pre"
+              className="w-full h-full py-3 px-4 font-mono text-sm text-foreground bg-transparent resize-none focus:outline-none overflow-y-auto overflow-x-auto overscroll-contain leading-6 whitespace-pre select-text"
               spellCheck={false}
               autoCapitalize="off"
               autoComplete="off"
@@ -335,10 +348,10 @@ export function CodeEditor({
             />
           </div>
 
-          {!monacoLoaded && (
+          {!monacoLoaded && !monacoFailed && (
             <div className="absolute top-2 right-3 flex items-center space-x-1.5 text-[11px] text-slate-400 dark:text-slate-500 bg-surface-subtle/80 backdrop-blur-xs px-2 py-0.5 rounded border border-surface-border pointer-events-none">
               <Loader2 className="h-3 w-3 animate-spin text-brand-500" />
-              <span>Initializing Monaco...</span>
+              <span>Editor Ready</span>
             </div>
           )}
         </div>

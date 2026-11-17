@@ -16,6 +16,7 @@ import {
   StudentCollegeDto,
   CollegeContextDto,
   StudentExamDashboardDto,
+  PowerAdminOverviewDto,
 } from "@/types/contest";
 
 function normalizeStatus(status: string): "UPCOMING" | "ACTIVE" | "CONCLUDED" {
@@ -80,7 +81,7 @@ export async function getContests(): Promise<ContestDto[]> {
 }
 
 export async function getContestDetail(slug: string): Promise<ContestDetailDto> {
-  const res = await apiClient<ApiResponse<any>>(`/api/v1/contests/${slug}`, { cacheTtlMs: 5000 });
+  const res = await apiClient<ApiResponse<any>>(`/api/v1/contests/${slug}`, { cacheTtlMs: 0 });
   const raw = res.data;
   const rawContest = raw?.contest || raw;
   const rawProblems: any[] = raw?.problems || [];
@@ -331,6 +332,13 @@ export async function getStudentExamDashboard(): Promise<StudentExamDashboardDto
 export async function getCollegeAdminDashboard(): Promise<CollegeAdminDashboardDto> {
   const res = await apiClient<ApiResponse<CollegeAdminDashboardDto>>("/api/v1/colleges/mine/dashboard", {
     cacheTtlMs: 5000,
+  });
+  return res.data;
+}
+
+export async function getPowerAdminOverview(): Promise<PowerAdminOverviewDto> {
+  const res = await apiClient<ApiResponse<PowerAdminOverviewDto>>("/api/v1/power-admin/overview", {
+    cacheTtlMs: 0,
   });
   return res.data;
 }
